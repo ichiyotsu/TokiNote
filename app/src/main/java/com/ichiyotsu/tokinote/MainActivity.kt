@@ -57,6 +57,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DarkMode
@@ -71,6 +72,7 @@ import androidx.compose.material.icons.filled.NoteAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -138,6 +140,10 @@ import java.util.Locale
 import java.util.UUID
 import java.util.function.Consumer
 
+private enum class MainTab(val label: String) {
+    NOTES("笔记"), TAGS("标签"), TIMELINE("时间线"), FOCUS("专注")
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -159,6 +165,7 @@ private fun TokiNoteApp() {
     var selectedTag by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var showMobileEditor by rememberSaveable { mutableStateOf(false) }
+    var mainTab by rememberSaveable { mutableStateOf(MainTab.NOTES) }
     var query by rememberSaveable { mutableStateOf("") }
     var showTagDialog by remember { mutableStateOf(false) }
     var deletedNote by remember { mutableStateOf<Pair<Note, Int>?>(null) }
@@ -297,6 +304,7 @@ private fun TokiNoteApp() {
     }
 
     BackHandler(enabled = showMobileEditor) { showMobileEditor = false }
+    BackHandler(enabled = mainTab == MainTab.FOCUS && !showMobileEditor) { mainTab = MainTab.NOTES }
 
     TokiNoteTheme(darkTheme = darkTheme) {
         BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -313,6 +321,8 @@ private fun TokiNoteApp() {
             ) {
                 if (!loaded) {
                     LoadingState()
+                } else if (mainTab == MainTab.FOCUS) {
+                    FocusScreen(darkTheme = darkTheme, onBack = { mainTab = MainTab.NOTES })
                 } else if (compact) {
                     if (showMobileEditor && selectedNote != null) {
                         NoteEditorPane(
@@ -326,12 +336,55 @@ private fun TokiNoteApp() {
                             onDelete = ::deleteNote
                         )
                     } else {
-                        PhoneNotesHome(
+                        when (mainTab) {
+                            MainTab.NOTES -> PhoneNotesHome(
+                                notes = visibleNotes,
+                                allTags = allTags,
+                                activeFilter = activeFilter,
+                                selectedTag = selectedTag,
+                                selectedId = selectedId,
+                                query = query,
+                                darkTheme = darkTheme,
+                                onQueryChange = { query = it },
+                                onFilter = ::changeFilter,
+                                onTag = ::chooseTag,
+                                onNew = { createNote() },
+                                onAddTag = { showTagDialog = true },
+                                onSelect = { note -> selectedId = note.id; showMobileEditor = true },
+                                onFavorite = ::toggleFavorite,
+                                onArchive = ::toggleArchive,
+                                onTheme = {
+                                    darkTheme = !darkTheme
+                                    preferences.edit { putBoolean("dark_theme", darkTheme) }
+                                }
+                            )
+                            MainTab.TAGS -> TagExplorePage(
+                                tags = allTags,
+                                notes = notes.filterNot { it.archived },
+                                selectedTag = selectedTag,
+                                onAddTag = { showTagDialog = true },
+                                onTag = { tag -> chooseTag(tag); mainTab = MainTab.NOTES }
+                            )
+                            MainTab.TIMELINE -> TimelinePage(
                             notes = visibleNotes,
+                            darkTheme = darkTheme,
+                            onSelect = { note -> selectedId = note.id; showMobileEditor = true },
+                            onFavorite = ::toggleFavorite,
+                            onArchive = ::toggleArchive
+                            )
+                            MainTab.FOCUS -> Unit
+                        }
+                    }
+                } else {
+                    when (mainTab) {
+                        MainTab.NOTES -> DesktopNotesHome(
+                            notes = visibleNotes,
+                            allNotes = notes,
                             allTags = allTags,
                             activeFilter = activeFilter,
                             selectedTag = selectedTag,
                             selectedId = selectedId,
+                            selectedNote = selectedNote,
                             query = query,
                             darkTheme = darkTheme,
                             onQueryChange = { query = it },
@@ -339,46 +392,49 @@ private fun TokiNoteApp() {
                             onTag = ::chooseTag,
                             onNew = { createNote() },
                             onAddTag = { showTagDialog = true },
-                            onSelect = { note -> selectedId = note.id; showMobileEditor = true },
+                            onSelect = { selectedId = it.id },
+                            onChange = ::updateNote,
                             onFavorite = ::toggleFavorite,
                             onArchive = ::toggleArchive,
+                            onDelete = ::deleteNote,
                             onTheme = {
                                 darkTheme = !darkTheme
                                 preferences.edit { putBoolean("dark_theme", darkTheme) }
-                            }
+                            },
+                            onFocus = { mainTab = MainTab.FOCUS }
                         )
+                        MainTab.TAGS -> TagExplorePage(
+                            tags = allTags,
+                            notes = notes.filterNot { it.archived },
+                            selectedTag = selectedTag,
+                            onAddTag = { showTagDialog = true },
+                            onTag = { tag -> chooseTag(tag); mainTab = MainTab.NOTES }
+                        )
+                        MainTab.TIMELINE -> TimelinePage(
+                            notes = visibleNotes,
+                            darkTheme = darkTheme,
+                            onSelect = { note -> selectedId = note.id; mainTab = MainTab.NOTES },
+                            onFavorite = ::toggleFavorite,
+                            onArchive = ::toggleArchive
+                        )
+                        MainTab.FOCUS -> Unit
                     }
-                } else {
-                    DesktopNotesHome(
-                        notes = visibleNotes,
-                        allNotes = notes,
-                        allTags = allTags,
-                        activeFilter = activeFilter,
-                        selectedTag = selectedTag,
-                        selectedId = selectedId,
-                        selectedNote = selectedNote,
-                        query = query,
-                        darkTheme = darkTheme,
-                        onQueryChange = { query = it },
-                        onFilter = ::changeFilter,
-                        onTag = ::chooseTag,
-                        onNew = { createNote() },
-                        onAddTag = { showTagDialog = true },
-                        onSelect = { selectedId = it.id },
-                        onChange = ::updateNote,
-                        onFavorite = ::toggleFavorite,
-                        onArchive = ::toggleArchive,
-                        onDelete = ::deleteNote,
-                        onTheme = {
-                            darkTheme = !darkTheme
-                            preferences.edit { putBoolean("dark_theme", darkTheme) }
-                        }
-                    )
                 }
+            }
+            if (loaded && !showMobileEditor && mainTab != MainTab.FOCUS && (compact || mainTab != MainTab.NOTES)) {
+                RootNavigationBar(
+                    selected = mainTab,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    onSelect = { mainTab = it }
+                )
             }
             SnackbarHost(
                 hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 18.dp, start = 18.dp, end = 18.dp)
+                modifier = Modifier.align(Alignment.BottomCenter).padding(
+                    bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + if (compact && mainTab != MainTab.FOCUS && !showMobileEditor) 88.dp else 18.dp,
+                    start = 18.dp,
+                    end = 18.dp
+                )
             )
             if (showTagDialog) {
                 AddTagDialog(
@@ -518,7 +574,7 @@ private fun PhoneNotesHome(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentPadding = PaddingValues(start = 15.dp, end = 15.dp, top = 3.dp, bottom = 96.dp),
+                    contentPadding = PaddingValues(start = 15.dp, end = 15.dp, top = 3.dp, bottom = 170.dp),
                     verticalArrangement = Arrangement.spacedBy(9.dp)
                 ) {
                     items(notes, key = { it.id }) { note ->
@@ -537,7 +593,7 @@ private fun PhoneNotesHome(
         }
         androidx.compose.material3.ExtendedFloatingActionButton(
             onClick = onNew,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(18.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 84.dp),
             shape = RoundedCornerShape(19.dp),
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -568,7 +624,8 @@ private fun DesktopNotesHome(
     onFavorite: (Note) -> Unit,
     onArchive: (Note) -> Unit,
     onDelete: (Note) -> Unit,
-    onTheme: () -> Unit
+    onTheme: () -> Unit,
+    onFocus: () -> Unit
 ) {
     Row(Modifier.fillMaxSize()) {
         SideNavigation(
@@ -592,6 +649,9 @@ private fun DesktopNotesHome(
                 Spacer(Modifier.weight(1f))
                 SearchField(query = query, onQueryChange = onQueryChange, modifier = Modifier.width(245.dp))
                 Spacer(Modifier.width(9.dp))
+                IconButton(onClick = onFocus) {
+                    Icon(Icons.Default.Timer, contentDescription = "打开专注")
+                }
                 IconButton(onClick = onTheme) {
                     Icon(if (darkTheme) Icons.Default.LightMode else Icons.Default.DarkMode, contentDescription = "切换主题")
                 }
@@ -1197,4 +1257,180 @@ private fun selectedTagForHeader(filter: NoteFilter): String = when (filter) {
     NoteFilter.ALL -> "全部笔记"
     NoteFilter.FAVORITES -> "我喜欢的"
     NoteFilter.ARCHIVE -> "归档"
+}
+
+
+@Composable
+private fun RootNavigationBar(
+    selected: MainTab,
+    modifier: Modifier = Modifier,
+    onSelect: (MainTab) -> Unit
+) {
+    val shape = RoundedCornerShape(24.dp)
+    Surface(
+        modifier = modifier
+            .widthIn(max = 480.dp)
+            .fillMaxWidth()
+            .padding(
+                start = 12.dp,
+                end = 12.dp,
+                top = 9.dp,
+                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 9.dp
+            )
+            .height(67.dp)
+            .shadow(12.dp, shape),
+        shape = shape,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = .96f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .65f)),
+        tonalElevation = 4.dp
+    ) {
+        Row(Modifier.fillMaxSize().padding(horizontal = 5.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            MainTab.entries.forEach { tab ->
+                val active = selected == tab
+                val icon = when (tab) {
+                    MainTab.NOTES -> Icons.Default.Description
+                    MainTab.TAGS -> Icons.AutoMirrored.Filled.Label
+                    MainTab.TIMELINE -> Icons.Default.CalendarMonth
+                    MainTab.FOCUS -> Icons.Default.Timer
+                }
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxHeight().clip(CircleShape)
+                        .clickable { onSelect(tab) }
+                        .padding(vertical = 2.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = if (active) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
+                    ) {
+                        Icon(
+                            icon,
+                            contentDescription = tab.label,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 3.dp).size(19.dp),
+                            tint = if (active) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        tab.label,
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal),
+                        color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TagExplorePage(
+    tags: List<String>,
+    notes: List<Note>,
+    selectedTag: String?,
+    onAddTag: () -> Unit,
+    onTag: (String) -> Unit
+) {
+    Column(Modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 19.dp, end = 13.dp, top = 17.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BrandLockup(compact = true)
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = onAddTag) { Icon(Icons.Default.Add, contentDescription = "新建标签") }
+        }
+        Text("把相近的想法，放在一起。", modifier = Modifier.padding(horizontal = 20.dp), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Text("用标签整理生活里的小片段", modifier = Modifier.padding(start = 20.dp, top = 4.dp, bottom = 14.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (tags.isEmpty()) {
+            EmptyNotesState(Modifier.fillMaxSize(), NoteFilter.ALL)
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 15.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                items(tags, key = { it }) { tag ->
+                    val related = notes.filter { tag in it.tags }
+                    val accent = NoteAccents[(tags.indexOf(tag)).mod(NoteAccents.size)]
+                    Card(
+                        onClick = { onTag(tag) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(19.dp),
+                        colors = CardDefaults.cardColors(containerColor = if (selectedTag == tag) MaterialTheme.colorScheme.primaryContainer.copy(alpha = .72f) else MaterialTheme.colorScheme.surface.copy(alpha = .82f)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f))
+                    ) {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)).background(accent.copy(alpha = .17f)), contentAlignment = Alignment.Center) {
+                                Text("#", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = accent)
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(tag, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                                Text(related.firstOrNull()?.title?.ifBlank { "无标题笔记" } ?: "从一个新想法开始", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                            Text("${related.size} 篇", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+                item { Spacer(Modifier.height(100.dp)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimelinePage(
+    notes: List<Note>,
+    darkTheme: Boolean,
+    onSelect: (Note) -> Unit,
+    onFavorite: (Note) -> Unit = {},
+    onArchive: (Note) -> Unit = {}
+) {
+    val groups = remember(notes) {
+        notes.sortedByDescending { it.updatedAt }.groupBy { shortTime(it.updatedAt) }.toList()
+    }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(todayText(), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp, fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("时间线", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+            }
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .72f)) {
+                Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(11.dp).size(20.dp))
+            }
+        }
+        Text("每一篇，都留住了当时的自己。", modifier = Modifier.padding(start = 20.dp, bottom = 12.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (notes.isEmpty()) {
+            EmptyNotesState(Modifier.fillMaxSize(), NoteFilter.ALL)
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 15.dp, end = 15.dp, top = 2.dp, bottom = 110.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(groups, key = { it.first }) { (day, dayNotes) ->
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(7.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+                            Spacer(Modifier.width(8.dp))
+                            Text(day, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+                            Spacer(Modifier.width(8.dp))
+                            HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .6f))
+                        }
+                        dayNotes.forEach { note ->
+                            NoteCard(
+                                note = note,
+                                selected = false,
+                                darkTheme = darkTheme,
+                                onClick = { onSelect(note) },
+                                onFavorite = { onFavorite(note) },
+                                onArchive = { onArchive(note) },
+                                compact = true
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
