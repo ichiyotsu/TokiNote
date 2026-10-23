@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 val releaseVersionName: String = System.getenv("VERSION_NAME") ?: "1.0"
 val releaseVersionCode: Int = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
 val releaseKeystore: String? = System.getenv("KEYSTORE_FILE")
+val compileSdkVersion: Int = System.getenv("COMPILE_SDK")?.toIntOrNull() ?: 37
+val targetSdkVersion: Int = System.getenv("TARGET_SDK")?.toIntOrNull() ?: compileSdkVersion
 
 plugins {
     alias(libs.plugins.android.application)
@@ -11,12 +13,12 @@ plugins {
 
 android {
     namespace = "com.tokinote.app"
-    compileSdk = 37
+    compileSdk = compileSdkVersion
 
     defaultConfig {
         applicationId = "com.tokinote.app"
         minSdk = 26
-        targetSdk = 37
+        targetSdk = targetSdkVersion
         versionCode = releaseVersionCode
         versionName = releaseVersionName
     }

@@ -31,17 +31,19 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept licenses
-        run: yes | sdkmanager --licenses || true
-
       - name: Provision SDK packages
         run: |
-          sdkmanager "platforms;android-37.0" "build-tools;36.0.0" \
-            || sdkmanager "platforms;android-37" "build-tools;36.0.0" \
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platforms;android-37.0" "build-tools;36.0.0" > /dev/null 2>&1 \
+            || sdkmanager "platforms;android-37" "build-tools;36.0.0" > /dev/null 2>&1 \
             || true
+          if [ -d "$ANDROID_HOME/platforms/android-37" ] || [ -d "$ANDROID_HOME/platforms/android-37.0" ]; then
+            SDK=37
+          else
+            SDK=36
+          fi
+          echo "COMPILE_SDK=$SDK" >> "$GITHUB_ENV"
+          echo "TARGET_SDK=$SDK" >> "$GITHUB_ENV"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -65,7 +67,7 @@ jobs:
           if [ ! -f "$NOTES" ]; then
             echo "TokiNote ${VERSION_NAME}" > /tmp/notes.md
             echo "" >> /tmp/notes.md
-            echo "本次发布包含若干修复与改进。" >> /tmp/notes.md
+            echo "This release contains fixes and improvements." >> /tmp/notes.md
             NOTES=/tmp/notes.md
           fi
           echo "NOTES_FILE=$NOTES" >> "$GITHUB_ENV"
