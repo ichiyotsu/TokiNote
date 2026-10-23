@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-val releaseVersionName: String = System.getenv("VERSION_NAME") ?: "0.1.0"
+val releaseVersionName: String = System.getenv("VERSION_NAME") ?: "0.2.0"
 val releaseVersionCode: Int = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
 val releaseKeystore: String? = System.getenv("KEYSTORE_FILE")
 val compileSdkVersion: Int = System.getenv("COMPILE_SDK")?.toIntOrNull() ?: 37
