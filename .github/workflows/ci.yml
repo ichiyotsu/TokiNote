@@ -33,12 +33,15 @@ jobs:
           echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
           ls "$SDK_ROOT/platforms"
 
-      # 用仓库里的 wrapper（9.6.0），避免依赖 runner 预装的 Gradle 版本。
+      # runner 上 downloads.gradle.org 会拒绝连接，wrapper 拉不到 9.6.0，直接用预装 Gradle（9.8.1）。
+      - name: Verify Gradle
+        run: gradle --version
+
       - name: Unit tests
-        run: bash ./gradlew testDebugUnitTest --no-daemon --stacktrace
+        run: gradle testDebugUnitTest --no-daemon --stacktrace
 
       - name: Assemble debug APK
-        run: bash ./gradlew assembleDebug --no-daemon --stacktrace
+        run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
