@@ -403,7 +403,7 @@ private fun MediaStrip(
                         .align(Alignment.TopEnd)
                         .padding(2.dp)
                         .size(24.dp)
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f), CircleShape),
+                        
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,

@@ -451,8 +451,34 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         }
     }
 
+    if (downloading) {
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = {},
+            properties = androidx.compose.ui.window.DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+            ),
+        ) {
+            androidx.compose.material3.Surface(
+                color = androidx.compose.ui.graphics.Color(0xFF141414),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                Column(Modifier.padding(horizontal = 24.dp, vertical = 48.dp)) {
+                    Text(
+                        text = stringResource(R.string.update_in_progress),
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = androidx.compose.ui.graphics.Color.White,
+                    )
+                    Spacer(Modifier.height(24.dp))
+                    WavyProgress(progress = progress / 100f)
+                }
+            }
+        }
+    }
+
     val currentRelease = release
-    if (currentRelease != null) {
+    if (currentRelease != null && !downloading) {
         AlertDialog(
             onDismissRequest = { if (!downloading) release = null },
             icon = { Icon(Icons.Filled.SystemUpdate, contentDescription = null) },
@@ -561,3 +587,41 @@ private fun SettingSwitch(
 private fun appVersionName(context: Context): String = runCatching {
     context.packageManager.getPackageInfo(context.packageName, 0).versionName
 }.getOrNull() ?: "0.1.0"
+
+@Composable
+private fun WavyProgress(progress: Float) {
+    androidx.compose.foundation.Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(18.dp),
+    ) {
+        val stroke = 6.dp.toPx()
+        val amplitude = 4.dp.toPx()
+        val y = size.height / 2f
+        drawRoundRect(
+            color = androidx.compose.ui.graphics.Color(0x33FFFFFF),
+            topLeft = androidx.compose.ui.geometry.Offset(0f, y - stroke / 2f),
+            size = androidx.compose.ui.geometry.Size(size.width, stroke),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(stroke / 2f),
+        )
+        val end = size.width * progress.coerceIn(0f, 1f)
+        if (end > 0f) {
+            val path = androidx.compose.ui.graphics.Path()
+            var x = 0f
+            path.moveTo(0f, y)
+            while (x <= end) {
+                val phase = (x / (18.dp.toPx())) * 2f * Math.PI
+                path.lineTo(x, y + (kotlin.math.sin(phase).toFloat() * amplitude))
+                x += 2.dp.toPx()
+            }
+            drawPath(
+                path = path,
+                color = androidx.compose.ui.graphics.Color(0xFFCFE4FF),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                    width = stroke,
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                ),
+            )
+        }
+    }
+}

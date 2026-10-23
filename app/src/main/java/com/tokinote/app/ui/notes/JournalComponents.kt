@@ -302,11 +302,11 @@ fun JournalTabs(selected: JournalTab, onSelect: (JournalTab) -> Unit) {
     ) {
         JournalTab.entries.forEach { tab ->
             val active = tab == selected
-            Row(
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(46.dp)
-                    .clip(CircleShape)
+                    .height(44.dp)
+                    .clip(if (active) CircleShape else RoundedCornerShape(14.dp))
                     .background(
                         if (active) {
                             MaterialTheme.colorScheme.primary
@@ -315,24 +315,8 @@ fun JournalTabs(selected: JournalTab, onSelect: (JournalTab) -> Unit) {
                         },
                     )
                     .clickable { onSelect(tab) },
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    imageVector = when (tab) {
-                        JournalTab.Journal -> Icons.Filled.StickyNote2
-                        JournalTab.Album -> Icons.Filled.Photo
-                        JournalTab.Stats -> Icons.Filled.BarChart
-                    },
-                    contentDescription = null,
-                    tint = if (active) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    modifier = Modifier.size(17.dp),
-                )
-                Spacer(Modifier.width(6.dp))
                 Text(
                     text = stringResource(tab.labelRes),
                     style = MaterialTheme.typography.labelLarge,
@@ -345,8 +329,7 @@ fun JournalTabs(selected: JournalTab, onSelect: (JournalTab) -> Unit) {
             }
         }
     }
-}
-@Composable
+}@Composable
 fun DayHeader(date: LocalDate, count: Int) {
     Row(
         modifier = Modifier
