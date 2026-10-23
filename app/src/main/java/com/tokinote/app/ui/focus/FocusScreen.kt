@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -137,28 +138,6 @@ fun FocusScreen(
                                 color = colorScheme.onSurfaceVariant,
                             )
                         }
-                        Spacer(Modifier.height(12.dp))
-                        val toggleInteraction = remember { MutableInteractionSource() }
-                        Surface(
-                            onClick = onToggle,
-                            shape = CircleShape,
-                            color = accent,
-                            contentColor = onAccent,
-                            interactionSource = toggleInteraction,
-                            modifier = Modifier
-                                .size(80.dp)
-                                .pressScale(toggleInteraction, pressedScale = 0.9f),
-                        ) {
-                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = if (state.running) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                                    contentDescription = stringResource(
-                                        if (state.running) R.string.focus_pause else R.string.focus_play,
-                                    ),
-                                    modifier = Modifier.size(36.dp),
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -169,6 +148,13 @@ fun FocusScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                FocusAction(
+                    icon = if (state.running) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    label = stringResource(if (state.running) R.string.focus_pause else R.string.focus_play),
+                    container = accent,
+                    content = onAccent,
+                    onClick = onToggle,
+                )
                 FocusAction(
                     icon = Icons.Filled.Refresh,
                     label = stringResource(R.string.focus_reset),
@@ -255,13 +241,13 @@ private fun FocusAction(
         interactionSource = interaction,
         modifier = Modifier.pressScale(interaction, pressedScale = 0.95f),
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Box(
+            modifier = Modifier
+                .height(56.dp)
+                .width(56.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.height(4.dp))
-            Text(text = label, style = MaterialTheme.typography.labelSmall)
+            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(22.dp))
         }
     }
 }

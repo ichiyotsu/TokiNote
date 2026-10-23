@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -110,6 +111,7 @@ fun MediaViewerScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .align(Alignment.TopCenter),
             verticalAlignment = Alignment.CenterVertically,
@@ -130,9 +132,9 @@ fun MediaViewerScreen(
         }
 
         Surface(
-            shape = RoundedCornerShape(30.dp),
-            color = Color(0xE62A2A2A),
-            contentColor = Color.White,
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
@@ -143,16 +145,16 @@ fun MediaViewerScreen(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ViewerAction(Icons.Filled.Download, stringResource(R.string.album_download)) {
+                ViewerAction(Icons.Filled.Download, stringResource(R.string.album_download_short)) {
                     val saved = saveToGallery(context, currentPath)
                     message = context.getString(
                         if (saved) R.string.album_downloaded else R.string.update_failed,
                     )
                 }
-                ViewerAction(Icons.Filled.OpenInNew, stringResource(R.string.album_locate)) {
+                ViewerAction(Icons.Filled.OpenInNew, stringResource(R.string.album_locate_short)) {
                     onOpenNote(note.id)
                 }
-                ViewerAction(Icons.Filled.Info, stringResource(R.string.album_info)) {
+                ViewerAction(Icons.Filled.Info, stringResource(R.string.album_info_short)) {
                     showInfo = true
                 }
             }

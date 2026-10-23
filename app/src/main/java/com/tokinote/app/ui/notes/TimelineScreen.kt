@@ -52,19 +52,14 @@ fun TimelineScreen(
     onOpenNote: (String) -> Unit,
     onOpenCalendar: () -> Unit,
     onOpenMedia: (String, Int) -> Unit,
+    onOpenFocusStats: () -> Unit,
+    onTodoToggle: (String) -> Unit,
 ) {
-    var selectedMonthString by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
-    val selectedMonth = remember(selectedMonthString) { YearMonth.parse(selectedMonthString) }
     var tab by rememberSaveable { mutableStateOf(JournalTab.Journal) }
     var searchActive by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
 
-    val months = remember { (11 downTo 0).map { YearMonth.now().minusMonths(it.toLong()) } }
-    val monthNotes = remember(notes, selectedMonth) {
-        notes
-            .filter { YearMonth.from(it.journalDate) == selectedMonth }
-            .sortedByDescending { it.updatedAt }
-    }
+    val monthNotes = remember(notes) { notes.sortedByDescending { it.updatedAt } }
     val groups = remember(monthNotes) {
         monthNotes.groupBy { it.journalDate }.toSortedMap(compareByDescending { it })
     }
@@ -111,16 +106,6 @@ fun TimelineScreen(
                 onOpenNote = onOpenNote,
             )
         } else {
-            MonthStrip(
-                months = months,
-                selected = selectedMonth,
-                hasEntries = { month ->
-                    notes.any { YearMonth.from(it.journalDate) == month }
-                },
-                onSelect = { selectedMonthString = it.toString() },
-            )
-
-            Spacer(Modifier.height(8.dp))
             JournalTabs(selected = tab, onSelect = { tab = it })
             Spacer(Modifier.height(4.dp))
 
@@ -131,12 +116,22 @@ fun TimelineScreen(
                         showTime = showTime,
                         contentPadding = contentPadding,
                         onOpenNote = onOpenNote,
+                        onTodoToggle = onTodoToggle,
                     )
 
                     JournalTab.Album -> AlbumTabContent(
                         items = album,
                         contentPadding = contentPadding,
                         onOpenMedia = onOpenMedia,
+                    )
+
+                    JournalTab.Stats -> CalendarScreen(
+                        notes = notes,
+                        contentPadding = contentPadding,
+                        onBack = {},
+                        onOpenNote = onOpenNote,
+                        showHeader = false,
+                        onOpenFocusStats = onOpenFocusStats,
                     )
                 }
             }
@@ -248,6 +243,7 @@ private fun JournalTabContent(
     showTime: Boolean,
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
+    onTodoToggle: (String) -> Unit,
 ) {
     if (groups.isEmpty()) {
         EmptyMonthHint(stringResource(R.string.no_entries))
@@ -269,6 +265,7 @@ private fun JournalTabContent(
                 JournalCard(
                     note = note,
                     showTime = showTime,
+                    onToggleDone = { onTodoToggle(note.id) },
                     onClick = { onOpenNote(note.id) },
                     onLongClick = {},
                 )

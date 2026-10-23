@@ -196,6 +196,7 @@ class TokiStore(context: Context) {
         put("emoji", emoji)
         put("colorIndex", colorIndex)
         put("pinned", pinned)
+        put("done", done)
         put("labelIds", JSONArray(labelIds.sorted()))
         put("titleSize", titleSize.name)
         put("bodySize", bodySize.name)
@@ -238,6 +239,7 @@ class TokiStore(context: Context) {
         emoji = optString("emoji", "😀"),
         colorIndex = optInt("colorIndex", 0).coerceIn(0, 7),
         pinned = optBoolean("pinned", false),
+        done = optBoolean("done", false),
         labelIds = buildSet {
             val ids = optJSONArray("labelIds") ?: JSONArray()
             for (index in 0 until ids.length()) add(ids.getString(index))

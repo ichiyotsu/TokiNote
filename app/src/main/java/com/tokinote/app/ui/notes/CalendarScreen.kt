@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,12 +51,16 @@ import java.util.Locale
 
 private val calendarMonthFormatter = DateTimeFormatter.ofPattern("yyyy年M月", Locale.CHINA)
 
+private enum class StatsScope { Day, Week, Month, Year }
+
 @Composable
 fun CalendarScreen(
     notes: List<Note>,
     contentPadding: PaddingValues,
     onBack: () -> Unit,
     onOpenNote: (String) -> Unit,
+    showHeader: Boolean = true,
+    onOpenFocusStats: (() -> Unit)? = null,
 ) {
     var monthString by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     val month = remember(monthString) { YearMonth.parse(monthString) }
@@ -68,23 +73,128 @@ fun CalendarScreen(
     }
     val dayEntries = entriesByDay[selectedDay].orEmpty().sortedByDescending { it.updatedAt }
 
+    var scopeName by rememberSaveable { mutableStateOf(StatsScope.Month.name) }
+    val scope = StatsScope.valueOf(scopeName)
+    val rangeStart = remember(scope, selectedDay) {
+        when (scope) {
+            StatsScope.Day -> selectedDay
+            StatsScope.Week -> selectedDay.minusDays((selectedDay.dayOfWeek.value - 1).toLong())
+            StatsScope.Month -> selectedDay.withDayOfMonth(1)
+            StatsScope.Year -> selectedDay.withDayOfYear(1)
+        }
+    }
+    val rangeEnd = remember(scope, selectedDay) {
+        when (scope) {
+            StatsScope.Day -> selectedDay
+            StatsScope.Week -> rangeStart.plusDays(6)
+            StatsScope.Month -> rangeStart.plusMonths(1).minusDays(1)
+            StatsScope.Year -> rangeStart.plusYears(1).minusDays(1)
+        }
+    }
+    val rangeNotes = notes.filter { it.journalDate in rangeStart..rangeEnd }
+    val rangeImages = rangeNotes.sumOf { it.media.size }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding),
     ) {
-        ExpressiveTopBar(
-            title = stringResource(R.string.calendar_title),
-            alignStart = true,
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.action_back),
+        if (showHeader) {
+            ExpressiveTopBar(
+                title = stringResource(R.string.calendar_title),
+                alignStart = true,
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back),
+                        )
+                    }
+                },
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            StatsScope.entries.forEach { item ->
+                val selected = item == scope
+                Surface(
+                    onClick = { scopeName = item.name },
+                    shape = CircleShape,
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    },
+                    contentColor = if (selected) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        text = stringResource(
+                            when (item) {
+                                StatsScope.Day -> R.string.stats_scope_day
+                                StatsScope.Week -> R.string.stats_scope_week
+                                StatsScope.Month -> R.string.stats_scope_month
+                                StatsScope.Year -> R.string.stats_scope_year
+                            },
+                        ),
+                        style = MaterialTheme.typography.labelLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 9.dp),
                     )
                 }
-            },
-        )
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.stats_notes_count, rangeNotes.size),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Text(
+                        text = stringResource(R.string.stats_photos_count, rangeImages),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                    )
+                }
+                if (onOpenFocusStats != null) {
+                    Surface(
+                        onClick = onOpenFocusStats,
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.stats_focus_link),
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),

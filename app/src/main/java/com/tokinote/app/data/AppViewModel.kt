@@ -56,6 +56,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         updateNotes { notes -> notes.filterNot { it.id == id } }
     }
 
+    fun toggleDone(id: String) {
+        updateNotes { notes ->
+            notes.map { if (it.id == id) it.copy(done = !it.done) else it }
+        }
+    }
+
     fun togglePin(id: String) {
         updateNotes { notes ->
             notes.map { if (it.id == id) it.copy(pinned = !it.pinned, updatedAt = System.currentTimeMillis()) else it }

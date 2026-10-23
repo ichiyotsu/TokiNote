@@ -3,9 +3,7 @@ package com.tokinote.app.ui.settings
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -30,13 +27,11 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -53,7 +48,6 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.AppSettings
@@ -66,7 +60,6 @@ import com.tokinote.app.ui.components.ExpressiveTopBar
 import com.tokinote.app.ui.components.PillGroup
 import com.tokinote.app.ui.components.SegmentedColumn
 import com.tokinote.app.ui.components.SegmentedListItem
-import com.tokinote.app.ui.components.SettingsSectionTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -79,8 +72,6 @@ fun SettingsScreen(
     contentPadding: PaddingValues,
     onOpen: (SettingsPage) -> Unit,
 ) {
-    val itemCount = 3
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -92,15 +83,14 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
-            Spacer(Modifier.height(8.dp))
-
+            Spacer(Modifier.height(12.dp))
             SegmentedColumn {
                 SegmentedListItem(
                     title = stringResource(R.string.settings_appearance),
                     subtitle = stringResource(R.string.settings_appearance_sub),
                     icon = Icons.Filled.Palette,
                     index = 0,
-                    count = itemCount,
+                    count = 3,
                     onClick = { onOpen(SettingsPage.Appearance) },
                     trailing = { Chevron() },
                 )
@@ -109,7 +99,7 @@ fun SettingsScreen(
                     subtitle = stringResource(R.string.settings_data_sub),
                     icon = Icons.Filled.Storage,
                     index = 1,
-                    count = itemCount,
+                    count = 3,
                     onClick = { onOpen(SettingsPage.Data) },
                     trailing = { Chevron() },
                 )
@@ -118,20 +108,11 @@ fun SettingsScreen(
                     subtitle = stringResource(R.string.settings_about_sub, appVersionName(LocalContext.current)),
                     icon = Icons.Filled.Info,
                     index = 2,
-                    count = itemCount,
+                    count = 3,
                     onClick = { onOpen(SettingsPage.About) },
                     trailing = { Chevron() },
                 )
             }
-
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = "${stringResource(R.string.app_name)} · ${stringResource(R.string.notes_count, noteCount)}",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -197,7 +178,6 @@ fun AppearanceSettings(
                 selected = settings.themeMode,
                 onSelect = { mode -> onUpdate { it.copy(themeMode = mode) } },
             )
-
             Spacer(Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.color_preset),
@@ -215,7 +195,6 @@ fun AppearanceSettings(
                 selected = settings.colorPreset,
                 onSelect = { preset -> onUpdate { it.copy(colorPreset = preset) } },
             )
-
             Spacer(Modifier.height(20.dp))
             SettingSwitch(
                 title = stringResource(R.string.setting_amoled),
@@ -274,14 +253,13 @@ fun DataSettings(
                 .padding(horizontal = 20.dp),
         ) {
             Spacer(Modifier.height(8.dp))
-
             SegmentedColumn {
                 SegmentedListItem(
                     title = stringResource(R.string.data_notes),
                     subtitle = null,
                     icon = Icons.Filled.Storage,
                     index = 0,
-                    count = 1,
+                    count = 3,
                     onClick = {},
                     trailing = {
                         Text(
@@ -291,16 +269,12 @@ fun DataSettings(
                         )
                     },
                 )
-            }
-
-            Spacer(Modifier.height(14.dp))
-            SegmentedColumn {
                 SegmentedListItem(
                     title = stringResource(R.string.data_export),
                     subtitle = stringResource(R.string.data_export_sub),
                     icon = Icons.Filled.Code,
-                    index = 0,
-                    count = 2,
+                    index = 1,
+                    count = 3,
                     onClick = {
                         clipboard.setText(AnnotatedString(exportJson()))
                         Toast.makeText(context, R.string.data_exported, Toast.LENGTH_SHORT).show()
@@ -311,8 +285,8 @@ fun DataSettings(
                     title = stringResource(R.string.data_clear),
                     subtitle = null,
                     icon = Icons.Filled.DeleteForever,
-                    index = 1,
-                    count = 2,
+                    index = 2,
+                    count = 3,
                     onClick = { showClearDialog = true },
                     trailing = { Chevron() },
                 )
@@ -436,22 +410,14 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))
-
             SegmentedColumn {
                 SegmentedListItem(
-                    title = stringResource(R.string.about_version_section),
+                    title = "TokiNote $version",
                     subtitle = null,
                     icon = Icons.Filled.Info,
                     index = 0,
                     count = 3,
                     onClick = {},
-                    trailing = {
-                        Text(
-                            text = version,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    },
                 )
                 SegmentedListItem(
                     title = stringResource(R.string.about_check_update),
@@ -554,22 +520,20 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     }
 }
 
-/** Release notes 是 Markdown；这里只做最小清理，让正文在弹框里读起来不刺眼。 */
 private fun cleanReleaseNotes(raw: String): String = raw
     .replace(Regex("(?m)^#{1,6}\\s*"), "")
     .replace(Regex("\\*\\*(.+?)\\*\\*"), "$1")
     .replace(Regex("(?m)^[-*]\\s+"), "· ")
     .trim()
 
-private fun openGitHub(context: Context) {    runCatching {
+private fun openGitHub(context: Context) {
+    runCatching {
         context.startActivity(
             Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ichiyotsu/TokiNote"))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
     }
 }
-
-/* ----------------------------- building blocks ----------------------------- */
 
 @Composable
 private fun SettingSwitch(
@@ -596,10 +560,4 @@ private fun SettingSwitch(
 
 private fun appVersionName(context: Context): String = runCatching {
     context.packageManager.getPackageInfo(context.packageName, 0).versionName
-}.getOrNull() ?: "1.0"
-
-@Suppress("unused")
-private fun appVersionCode(context: Context): Long = runCatching {
-    val info = context.packageManager.getPackageInfo(context.packageName, 0)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else info.versionCode.toLong()
-}.getOrDefault(0L)
+}.getOrNull() ?: "0.1.0"

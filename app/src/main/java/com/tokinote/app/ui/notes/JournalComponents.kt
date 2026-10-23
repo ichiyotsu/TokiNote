@@ -70,6 +70,7 @@ import kotlinx.coroutines.withContext
 enum class JournalTab(val labelRes: Int) {
     Journal(R.string.tab_journal),
     Album(R.string.tab_album),
+    Stats(R.string.tab_stats),
 }
 
 private val dayFormatter = DateTimeFormatter.ofPattern("M月d日", Locale.CHINA)
@@ -373,6 +374,7 @@ fun JournalCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     showTime: Boolean = true,
+    onToggleDone: (() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(24.dp)
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
@@ -391,12 +393,25 @@ fun JournalCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
+                if (onToggleDone != null) {
+                    androidx.compose.material3.Checkbox(
+                        checked = note.done,
+                        onCheckedChange = { onToggleDone() },
+                        modifier = Modifier.padding(end = 4.dp),
+                    )
+                }
                 EmojiBadge(note.emoji)
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = note.title.ifBlank { stringResource(R.string.note_untitled) },
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            textDecoration = if (note.done) {
+                                androidx.compose.ui.text.style.TextDecoration.LineThrough
+                            } else {
+                                null
+                            },
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,

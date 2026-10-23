@@ -99,7 +99,7 @@
     <string name="about_body">TokiNote 是一个本地优先的笔记与专注应用。所有数据都保存在设备本地，不需要网络。</string>
     <string name="about_inspired">设计语言以 Tomato（nsh07）为基准，遵循 Material 3 Expressive。</string>
 
-    <string name="tab_journal">日志</string>
+    <string name="tab_journal">笔记</string>
     <string name="tab_album">相册</string>
     <string name="tab_map">地图</string>
     <string name="tab_files">文件</string>
@@ -119,7 +119,7 @@
     <string name="media_empty">这个月还没有图片</string>
     <string name="files_empty">这个月还没有文件</string>
     <string name="map_empty">还没有带位置的日记</string>
-    <string name="calendar_title">日历</string>
+    <string name="calendar_title">统计</string>
     <string name="calendar_entries">%1$d 条日记</string>
     <string name="entry_count">%1$d 条</string>
     <string name="no_entries">这个月还没有日记</string>
@@ -230,4 +230,15 @@
     <string name="color_orange">暖橙</string>
     <string name="about_tagline">基于 Material Design 3 Expressive 设计</string>
     <string name="data_backup_title">备份</string>
+    <string name="tab_stats">统计</string>
+    <string name="stats_scope_day">日</string>
+    <string name="stats_scope_week">周</string>
+    <string name="stats_scope_month">月</string>
+    <string name="stats_scope_year">年</string>
+    <string name="stats_notes_count">%1$d 条笔记</string>
+    <string name="stats_photos_count">%1$d 张图片</string>
+    <string name="stats_focus_link">专注统计</string>
+    <string name="album_download_short">下载</string>
+    <string name="album_locate_short">定位</string>
+    <string name="album_info_short">信息</string>
 </resources>

@@ -72,16 +72,13 @@ fun SegmentedListItem(
     ) {
         if (icon != null) {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier.size(40.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(21.dp),
                 )
             }

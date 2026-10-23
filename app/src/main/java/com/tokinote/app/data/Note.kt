@@ -43,6 +43,7 @@ data class Note(
     val emoji: String = "😀",
     val colorIndex: Int = 0,
     val pinned: Boolean = false,
+    val done: Boolean = false,
     val labelIds: Set<String> = emptySet(),
     val titleSize: TextSize = TextSize.Medium,
     val bodySize: TextSize = TextSize.Medium,
