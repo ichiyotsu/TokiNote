@@ -38,8 +38,21 @@ jobs:
       - name: Verify Gradle
         run: gradle --version
 
+      - name: Probe Google Maven
+        run: |
+          P="com/android/application/com.android.application.gradle.plugin/9.4.1/com.android.application.gradle.plugin-9.4.1.pom"
+          code=$(curl -s -o /tmp/agp.pom -w '%{http_code}' --max-time 25 "https://dl.google.com/dl/android/maven2/$P" || true)
+          echo "google GET=$code size=$(wc -c < /tmp/agp.pom 2>/dev/null || echo 0)"
+          code2=$(curl -s -o /tmp/agp2.pom -w '%{http_code}' --max-time 25 "https://maven.aliyun.com/repository/google/$P" || true)
+          echo "aliyun GET=$code2 size=$(wc -c < /tmp/agp2.pom 2>/dev/null || echo 0)"
+          D="com/android/tools/build/gradle/9.4.1/gradle-9.4.1.pom"
+          code3=$(curl -s -o /tmp/agp3.pom -w '%{http_code}' --max-time 25 "https://dl.google.com/dl/android/maven2/$D" || true)
+          echo "google-impl GET=$code3 size=$(wc -c < /tmp/agp3.pom 2>/dev/null || echo 0)"
+          echo "--- proxy env ---"
+          env | grep -i proxy || true
+
       - name: Unit tests
-        run: gradle testDebugUnitTest --no-daemon --stacktrace
+        run: gradle testDebugUnitTest --no-daemon --stacktrace --info
 
       - name: Assemble debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
