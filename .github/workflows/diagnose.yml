@@ -1,0 +1,27 @@
+name: Diagnose
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gradle
+        run: gradle --version || true
+      - name: Java
+        run: java -version || true
+      - name: Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms" || true
+          ls "$ANDROID_HOME/build-tools" || true
+      - name: Gradle CDN reachability
+        run: |
+          curl -sSI --max-time 20 https://services.gradle.org/distributions/ | head -5 || true
+          curl -sSI --max-time 20 https://downloads.gradle.org/distributions/gradle-9.6.0-bin.zip | head -5 || true
+          curl -sSI --max-time 20 https://downloads.gradle.org/distributions/gradle-9.4.0-bin.zip | head -5 || true
+      - name: Maven reachability
+        run: |
+          curl -sSI --max-time 20 https://dl.google.com/dl/android/maven2/ | head -3 || true
+          curl -sSI --max-time 20 https://repo.maven.apache.org/maven2/ | head -3 || true
