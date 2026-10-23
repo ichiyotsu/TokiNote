@@ -30,6 +30,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.MoreVert
@@ -232,6 +233,64 @@ fun JournalEditorScreen(
                 )
             }
 
+            if (note.checklist.isNotEmpty()) {
+                Spacer(Modifier.height(14.dp))
+                note.checklist.forEachIndexed { index, item ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.Checkbox(
+                            checked = item.done,
+                            onCheckedChange = { checked ->
+                                val list = note.checklist.toMutableList()
+                                list[index] = item.copy(done = checked)
+                                onChange(note.copy(checklist = list))
+                            },
+                        )
+                        BasicTextField(
+                            value = item.text,
+                            onValueChange = { text ->
+                                val list = note.checklist.toMutableList()
+                                list[index] = item.copy(text = text)
+                                onChange(note.copy(checklist = list))
+                            },
+                            singleLine = true,
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
+                            ),
+                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                            modifier = Modifier.weight(1f),
+                            decorationBox = { inner ->
+                                if (item.text.isEmpty()) {
+                                    Text(
+                                        text = stringResource(R.string.checklist_empty_item),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    )
+                                }
+                                inner()
+                            },
+                        )
+                        IconButton(
+                            onClick = {
+                                onChange(note.copy(checklist = note.checklist.filterIndexed { i, _ -> i != index }))
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = stringResource(R.string.action_remove),
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                }
+                TextButton(
+                    onClick = { onChange(note.copy(checklist = note.checklist + com.tokinote.app.data.ChecklistItem())) },
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.checklist_add))
+                }
+            }
+
             Spacer(Modifier.height(14.dp))
             BasicTextField(
                 value = note.body,
@@ -273,6 +332,9 @@ fun JournalEditorScreen(
             EditorTool(Icons.Filled.FormatSize, stringResource(R.string.action_format)) { showFormat = true }
             EditorTool(Icons.Filled.Photo, stringResource(R.string.attach_photo)) {
                 imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }
+            EditorTool(Icons.Filled.Checklist, stringResource(R.string.checklist_title)) {
+                onChange(note.copy(checklist = note.checklist + com.tokinote.app.data.ChecklistItem()))
             }
             EditorTool(Icons.Filled.CalendarMonth, stringResource(R.string.editor_date_labels)) {
                 showDateLabels = true

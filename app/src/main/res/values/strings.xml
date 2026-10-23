@@ -241,4 +241,7 @@
     <string name="album_download_short">下载</string>
     <string name="album_locate_short">定位</string>
     <string name="album_info_short">信息</string>
+    <string name="checklist_empty_item">空条目</string>
+    <string name="checklist_title">清单</string>
+    <string name="checklist_add">添加条目</string>
 </resources>

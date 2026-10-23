@@ -265,7 +265,6 @@ private fun JournalTabContent(
                 JournalCard(
                     note = note,
                     showTime = showTime,
-                    onToggleDone = { onTodoToggle(note.id) },
                     onClick = { onOpenNote(note.id) },
                     onLongClick = {},
                 )

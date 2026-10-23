@@ -26,6 +26,8 @@ data class JournalFile(
     val size: Long,
 )
 
+data class ChecklistItem(val text: String = "", val done: Boolean = false)
+
 /** 日记关联的位置，坐标使用 GCJ-02（腾讯地图坐标系）。 */
 data class JournalLocation(
     val lat: Double,
@@ -44,6 +46,7 @@ data class Note(
     val colorIndex: Int = 0,
     val pinned: Boolean = false,
     val done: Boolean = false,
+    val checklist: List<ChecklistItem> = emptyList(),
     val labelIds: Set<String> = emptySet(),
     val titleSize: TextSize = TextSize.Medium,
     val bodySize: TextSize = TextSize.Medium,

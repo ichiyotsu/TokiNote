@@ -197,6 +197,14 @@ class TokiStore(context: Context) {
         put("colorIndex", colorIndex)
         put("pinned", pinned)
         put("done", done)
+        put(
+            "checklist",
+            JSONArray().apply {
+                checklist.forEach { item ->
+                    put(JSONObject().apply { put("text", item.text); put("done", item.done) })
+                }
+            },
+        )
         put("labelIds", JSONArray(labelIds.sorted()))
         put("titleSize", titleSize.name)
         put("bodySize", bodySize.name)
@@ -240,6 +248,13 @@ class TokiStore(context: Context) {
         colorIndex = optInt("colorIndex", 0).coerceIn(0, 7),
         pinned = optBoolean("pinned", false),
         done = optBoolean("done", false),
+        checklist = buildList {
+            val array = optJSONArray("checklist") ?: JSONArray()
+            for (i in 0 until array.length()) {
+                val item = array.getJSONObject(i)
+                add(ChecklistItem(item.optString("text", ""), item.optBoolean("done", false)))
+            }
+        },
         labelIds = buildSet {
             val ids = optJSONArray("labelIds") ?: JSONArray()
             for (index in 0 until ids.length()) add(ids.getString(index))

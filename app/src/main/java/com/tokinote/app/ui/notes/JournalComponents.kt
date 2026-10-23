@@ -28,6 +28,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PushPin
@@ -294,39 +296,43 @@ fun JournalTabs(selected: JournalTab, onSelect: (JournalTab) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+            .padding(horizontal = 16.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         JournalTab.entries.forEach { tab ->
             val active = tab == selected
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+            val container by animateColorAsState(
+                targetValue = if (active) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+                },
+                label = "tabContainer",
+            )
+            val content by animateColorAsState(
+                targetValue = if (active) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                label = "tabContent",
+            )
+            Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
+                    .weight(1f)
+                    .clip(CircleShape)
+                    .background(container)
                     .clickable { onSelect(tab) }
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(tab.labelRes),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (active) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-                Spacer(Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .height(3.dp)
-                        .width(
-                            animateDpAsState(
-                                targetValue = if (active) 22.dp else 0.dp,
-                                label = "tabIndicator",
-                            ).value,
-                        )
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = content,
                 )
             }
         }
@@ -374,7 +380,6 @@ fun JournalCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     showTime: Boolean = true,
-    onToggleDone: (() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(24.dp)
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
@@ -393,25 +398,12 @@ fun JournalCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
-                if (onToggleDone != null) {
-                    androidx.compose.material3.Checkbox(
-                        checked = note.done,
-                        onCheckedChange = { onToggleDone() },
-                        modifier = Modifier.padding(end = 4.dp),
-                    )
-                }
                 EmojiBadge(note.emoji)
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = note.title.ifBlank { stringResource(R.string.note_untitled) },
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            textDecoration = if (note.done) {
-                                androidx.compose.ui.text.style.TextDecoration.LineThrough
-                            } else {
-                                null
-                            },
-                        ),
+                        style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -465,6 +457,39 @@ fun JournalCard(
                     if (note.media.size == 1) {
                         Spacer(Modifier.weight(2f))
                     }
+                }
+            }
+
+            if (note.checklist.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                note.checklist.forEach { item ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (item.done) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                            contentDescription = null,
+                            tint = if (item.done) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = item.text.ifBlank { stringResource(R.string.checklist_empty_item) },
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                textDecoration = if (item.done) {
+                                    androidx.compose.ui.text.style.TextDecoration.LineThrough
+                                } else {
+                                    null
+                                },
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
                 }
             }
 
