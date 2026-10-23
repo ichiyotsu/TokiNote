@@ -112,7 +112,7 @@ fun TimelineScreen(
             Box(modifier = Modifier.weight(1f)) {
                 when (tab) {
                     JournalTab.Journal -> JournalTabContent(
-                        groups = groups,
+                        notes = monthNotes,
                         showTime = showTime,
                         contentPadding = contentPadding,
                         onOpenNote = onOpenNote,
@@ -239,16 +239,19 @@ private fun SearchHint(text: String) {
 
 @Composable
 private fun JournalTabContent(
-    groups: Map<LocalDate, List<Note>>,
+    notes: List<Note>,
     showTime: Boolean,
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
     onTodoToggle: (String) -> Unit,
 ) {
-    if (groups.isEmpty()) {
+    if (notes.isEmpty()) {
         EmptyMonthHint(stringResource(R.string.no_entries))
         return
     }
+    val pinned = notes.filter { it.pinned }.sortedByDescending { it.updatedAt }
+    val others = notes.filterNot { it.pinned }.sortedByDescending { it.updatedAt }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -259,9 +262,9 @@ private fun JournalTabContent(
         ),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        groups.forEach { (date, dayNotes) ->
-            item(key = "header-$date") { DayHeader(date, dayNotes.size) }
-            items(dayNotes, key = { it.id }) { note ->
+        if (pinned.isNotEmpty()) {
+            item(key = "section-pinned") { SectionLabel(stringResource(R.string.notes_pinned)) }
+            items(pinned, key = { it.id }) { note ->
                 JournalCard(
                     note = note,
                     showTime = showTime,
@@ -270,7 +273,26 @@ private fun JournalTabContent(
                 )
             }
         }
+        item(key = "section-daily") { SectionLabel(stringResource(R.string.notes_daily)) }
+        items(others, key = { it.id }) { note ->
+            JournalCard(
+                note = note,
+                showTime = showTime,
+                onClick = { onOpenNote(note.id) },
+                onLongClick = {},
+            )
+        }
     }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 2.dp),
+    )
 }
 
 @Composable
