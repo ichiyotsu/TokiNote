@@ -140,4 +140,61 @@
     <string name="zoom_out">缩小</string>
     <string name="close_search">关闭搜索</string>
     <string name="file_loading">正在解析文档…</string>
+
+    <!-- 搜索 -->
+    <string name="search_open">搜索笔记</string>
+    <string name="search_title_match">标题 %1$d</string>
+    <string name="search_body_match">正文 %1$d</string>
+    <string name="search_result_count">%1$d 条结果</string>
+    <string name="search_results_empty">没有找到「%1$s」</string>
+    <string name="search_prompt">输入关键词，搜索结果会按日期分组显示</string>
+
+    <!-- 专注总结 -->
+    <string name="focus_more">更多</string>
+    <string name="focus_summary">专注总结</string>
+    <string name="focus_summary_short">总结</string>
+    <string name="summary_this_week">本周</string>
+    <string name="summary_last_week">上周</string>
+    <string name="summary_weeks_ago">%1$d 周前</string>
+    <string name="summary_caption">完成 %1$d 段专注 · 日均 %2$s</string>
+    <string name="summary_minutes_unit">分钟</string>
+    <string name="summary_total_label">本周专注</string>
+    <string name="summary_avg_label">日均 %1$s</string>
+    <string name="summary_empty">这一周还没有专注记录</string>
+    <string name="summary_recent">最近记录</string>
+    <string name="summary_recent_empty">开始一段专注后，这里会显示记录</string>
+    <string name="summary_sessions">%1$d 段</string>
+    <string name="summary_prev_week">上一周</string>
+    <string name="summary_next_week">下一周</string>
+
+    <!-- 计时器 -->
+    <string name="timer_adjust">调整时钟</string>
+    <string name="timer_custom">自定义</string>
+    <string name="timer_custom_minutes">自定义时长</string>
+    <string name="timer_custom_sessions">自定义段数</string>
+    <string name="timer_focus_section">专注</string>
+    <string name="timer_break_section">休息</string>
+    <string name="timer_cycle_section">循环</string>
+    <string name="timer_pick_time">选择时长</string>
+    <string name="timer_pick_sessions">长休息间隔</string>
+
+    <!-- 设置 / 关于 / 更新 -->
+    <string name="setting_motion">减弱动效</string>
+    <string name="setting_motion_desc">关闭页面转场与按压缩放动画</string>
+    <string name="about_version_section">版本</string>
+    <string name="about_check_update">检查更新</string>
+    <string name="about_checking">正在检查…</string>
+    <string name="about_latest">已是最新</string>
+    <string name="about_check_failed">检查失败，点按重试</string>
+    <string name="about_links_section">链接</string>
+    <string name="about_github">GitHub 主页</string>
+    <string name="about_github_desc">github.com/ichiyotsu/TokiNote</string>
+    <string name="update_title">发现新版本 %1$s</string>
+    <string name="update_current">当前版本 %1$s</string>
+    <string name="update_download">下载安装</string>
+    <string name="update_downloading">正在下载… %1$d%%</string>
+    <string name="update_failed">下载失败，请稍后再试</string>
+    <string name="update_no_apk">这个版本没有可用的 APK</string>
+    <string name="update_permission">请先允许 TokiNote 安装未知应用</string>
+    <string name="update_installing">正在打开安装程序…</string>
 </resources>

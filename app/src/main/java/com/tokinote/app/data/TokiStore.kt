@@ -87,6 +87,7 @@ class TokiStore(context: Context) {
                 longBreakMinutes = json.optInt("longBreakMinutes", 15).coerceIn(1, 90),
                 sessionsBeforeLongBreak = json.optInt("sessionsBeforeLongBreak", 4).coerceIn(1, 12),
                 autoStartNext = json.optBoolean("autoStartNext", true),
+                reduceMotion = json.optBoolean("reduceMotion", false),
             )
         }.getOrDefault(AppSettings())
     }
@@ -101,6 +102,7 @@ class TokiStore(context: Context) {
             put("longBreakMinutes", settings.longBreakMinutes)
             put("sessionsBeforeLongBreak", settings.sessionsBeforeLongBreak)
             put("autoStartNext", settings.autoStartNext)
+            put("reduceMotion", settings.reduceMotion)
         }
         prefs.edit().putString(KEY_SETTINGS, json.toString()).apply()
     }
@@ -166,6 +168,7 @@ class TokiStore(context: Context) {
                 put("longBreakMinutes", settings.longBreakMinutes)
                 put("sessionsBeforeLongBreak", settings.sessionsBeforeLongBreak)
                 put("autoStartNext", settings.autoStartNext)
+                put("reduceMotion", settings.reduceMotion)
             })
         }.toString(2)
     }

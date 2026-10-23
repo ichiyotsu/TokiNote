@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * 居中标题的顶栏，复刻 Tomato 的 32sp 粗标题 + 副标题结构。
- * 不依赖 TopAppBar，方便完全控制排布与内边距。
+ * 顶栏，复刻 Tomato 的 32sp 粗标题 + 副标题结构。
+ * 一级页面居中，二级页面通过 [alignStart] 统一左对齐。
  */
 @Composable
 fun ExpressiveTopBar(
@@ -29,15 +29,22 @@ fun ExpressiveTopBar(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     titleColor: Color = MaterialTheme.colorScheme.onSurface,
+    alignStart: Boolean = false,
     navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
+    val alignment = if (alignStart) Alignment.CenterStart else Alignment.Center
+    val horizontal = when {
+        alignStart && navigationIcon != null -> 68.dp
+        alignStart -> 20.dp
+        else -> 64.dp
+    }
     Box(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
             .padding(horizontal = 8.dp),
-        contentAlignment = Alignment.Center,
+        contentAlignment = alignment,
     ) {
         if (navigationIcon != null) {
             Row(
@@ -49,8 +56,8 @@ fun ExpressiveTopBar(
         }
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 64.dp, vertical = 8.dp),
+            horizontalAlignment = if (alignStart) Alignment.Start else Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = horizontal, vertical = 8.dp),
         ) {
             Text(
                 text = title,
@@ -58,7 +65,7 @@ fun ExpressiveTopBar(
                 color = titleColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
+                textAlign = if (alignStart) TextAlign.Start else TextAlign.Center,
             )
             if (subtitle != null) {
                 Text(
@@ -67,7 +74,7 @@ fun ExpressiveTopBar(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
+                    textAlign = if (alignStart) TextAlign.Start else TextAlign.Center,
                 )
             }
         }

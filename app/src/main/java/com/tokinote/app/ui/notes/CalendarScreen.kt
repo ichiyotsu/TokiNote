@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.data.Note
+import com.tokinote.app.ui.components.ExpressiveTopBar
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -72,24 +73,18 @@ fun CalendarScreen(
             .fillMaxSize()
             .padding(contentPadding),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.action_back),
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            Text(
-                text = stringResource(R.string.calendar_title),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 26.sp),
-            )
-            Spacer(Modifier.weight(1f))
-            Spacer(Modifier.size(48.dp))
-        }
+        ExpressiveTopBar(
+            title = stringResource(R.string.calendar_title),
+            alignStart = true,
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.action_back),
+                    )
+                }
+            },
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),

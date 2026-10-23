@@ -14,11 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,8 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import com.tokinote.app.R
 import com.tokinote.app.data.JournalFile
 import com.tokinote.app.data.Note
@@ -44,7 +42,6 @@ fun TimelineScreen(
     notes: List<Note>,
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
-    onCreateNote: () -> Unit,
     onOpenCalendar: () -> Unit,
     onOpenFile: (JournalFile) -> Unit,
 ) {
@@ -55,37 +52,52 @@ fun TimelineScreen(
     var query by rememberSaveable { mutableStateOf("") }
 
     val months = remember { (11 downTo 0).map { YearMonth.now().minusMonths(it.toLong()) } }
-    val monthNotes = remember(notes, selectedMonth, query) {
+    val monthNotes = remember(notes, selectedMonth) {
         notes
             .filter { YearMonth.from(it.journalDate) == selectedMonth }
-            .filter { note ->
-                query.isBlank() ||
-                    note.title.contains(query, ignoreCase = true) ||
-                    note.body.contains(query, ignoreCase = true)
-            }
             .sortedByDescending { it.updatedAt }
     }
     val groups = remember(monthNotes) {
         monthNotes.groupBy { it.journalDate }.toSortedMap(compareByDescending { it })
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize().padding(top = contentPadding.calculateTopPadding())) {
-            JournalTopBar(
-                searchActive = searchActive,
-                query = query,
-                onQueryChange = { query = it },
-                onToggleSearch = {
-                    if (searchActive) {
-                        query = ""
-                        searchActive = false
-                    } else {
-                        searchActive = true
-                    }
-                },
-                onOpenCalendar = onOpenCalendar,
-            )
+    val results = remember(notes, query) {
+        if (query.isBlank()) {
+            emptyList()
+        } else {
+            notes
+                .filter {
+                    it.title.contains(query, ignoreCase = true) || it.body.contains(query, ignoreCase = true)
+                }
+                .sortedByDescending { it.updatedAt }
+        }
+    }
+    val groupedResults = remember(results) {
+        results.groupBy { it.journalDate }.toSortedMap(compareByDescending { it })
+    }
 
+    Column(modifier = Modifier.fillMaxSize().padding(top = contentPadding.calculateTopPadding())) {
+        JournalTopBar(
+            searchActive = searchActive,
+            query = query,
+            onQueryChange = { query = it },
+            onOpenSearch = { searchActive = true },
+            onCloseSearch = {
+                query = ""
+                searchActive = false
+            },
+            onOpenCalendar = onOpenCalendar,
+        )
+
+        if (searchActive) {
+            SearchResults(
+                query = query,
+                results = results,
+                groups = groupedResults,
+                contentPadding = contentPadding,
+                onOpenNote = onOpenNote,
+            )
+        } else {
             MonthStrip(
                 months = months,
                 selected = selectedMonth,
@@ -123,17 +135,106 @@ fun TimelineScreen(
             }
             Spacer(Modifier.height(2.dp))
         }
+    }
+}
 
-        ExtendedFloatingActionButton(
-            onClick = onCreateNote,
-            icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-            text = { Text(stringResource(R.string.entry_new)) },
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = contentPadding.calculateBottomPadding() + 16.dp),
+/**
+ * 搜索结果：先按「标题命中 / 正文命中」给出容器化的统计，再把结果按日期分组，
+ * 每组放进一张大圆角容器里，符合 MD3E 的分组（grouping）与容器（container）原则。
+ */
+@Composable
+private fun SearchResults(
+    query: String,
+    results: List<Note>,
+    groups: Map<LocalDate, List<Note>>,
+    contentPadding: PaddingValues,
+    onOpenNote: (String) -> Unit,
+) {
+    when {
+        query.isBlank() -> SearchHint(stringResource(R.string.search_prompt))
+        results.isEmpty() -> SearchHint(stringResource(R.string.search_results_empty, query))
+        else -> {
+            val titleHits = results.count { it.title.contains(query, ignoreCase = true) }
+            val bodyHits = results.count { it.body.contains(query, ignoreCase = true) }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 4.dp,
+                    bottom = contentPadding.calculateBottomPadding() + 120.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                item(key = "search-summary") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ResultChip(stringResource(R.string.search_result_count, results.size), emphasized = true)
+                        ResultChip(stringResource(R.string.search_title_match, titleHits))
+                        ResultChip(stringResource(R.string.search_body_match, bodyHits))
+                    }
+                }
+                groups.forEach { (date, dayNotes) ->
+                    item(key = "search-header-$date") { DayHeader(date, dayNotes.size) }
+                    item(key = "search-group-$date") {
+                        Surface(
+                            shape = RoundedCornerShape(28.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Column {
+                                dayNotes.forEachIndexed { index, note ->
+                                    if (index > 0) {
+                                        HorizontalDivider(
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                            modifier = Modifier.padding(start = 68.dp),
+                                        )
+                                    }
+                                    SearchResultRow(
+                                        note = note,
+                                        query = query,
+                                        onClick = { onOpenNote(note.id) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultChip(text: String, emphasized: Boolean = false) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = if (emphasized) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        contentColor = if (emphasized) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+        )
+    }
+}
+
+@Composable
+private fun SearchHint(text: String) {
+    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
     }
 }

@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
@@ -37,11 +38,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
@@ -53,6 +58,7 @@ import com.tokinote.app.R
 import com.tokinote.app.data.JournalFile
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.formatFileSize
+import com.tokinote.app.ui.pressScale
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -97,59 +103,121 @@ fun JournalTopBar(
     searchActive: Boolean,
     query: String,
     onQueryChange: (String) -> Unit,
-    onToggleSearch: () -> Unit,
+    onOpenSearch: () -> Unit,
+    onCloseSearch: () -> Unit,
     onOpenCalendar: () -> Unit,
 ) {
-    Box(
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(searchActive) {
+        if (searchActive) runCatching { focusRequester.requestFocus() }
+    }
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center,
+            .padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onToggleSearch, modifier = Modifier.align(Alignment.CenterStart)) {
-            Icon(
-                imageVector = if (searchActive) Icons.Filled.Close else Icons.Filled.Search,
-                contentDescription = stringResource(if (searchActive) R.string.close_search else R.string.search_hint),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
         if (searchActive) {
-            androidx.compose.foundation.text.BasicTextField(
+            IconButton(onClick = onCloseSearch) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.close_search),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            BasicTextField(
                 value = query,
                 onValueChange = onQueryChange,
                 singleLine = true,
-                textStyle = MaterialTheme.typography.titleMedium.copy(
+                textStyle = MaterialTheme.typography.titleLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface,
                 ),
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier.fillMaxWidth(0.72f),
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
                 decorationBox = { inner ->
                     if (query.isEmpty()) {
                         Text(
                             text = stringResource(R.string.search_hint),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     inner()
                 },
             )
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.action_cancel),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         } else {
             Text(
                 text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 28.sp),
+                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 30.sp, lineHeight = 34.sp),
                 color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable(onClick = onOpenSearch)
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
             )
+            Spacer(Modifier.weight(1f))
         }
 
-        IconButton(onClick = onOpenCalendar, modifier = Modifier.align(Alignment.CenterEnd)) {
+        IconButton(onClick = onOpenCalendar) {
             Icon(
                 imageVector = Icons.Filled.CalendarMonth,
                 contentDescription = stringResource(R.string.action_calendar),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+}
+
+/** 搜索结果里的一行：情绪、标题、命中片段与时间。 */
+@Composable
+fun SearchResultRow(note: Note, query: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        EmojiBadge(note.emoji, size = 40)
+        Spacer(Modifier.size(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = note.title.ifBlank { stringResource(R.string.note_untitled) },
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val snippet = note.body.trim().ifBlank { note.files.firstOrNull()?.name ?: "" }
+            if (snippet.isNotEmpty()) {
+                Spacer(Modifier.size(2.dp))
+                Text(
+                    text = snippet,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Spacer(Modifier.size(10.dp))
+        Text(
+            text = note.updatedAt.timeLabel(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -308,11 +376,17 @@ fun JournalCard(
     onLongClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(24.dp)
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .clickable(onClick = onClick),
+            .clickable(
+                interactionSource = interaction,
+                indication = androidx.compose.foundation.LocalIndication.current,
+                onClick = onClick,
+            )
+            .pressScale(interaction),
         shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {

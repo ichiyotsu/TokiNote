@@ -3,14 +3,22 @@ package com.tokinote.app.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -22,14 +30,19 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tokinote.app.R
 import com.tokinote.app.data.AppViewModel
 import com.tokinote.app.data.JournalFile
 import com.tokinote.app.ui.components.FloatingNavBar
+import com.tokinote.app.ui.components.NavActionButton
 import com.tokinote.app.ui.focus.FocusScreen
+import com.tokinote.app.ui.focus.FocusSummaryScreen
 import com.tokinote.app.ui.focus.FocusViewModel
+import com.tokinote.app.ui.focus.TimerSettingsScreen
 import com.tokinote.app.ui.map.LocationPickerScreen
 import com.tokinote.app.ui.notes.CalendarScreen
 import com.tokinote.app.ui.notes.DocumentPreviewScreen
@@ -40,7 +53,6 @@ import com.tokinote.app.ui.settings.AboutScreen
 import com.tokinote.app.ui.settings.AppearanceSettings
 import com.tokinote.app.ui.settings.DataSettings
 import com.tokinote.app.ui.settings.SettingsScreen
-import com.tokinote.app.ui.settings.TimerSettings
 
 @Composable
 fun TokiNoteApp(viewModel: AppViewModel) {
@@ -74,10 +86,12 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val current = backStack.lastOrNull() ?: Dest.Notes
     val selectedTab: Dest = when (current) {
         is Dest.SettingsDetail -> Dest.Settings
+        Dest.Timer, Dest.FocusSummary -> Dest.Focus
         is Dest.Editor, Dest.Calendar, is Dest.Preview, is Dest.MediaViewer, is Dest.LocationPicker -> Dest.Notes
         else -> current
     }
     val showNavBar = current.isTopLevel() || current is Dest.SettingsDetail
+    val motion = LocalMotionEnabled.current
 
     fun goBack() {
         val popped = backStack.removeAt(backStack.lastIndex)
@@ -95,8 +109,12 @@ fun TokiNoteApp(viewModel: AppViewModel) {
         bottomBar = {
             AnimatedVisibility(
                 visible = showNavBar,
-                enter = slideInVertically { it },
-                exit = slideOutVertically { it },
+                enter = slideInVertically(tween(if (motion) TokiMotion.standard else 0)) { it } + fadeIn(
+                    tween(if (motion) TokiMotion.standard else 0),
+                ),
+                exit = slideOutVertically(tween(if (motion) TokiMotion.quick else 0)) { it } + fadeOut(
+                    tween(if (motion) TokiMotion.quick else 0),
+                ),
             ) {
                 FloatingNavBar(
                     current = selectedTab,
@@ -107,13 +125,44 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     modifier = Modifier
                         .navigationBarsPadding()
                         .padding(bottom = 8.dp),
+                    action = if (selectedTab == Dest.Notes || selectedTab == Dest.Focus) {
+                        {
+                            NavActionFor(
+                                tab = selectedTab,
+                                onNewNote = {
+                                    val note = viewModel.createNote()
+                                    openNote(note.id)
+                                },
+                                onAdjustTimer = { backStack.add(Dest.Timer) },
+                            )
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
         },
     ) { padding ->
         AnimatedContent(
             targetState = current,
-            transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(140)) },
+            transitionSpec = {
+                if (!motion) {
+                    EnterTransition.None togetherWith ExitTransition.None
+                } else {
+                    val forward = targetState.depth() >= initialState.depth()
+                    if (forward) {
+                        (slideInHorizontally(tween(TokiMotion.expressive)) { it / 10 } +
+                            fadeIn(tween(TokiMotion.standard))) togetherWith
+                            (slideOutHorizontally(tween(TokiMotion.quick)) { -it / 10 } +
+                                fadeOut(tween(TokiMotion.quick)))
+                    } else {
+                        (fadeIn(tween(TokiMotion.standard)) +
+                            scaleIn(initialScale = 0.98f, animationSpec = tween(TokiMotion.standard))) togetherWith
+                            (slideOutHorizontally(tween(TokiMotion.quick)) { it / 10 } +
+                                fadeOut(tween(TokiMotion.quick)))
+                    }
+                }
+            },
             label = "tokinote-screen",
         ) { dest ->
             when (dest) {
@@ -121,10 +170,6 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     notes = notes,
                     contentPadding = padding,
                     onOpenNote = ::openNote,
-                    onCreateNote = {
-                        val note = viewModel.createNote()
-                        openNote(note.id)
-                    },
                     onOpenCalendar = { backStack.add(Dest.Calendar) },
                     onOpenFile = { file -> backStack.add(Dest.Preview(file.path)) },
                 )
@@ -136,7 +181,8 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     onToggle = focusViewModel::toggle,
                     onReset = focusViewModel::reset,
                     onSkip = focusViewModel::skip,
-                    onOpenTimerSettings = { backStack.add(Dest.SettingsDetail(SettingsPage.Timer)) },
+                    onOpenTimerSettings = { backStack.add(Dest.Timer) },
+                    onOpenSummary = { backStack.add(Dest.FocusSummary) },
                 )
 
                 Dest.Settings -> SettingsScreen(
@@ -181,6 +227,19 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     onOpenNote = ::openNote,
                 )
 
+                Dest.FocusSummary -> FocusSummaryScreen(
+                    sessions = sessions,
+                    contentPadding = padding,
+                    onBack = { goBack() },
+                )
+
+                Dest.Timer -> TimerSettingsScreen(
+                    settings = settings,
+                    contentPadding = padding,
+                    onBack = { goBack() },
+                    onUpdate = viewModel::updateSettings,
+                )
+
                 is Dest.Preview -> {
                     val file = notes.flatMap { it.files }.firstOrNull { it.path == dest.path }
                         ?: JournalFile(
@@ -220,13 +279,6 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                         onUpdate = viewModel::updateSettings,
                     )
 
-                    SettingsPage.Timer -> TimerSettings(
-                        settings = settings,
-                        contentPadding = padding,
-                        onBack = { goBack() },
-                        onUpdate = viewModel::updateSettings,
-                    )
-
                     SettingsPage.Data -> DataSettings(
                         noteCount = notes.size,
                         contentPadding = padding,
@@ -242,5 +294,28 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun NavActionFor(
+    tab: Dest,
+    onNewNote: () -> Unit,
+    onAdjustTimer: () -> Unit,
+) {
+    when (tab) {
+        Dest.Notes -> NavActionButton(
+            icon = Icons.Filled.Add,
+            contentDescription = stringResource(R.string.entry_new),
+            onClick = onNewNote,
+        )
+
+        Dest.Focus -> NavActionButton(
+            icon = Icons.Filled.GridView,
+            contentDescription = stringResource(R.string.timer_adjust),
+            onClick = onAdjustTimer,
+        )
+
+        else -> Unit
     }
 }

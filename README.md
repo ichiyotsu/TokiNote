@@ -3,9 +3,13 @@
 本地优先的笔记 + 专注应用。设计语言以 [Tomato](https://github.com/nsh07/Tomato) 为基准，遵循
 Material 3 Expressive：大圆角、胶囊形控件、胶囊悬浮导航栏、分段列表与 Google Sans Flex 字体。
 
-| 日志时间线 | 媒体 | 文件 |
+| 日志时间线 | 搜索结果 | 专注 |
 | --- | --- | --- |
-| ![](screenshots/journal.png) | ![](screenshots/media.png) | ![](screenshots/files.png) |
+| ![](screenshots/journal.png) | ![](screenshots/search.png) | ![](screenshots/focus.png) |
+
+| 专注总结 | 计时器设置 | 关于 |
+| --- | --- | --- |
+| ![](screenshots/focus-summary.png) | ![](screenshots/timer.png) | ![](screenshots/about.png) |
 
 | 日历 | 文档预览 | 腾讯地图 |
 | --- | --- | --- |
@@ -13,9 +17,11 @@ Material 3 Expressive：大圆角、胶囊形控件、胶囊悬浮导航栏、�
 
 ## 笔记页（参考 June）
 
-笔记页按 [June](https://github.com/DenserMeerkat/June)（GPL-3.0）的日记时间线重构，底栏仍是 TokiNote 自己的胶囊导航：
+笔记页按 [June](https://github.com/DenserMeerkat/June)（GPL-3.0）的日记时间线重构，底栏是 TokiNote 自己的胶囊导航：
 
-- 顶部：搜索、居中标题、日历入口
+- 顶部：左对齐的「TokiNote」标题（点按展开搜索）+ 日历入口
+- 搜索：标题命中 / 正文命中的结果先按类型统计，再按日期分组放进大圆角容器
+- 底部：胶囊导航 + 右侧独立「写日记」圆形按钮（FAB 并入底栏）
 - 月份条：自动滚动到当前月，有日记的月份带圆点
 - 分类页签：**日志 / 媒体 / 地图 / 文件**（原 June 的 Music 替换为 Files）
 - 日志：按天分组的卡片，含 emoji、标题、正文预览、图片拼贴、附件、位置与时间
@@ -52,19 +58,25 @@ Material 3 Expressive：大圆角、胶囊形控件、胶囊悬浮导航栏、�
 ### 专注（番茄钟，行为对齐 Tomato）
 - 专注 25 分钟 / 短休息 5 分钟 / 长休息 15 分钟，每 4 段进入长休息
 - 开始、暂停、重置、跳过；自动开始下一段
-- 圆形进度环 + 分段圆点 + “接下来”
-- 完成一段专注后记录到「今日专注」统计
-- 时长、长休息间隔、自动开始均可在设置中调整
+- 「波浪断点」计时环：平滑轨道 + 波浪粗线进度，中心暂停按钮
+- ⋮ 菜单进入**专注总结**：本周大数字、7 天柱状图、最近记录
+- 计时设置：三选一胶囊按钮 + 「自定义」（调用系统时间选择器）
+- 底栏右侧按钮在此页变为「调整时钟」，直达计时设置
+
+### 应用内更新
+- 关于页「检查更新」读取 GitHub Releases API，比对版本号
+- 有新版本时展示 release notes，可一键下载 APK 并调起系统安装器
+- 未授权「安装未知应用」时自动跳转系统设置
 
 ### 设置
 - 主题模式：跟随系统 / 浅色 / 深色；纯黑（AMOLED）；动态取色（Android 12+）
-- 计时器：专注时长、短休息、长休息、长休息间隔、自动开始
+- 减弱动效：关闭页面转场与按压缩放
 - 数据：笔记数量、复制备份 JSON 到剪贴板、清空全部数据
-- 关于：版本与设计说明
+- 关于：版本分组、检查更新、GitHub 主页链接
 
 ## 数据存储
 
-所有数据都保存在设备本地（`SharedPreferences` + JSON），没有账号、没有网络请求：
+所有数据都保存在设备本地（`SharedPreferences` + JSON），没有账号、没有云端同步；只有「检查更新 / 下载 APK」会访问 `api.github.com` 与 GitHub 的下载地址：
 
 ```
 tokinote_prefs
@@ -100,16 +112,18 @@ app/src/main/java/com/tokinote/app/
 │   ├── Label.kt               标签模型
 │   ├── AppSettings.kt         设置与专注记录模型
 │   ├── TokiStore.kt           SharedPreferences + JSON 持久化
+│   ├── UpdateChecker.kt       GitHub Releases 检查与 APK 下载
 │   └── AppViewModel.kt        单一状态源，所有写操作即时落盘
 └── ui/
     ├── TokiNoteApp.kt         导航栈 + Scaffold + 悬浮导航栏
     ├── Dest.kt                页面路由
+    ├── Motion.kt              动效开关、弹簧参数与按压缩放
     ├── Format.kt              日期 / 时长格式化
     ├── theme/                 Color、Type、Shape、Theme
-    ├── components/            顶栏、悬浮导航栏、分段列表
-    ├── notes/                 笔记列表、编辑器、底部弹层
-    ├── focus/                 番茄钟状态机与界面
-    └── settings/              设置主页与四个子页
+    ├── components/            顶栏、悬浮导航栏、胶囊按钮组、分段列表
+    ├── notes/                 笔记列表、搜索、编辑器、底部弹层
+    ├── focus/                 番茄钟状态机、波浪环、总结页、计时设置
+    └── settings/              设置主页与三个子页、APK 安装器
 ```
 
 ## 设计来源与许可

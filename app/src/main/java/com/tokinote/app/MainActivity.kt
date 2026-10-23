@@ -5,12 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tokinote.app.data.AppViewModel
 import com.tokinote.app.data.ThemeMode
 import com.tokinote.app.ui.TokiNoteApp
+import com.tokinote.app.ui.LocalMotionEnabled
 import com.tokinote.app.ui.theme.TokiNoteTheme
 
 class MainActivity : ComponentActivity() {
@@ -34,7 +36,9 @@ class MainActivity : ComponentActivity() {
                 dynamicColor = settings.dynamicColor,
                 amoled = settings.amoled,
             ) {
-                TokiNoteApp(viewModel)
+                CompositionLocalProvider(LocalMotionEnabled provides !settings.reduceMotion) {
+                    TokiNoteApp(viewModel)
+                }
             }
         }
     }

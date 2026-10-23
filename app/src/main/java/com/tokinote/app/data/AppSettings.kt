@@ -16,6 +16,8 @@ data class AppSettings(
     val longBreakMinutes: Int = 15,
     val sessionsBeforeLongBreak: Int = 4,
     val autoStartNext: Boolean = true,
+    /** 减弱动效：关闭页面转场、按压回弹等动画。 */
+    val reduceMotion: Boolean = false,
 )
 
 /** 一段已完成的专注记录，用于「今日专注」统计。 */
