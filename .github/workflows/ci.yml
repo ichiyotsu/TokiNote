@@ -5,6 +5,10 @@ on:
     branches: [main, master]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,20 +20,29 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+          cache: gradle
 
-      - name: Verify toolchain
+      # Runner 自带的 SDK 不一定有 compileSdk 37 的平台包，这里显式安装。
+      - name: Install Android SDK packages
         run: |
-          gradle --version
-          ls "$ANDROID_HOME/platforms" | tail -5
+          SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          echo "sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" "platforms;android-37.0" "build-tools;36.0.0"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          ls "$SDK_ROOT/platforms"
 
+      # 用仓库里的 wrapper（9.6.0），避免依赖 runner 预装的 Gradle 版本。
       - name: Unit tests
-        run: gradle testDebugUnitTest --no-daemon
+        run: bash ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
       - name: Assemble debug APK
-        run: gradle assembleDebug --no-daemon
+        run: bash ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: tokinote-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

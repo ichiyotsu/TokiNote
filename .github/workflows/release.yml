@@ -30,11 +30,17 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+          cache: gradle
 
-      - name: Verify toolchain
+      - name: Install Android SDK packages
         run: |
-          gradle --version
-          ls "$ANDROID_HOME/platforms" | tail -5
+          SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          echo "sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" "platforms;android-37.0" "build-tools;36.0.0"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          ls "$SDK_ROOT/platforms"
 
       - name: Decode signing keystore
         run: |
@@ -47,7 +53,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_CODE: ${{ github.run_number }}
-        run: gradle assembleRelease bundleRelease --no-daemon -x lintVitalAnalyzeRelease -x lintVitalRelease
+        run: bash ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace -x lintVitalAnalyzeRelease -x lintVitalRelease
 
       - name: Prepare release notes
         run: |
