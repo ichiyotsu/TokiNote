@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -124,7 +125,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     modifier = Modifier
                         .navigationBarsPadding()
                         .padding(bottom = 8.dp),
-                    action = if (selectedTab == Dest.Notes) {
+                    action = if (selectedTab == Dest.Notes || selectedTab == Dest.Focus) {
                         {
                             NavActionFor(
                                 tab = selectedTab,
@@ -132,6 +133,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                                     val note = viewModel.createNote()
                                     openNote(note.id)
                                 },
+                                onOpenStats = { backStack.add(Dest.FocusSummary) },
                             )
                         }
                     } else {
@@ -285,12 +287,19 @@ fun TokiNoteApp(viewModel: AppViewModel) {
 private fun NavActionFor(
     tab: Dest,
     onNewNote: () -> Unit,
+    onOpenStats: () -> Unit,
 ) {
     when (tab) {
         Dest.Notes -> NavActionButton(
             icon = Icons.Filled.Add,
             contentDescription = stringResource(R.string.entry_new),
             onClick = onNewNote,
+        )
+
+        Dest.Focus -> NavActionButton(
+            icon = Icons.Filled.BarChart,
+            contentDescription = stringResource(R.string.focus_summary),
+            onClick = onOpenStats,
         )
 
         else -> Unit

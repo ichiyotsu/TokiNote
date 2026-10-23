@@ -78,9 +78,14 @@ fun FloatingNavBar(
         ) {
             Surface(
                 shape = CircleShape,
-                color = colorScheme.primaryContainer,
-                contentColor = colorScheme.onPrimaryContainer,
-                tonalElevation = 0.dp,
+                color = colorScheme.surface.copy(alpha = 0.92f),
+                contentColor = colorScheme.onSurface,
+                tonalElevation = 6.dp,
+                shadowElevation = 10.dp,
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = colorScheme.outlineVariant.copy(alpha = 0.35f),
+                ),
             ) {
                 Row(
                     modifier = Modifier.padding(6.dp),
