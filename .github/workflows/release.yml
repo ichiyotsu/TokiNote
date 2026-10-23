@@ -59,7 +59,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_CODE: ${{ github.run_number }}
-        run: ./gradlew assembleRelease bundleRelease --no-daemon
+        run: bash ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Prepare release notes
         run: |
