@@ -59,11 +59,22 @@ jobs:
           VERSION_CODE: ${{ github.run_number }}
         run: ./gradlew assembleRelease bundleRelease --no-daemon
 
+      - name: Prepare release notes
+        run: |
+          NOTES=".github/release-notes/${VERSION_NAME}.md"
+          if [ ! -f "$NOTES" ]; then
+            echo "TokiNote ${VERSION_NAME}" > /tmp/notes.md
+            echo "" >> /tmp/notes.md
+            echo "本次发布包含若干修复与改进。" >> /tmp/notes.md
+            NOTES=/tmp/notes.md
+          fi
+          echo "NOTES_FILE=$NOTES" >> "$GITHUB_ENV"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: TokiNote ${{ env.VERSION_NAME }}
-          generate_release_notes: true
+          body_path: ${{ env.NOTES_FILE }}
           prerelease: ${{ env.IS_PRERELEASE == 'true' }}
           make_latest: ${{ env.IS_PRERELEASE == 'false' }}
           files: |
