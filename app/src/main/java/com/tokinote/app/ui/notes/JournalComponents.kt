@@ -28,6 +28,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.StickyNote2
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Description
@@ -294,49 +297,55 @@ fun JournalTabs(selected: JournalTab, onSelect: (JournalTab) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         JournalTab.entries.forEach { tab ->
             val active = tab == selected
-            val container by animateColorAsState(
-                targetValue = if (active) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHigh
-                },
-                label = "tabContainer",
-            )
-            val content by animateColorAsState(
-                targetValue = if (active) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                label = "tabContent",
-            )
-            Box(
+            Row(
                 modifier = Modifier
                     .weight(1f)
+                    .height(46.dp)
                     .clip(CircleShape)
-                    .background(container)
-                    .clickable { onSelect(tab) }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center,
+                    .background(
+                        if (active) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHigh
+                        },
+                    )
+                    .clickable { onSelect(tab) },
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                Icon(
+                    imageVector = when (tab) {
+                        JournalTab.Journal -> Icons.Filled.StickyNote2
+                        JournalTab.Album -> Icons.Filled.Photo
+                        JournalTab.Stats -> Icons.Filled.BarChart
+                    },
+                    contentDescription = null,
+                    tint = if (active) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.size(17.dp),
+                )
+                Spacer(Modifier.width(6.dp))
                 Text(
                     text = stringResource(tab.labelRes),
                     style = MaterialTheme.typography.labelLarge,
-                    color = content,
+                    color = if (active) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 )
             }
         }
     }
 }
-
 @Composable
 fun DayHeader(date: LocalDate, count: Int) {
     Row(
