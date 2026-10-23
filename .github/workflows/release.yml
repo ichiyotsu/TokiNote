@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags:
+      - '[0-9]*'
       - 'v*'
 
 permissions:
@@ -13,6 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "VERSION_NAME=$TAG" >> "$GITHUB_ENV"
+          if [[ "$TAG" == *-* ]]; then
+            echo "IS_PRERELEASE=true" >> "$GITHUB_ENV"
+          else
+            echo "IS_PRERELEASE=false" >> "$GITHUB_ENV"
+          fi
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -46,14 +57,15 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_CODE: ${{ github.run_number }}
-        run: |
-          export VERSION_NAME="${GITHUB_REF_NAME#v}"
-          ./gradlew assembleRelease bundleRelease --no-daemon
+        run: ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          name: TokiNote ${{ env.VERSION_NAME }}
           generate_release_notes: true
+          prerelease: ${{ env.IS_PRERELEASE == 'true' }}
+          make_latest: ${{ env.IS_PRERELEASE == 'false' }}
           files: |
             app/build/outputs/apk/release/app-release.apk
             app/build/outputs/bundle/release/app-release.aab
