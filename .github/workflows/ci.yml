@@ -51,18 +51,14 @@ jobs:
           echo "--- proxy env ---"
           env | grep -i proxy || true
 
-      - name: Probe Maven mirror config
+      - name: Probe Gradle launcher
         run: |
-          echo "--- ~/.m2 ---"
-          ls -la "$HOME/.m2" 2>/dev/null || echo "no ~/.m2"
-          echo "--- settings.xml ---"
-          cat "$HOME/.m2/settings.xml" 2>/dev/null || echo "no settings.xml"
-          echo "--- gradle properties ---"
-          cat "$HOME/.gradle/gradle.properties" 2>/dev/null || echo "no gradle.properties"
-          echo "--- init scripts ---"
-          ls -la "$HOME/.gradle/init.d" 2>/dev/null || echo "no init.d"
-          echo "--- full gradle --version ---"
-          gradle --version
+          which gradle
+          file "$(command -v gradle)" || true
+          echo "--- launcher head ---"
+          sed -n '1,40p' "$(command -v gradle)" 2>/dev/null || true
+          echo "--- env ---"
+          env | grep -i -E 'gradle|offline|proxy' || true
 
       - name: Unit tests
         run: gradle testDebugUnitTest --no-daemon --stacktrace --info
