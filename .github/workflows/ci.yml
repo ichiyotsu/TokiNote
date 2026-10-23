@@ -37,8 +37,13 @@ jobs:
       - name: Verify Gradle
         run: gradle --version
 
+      - name: Check Maven reachability
+        run: |
+          curl -sSI --max-time 20 https://dl.google.com/dl/android/maven2/com/android/application/com.android.application.gradle.plugin/9.4.1/com.android.application.gradle.plugin-9.4.1.pom | head -5 || true
+          curl -sSI --max-time 20 https://repo.maven.apache.org/maven2/ | head -3 || true
+
       - name: Unit tests
-        run: gradle testDebugUnitTest --no-daemon --stacktrace
+        run: gradle testDebugUnitTest --no-daemon --stacktrace --info
 
       - name: Assemble debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
