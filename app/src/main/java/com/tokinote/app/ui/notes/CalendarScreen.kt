@@ -297,7 +297,7 @@ private fun MonthGrid(
                     val dayNumber = cellIndex - offset + 1
                     if (dayNumber in 1..days) {
                         val date = month.atDay(dayNumber)
-                        val emoji = entriesByDay[date]?.firstOrNull()?.emoji
+                        val emoji: String? = null
                         DayCell(
                             day = dayNumber,
                             emoji = emoji,

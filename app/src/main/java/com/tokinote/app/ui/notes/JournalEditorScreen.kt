@@ -95,7 +95,6 @@ fun JournalEditorScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var showEmoji by remember { mutableStateOf(false) }
     var showFormat by remember { mutableStateOf(false) }
     var showDateLabels by remember { mutableStateOf(false) }
     var showDelete by remember { mutableStateOf(false) }
@@ -133,15 +132,6 @@ fun JournalEditorScreen(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Row(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .clickable { showEmoji = true }
-                    .padding(4.dp),
-            ) {
-                EmojiBadge(note.emoji, 40)
-            }
-            Spacer(Modifier.width(4.dp))
             IconButton(onClick = {
                 imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }) {
@@ -340,17 +330,6 @@ fun JournalEditorScreen(
                 showDateLabels = true
             }
         }
-    }
-
-    if (showEmoji) {
-        EmojiSheet(
-            selected = note.emoji,
-            onSelect = {
-                onChange(note.copy(emoji = it))
-                showEmoji = false
-            },
-            onDismiss = { showEmoji = false },
-        )
     }
 
     if (showFormat) {

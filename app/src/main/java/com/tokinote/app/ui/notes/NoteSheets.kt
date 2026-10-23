@@ -54,7 +54,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
-import com.tokinote.app.data.JournalEmojis
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.TextSize
@@ -159,69 +158,6 @@ fun NoteOptionsSheet(
                 onClick = onDelete,
                 tint = MaterialTheme.colorScheme.error,
             )
-        }
-    }
-}
-
-@Composable
-fun EmojiSheet(
-    selected: String,
-    onSelect: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    SheetContainer(onDismiss = onDismiss) {
-        SheetTitle(stringResource(R.string.emoji_title))
-        var custom by remember { mutableStateOf("") }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = custom,
-                onValueChange = { custom = it.take(8) },
-                singleLine = true,
-                label = { Text(stringResource(R.string.emoji_custom_hint)) },
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.weight(1f),
-            )
-            IconButton(
-                onClick = {
-                    if (custom.isNotBlank()) {
-                        onSelect(custom.trim())
-                        custom = ""
-                    }
-                },
-                enabled = custom.isNotBlank(),
-            ) {
-                Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.emoji_custom))
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-        JournalEmojis.chunked(6).forEach { row ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                row.forEach { emoji ->
-                    val isSelected = emoji == selected
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (isSelected) {
-                                    MaterialTheme.colorScheme.primaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceContainerHigh
-                                },
-                            )
-                            .clickable { onSelect(emoji) },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = emoji, fontSize = 24.sp)
-                    }
-                }
-                repeat(6 - row.size) { Spacer(Modifier.weight(1f)) }
-            }
-            Spacer(Modifier.height(6.dp))
         }
     }
 }
