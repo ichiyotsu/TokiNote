@@ -15,12 +15,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 注意：不要给 setup-java 开 cache: gradle。曾经被污染的依赖缓存会让
+      # Gradle 认为 AGP 插件解析失败而不去下载，表现成 "plugin not found"。
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-          cache: gradle
 
       # Runner 自带的 SDK 不一定有 compileSdk 37 的平台包，这里显式安装。
       - name: Install Android SDK packages
@@ -37,13 +38,8 @@ jobs:
       - name: Verify Gradle
         run: gradle --version
 
-      - name: Check Maven reachability
-        run: |
-          curl -sSI --max-time 20 https://dl.google.com/dl/android/maven2/com/android/application/com.android.application.gradle.plugin/9.4.1/com.android.application.gradle.plugin-9.4.1.pom | head -5 || true
-          curl -sSI --max-time 20 https://repo.maven.apache.org/maven2/ | head -3 || true
-
       - name: Unit tests
-        run: gradle testDebugUnitTest --no-daemon --stacktrace --info
+        run: gradle testDebugUnitTest --no-daemon --stacktrace
 
       - name: Assemble debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
