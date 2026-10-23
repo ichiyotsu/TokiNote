@@ -171,6 +171,29 @@ fun EmojiSheet(
 ) {
     SheetContainer(onDismiss = onDismiss) {
         SheetTitle(stringResource(R.string.emoji_title))
+        var custom by remember { mutableStateOf("") }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = custom,
+                onValueChange = { custom = it.take(8) },
+                singleLine = true,
+                label = { Text(stringResource(R.string.emoji_custom_hint)) },
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(
+                onClick = {
+                    if (custom.isNotBlank()) {
+                        onSelect(custom.trim())
+                        custom = ""
+                    }
+                },
+                enabled = custom.isNotBlank(),
+            ) {
+                Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.emoji_custom))
+            }
+        }
+        Spacer(Modifier.height(8.dp))
         JournalEmojis.chunked(6).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),

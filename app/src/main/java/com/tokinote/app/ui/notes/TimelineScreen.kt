@@ -1,17 +1,23 @@
 package com.tokinote.app.ui.notes
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
@@ -27,23 +33,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
-import com.tokinote.app.data.JournalFile
 import com.tokinote.app.data.Note
-import com.tokinote.app.ui.map.TencentMap
 import java.time.LocalDate
 import java.time.YearMonth
+
+private data class AlbumItem(val noteId: String, val path: String, val index: Int, val date: LocalDate)
 
 @Composable
 fun TimelineScreen(
     notes: List<Note>,
+    showTime: Boolean,
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
     onOpenCalendar: () -> Unit,
-    onOpenFile: (JournalFile) -> Unit,
+    onOpenMedia: (String, Int) -> Unit,
 ) {
     var selectedMonthString by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     val selectedMonth = remember(selectedMonthString) { YearMonth.parse(selectedMonthString) }
@@ -59,6 +67,11 @@ fun TimelineScreen(
     }
     val groups = remember(monthNotes) {
         monthNotes.groupBy { it.journalDate }.toSortedMap(compareByDescending { it })
+    }
+    val album = remember(monthNotes) {
+        monthNotes.flatMap { note ->
+            note.media.mapIndexed { index, path -> AlbumItem(note.id, path, index, note.journalDate) }
+        }
     }
 
     val results = remember(notes, query) {
@@ -115,21 +128,15 @@ fun TimelineScreen(
                 when (tab) {
                     JournalTab.Journal -> JournalTabContent(
                         groups = groups,
+                        showTime = showTime,
                         contentPadding = contentPadding,
                         onOpenNote = onOpenNote,
                     )
 
-                    JournalTab.Media -> MediaTabContent(groups = groups, contentPadding = contentPadding)
-                    JournalTab.Files -> FilesTabContent(
-                        groups = groups,
+                    JournalTab.Album -> AlbumTabContent(
+                        items = album,
                         contentPadding = contentPadding,
-                        onOpenFile = onOpenFile,
-                    )
-
-                    JournalTab.Map -> MapTabContent(
-                        notes = monthNotes.filter { it.location != null },
-                        contentPadding = contentPadding,
-                        onOpenNote = onOpenNote,
+                        onOpenMedia = onOpenMedia,
                     )
                 }
             }
@@ -138,10 +145,6 @@ fun TimelineScreen(
     }
 }
 
-/**
- * 搜索结果：先按「标题命中 / 正文命中」给出容器化的统计，再把结果按日期分组，
- * 每组放进一张大圆角容器里，符合 MD3E 的分组（grouping）与容器（container）原则。
- */
 @Composable
 private fun SearchResults(
     query: String,
@@ -242,6 +245,7 @@ private fun SearchHint(text: String) {
 @Composable
 private fun JournalTabContent(
     groups: Map<LocalDate, List<Note>>,
+    showTime: Boolean,
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
 ) {
@@ -262,26 +266,29 @@ private fun JournalTabContent(
         groups.forEach { (date, dayNotes) ->
             item(key = "header-$date") { DayHeader(date, dayNotes.size) }
             items(dayNotes, key = { it.id }) { note ->
-                JournalCard(note = note, onClick = { onOpenNote(note.id) }, onLongClick = {})
+                JournalCard(
+                    note = note,
+                    showTime = showTime,
+                    onClick = { onOpenNote(note.id) },
+                    onLongClick = {},
+                )
             }
         }
     }
 }
 
 @Composable
-private fun MediaTabContent(
-    groups: Map<LocalDate, List<Note>>,
+private fun AlbumTabContent(
+    items: List<AlbumItem>,
     contentPadding: PaddingValues,
+    onOpenMedia: (String, Int) -> Unit,
 ) {
-    val mediaGroups = groups.mapValues { (_, dayNotes) -> dayNotes.flatMap { it.media } }
-        .filterValues { it.isNotEmpty() }
-
-    if (mediaGroups.isEmpty()) {
-        EmptyMonthHint(stringResource(R.string.media_empty))
+    if (items.isEmpty()) {
+        EmptyMonthHint(stringResource(R.string.album_empty))
         return
     }
-
-    LazyColumn(
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             start = 16.dp,
@@ -289,96 +296,34 @@ private fun MediaTabContent(
             top = 4.dp,
             bottom = contentPadding.calculateBottomPadding() + 120.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        mediaGroups.forEach { (date, paths) ->
-            item(key = "media-$date") { DayHeader(date, paths.size) }
-            paths.chunked(3).forEach { rowPaths ->
-                item(key = "row-$date-${rowPaths.first()}") {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        rowPaths.forEach { path ->
-                            MediaThumb(path = path, modifier = Modifier.weight(1f))
-                        }
-                        repeat(3 - rowPaths.size) { Spacer(Modifier.weight(1f)) }
-                    }
-                }
-            }
+        items(items, key = { "${it.noteId}-${it.path}" }) { item ->
+            AlbumCell(item = item, onClick = { onOpenMedia(item.noteId, item.index) })
         }
     }
 }
 
 @Composable
-private fun MediaThumb(path: String, modifier: Modifier = Modifier) {
-    val image = rememberImage(path)
+private fun AlbumCell(item: AlbumItem, onClick: () -> Unit) {
+    val image = rememberImage(item.path)
     Box(
-        modifier = modifier
-            .height(110.dp)
-            .padding(vertical = 3.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable(onClick = onClick),
     ) {
         if (image != null) {
-            androidx.compose.foundation.Image(
+            Image(
                 bitmap = image,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                contentScale = ContentScale.Crop,
             )
         }
-    }
-}
-
-@Composable
-private fun FilesTabContent(
-    groups: Map<LocalDate, List<Note>>,
-    contentPadding: PaddingValues,
-    onOpenFile: (JournalFile) -> Unit,
-) {
-    val fileGroups = groups.mapValues { (_, dayNotes) -> dayNotes.flatMap { it.files } }
-        .filterValues { it.isNotEmpty() }
-
-    if (fileGroups.isEmpty()) {
-        EmptyMonthHint(stringResource(R.string.files_empty))
-        return
-    }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 4.dp,
-            bottom = contentPadding.calculateBottomPadding() + 120.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        fileGroups.forEach { (date, files) ->
-            item(key = "files-$date") { DayHeader(date, files.size) }
-            items(files, key = { it.path }) { file -> FileCard(file = file, onClick = { onOpenFile(file) }) }
-        }
-    }
-}
-
-@Composable
-private fun MapTabContent(
-    notes: List<Note>,
-    contentPadding: PaddingValues,
-    onOpenNote: (String) -> Unit,
-) {
-    if (notes.isEmpty()) {
-        EmptyMonthHint(stringResource(R.string.map_empty))
-        return
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = contentPadding.calculateBottomPadding() + 8.dp),
-    ) {
-        TencentMap(
-            notes = notes,
-            modifier = Modifier.fillMaxSize(),
-            onOpenNote = onOpenNote,
-        )
     }
 }
 

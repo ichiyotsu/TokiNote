@@ -89,7 +89,8 @@
     <string name="minutes_value">%1$d 分钟</string>
     <string name="sessions_value">%1$d 段</string>
     <string name="data_notes">笔记数量</string>
-    <string name="data_export">复制备份 JSON</string>
+    <string name="data_export">备份 JSON</string>
+    <string name="data_export_sub">复制到剪贴板的完整备份</string>
     <string name="data_exported">备份已复制到剪贴板</string>
     <string name="data_clear">清空全部数据</string>
     <string name="data_clear_title">清空所有数据？</string>
@@ -99,7 +100,7 @@
     <string name="about_inspired">设计语言以 Tomato（nsh07）为基准，遵循 Material 3 Expressive。</string>
 
     <string name="tab_journal">日志</string>
-    <string name="tab_media">媒体</string>
+    <string name="tab_album">相册</string>
     <string name="tab_map">地图</string>
     <string name="tab_files">文件</string>
     <string name="action_calendar">日历</string>
@@ -197,4 +198,36 @@
     <string name="update_no_apk">这个版本没有可用的 APK</string>
     <string name="update_permission">请先允许 TokiNote 安装未知应用</string>
     <string name="update_installing">正在打开安装程序…</string>
+    <string name="album_empty">这个月还没有照片</string>
+    <string name="album_download">保存到相册</string>
+    <string name="album_downloaded">已保存到系统相册</string>
+    <string name="album_locate">查看原笔记</string>
+    <string name="album_info">图片信息</string>
+    <string name="album_info_size">大小</string>
+    <string name="album_info_time">时间</string>
+    <string name="album_info_path">位置</string>
+    <string name="album_zoom_hint">双指缩放 · 双击放大</string>
+    <string name="editor_date_labels">日期与标签</string>
+    <string name="editor_pick_date">选择日期</string>
+    <string name="editor_pick_time">选择时间</string>
+    <string name="setting_show_time">显示时间</string>
+    <string name="setting_show_time_desc">在日记卡片上显示具体时间</string>
+    <string name="emoji_custom">自定义</string>
+    <string name="emoji_custom_hint">输入一个 emoji</string>
+    <string name="focus_settings">计时器设置</string>
+    <string name="stats_today">今天</string>
+    <string name="stats_focus">专注</string>
+    <string name="stats_break">休息</string>
+    <string name="stats_last_week">上周</string>
+    <string name="stats_last_month">上个月</string>
+    <string name="stats_per_day">日均专注 %1$s</string>
+    <string name="stats_avg">日均 %1$s</string>
+    <string name="stats_avg_focus">日均专注</string>
+    <string name="color_preset">配色</string>
+    <string name="color_default">抹茶</string>
+    <string name="color_blue">晴空</string>
+    <string name="color_purple">紫藤</string>
+    <string name="color_orange">暖橙</string>
+    <string name="about_tagline">基于 Material Design 3 Expressive 设计</string>
+    <string name="data_backup_title">备份</string>
 </resources>

@@ -81,12 +81,16 @@ class TokiStore(context: Context) {
                     ThemeMode.valueOf(json.optString("themeMode", ThemeMode.System.name))
                 }.getOrDefault(ThemeMode.System),
                 dynamicColor = json.optBoolean("dynamicColor", false),
+                colorPreset = runCatching {
+                    ColorPreset.valueOf(json.optString("colorPreset", ColorPreset.Matcha.name))
+                }.getOrDefault(ColorPreset.Matcha),
                 amoled = json.optBoolean("amoled", false),
                 focusMinutes = json.optInt("focusMinutes", 25).coerceIn(1, 180),
                 shortBreakMinutes = json.optInt("shortBreakMinutes", 5).coerceIn(1, 60),
                 longBreakMinutes = json.optInt("longBreakMinutes", 15).coerceIn(1, 90),
                 sessionsBeforeLongBreak = json.optInt("sessionsBeforeLongBreak", 4).coerceIn(1, 12),
                 autoStartNext = json.optBoolean("autoStartNext", true),
+                showTime = json.optBoolean("showTime", true),
                 reduceMotion = json.optBoolean("reduceMotion", false),
             )
         }.getOrDefault(AppSettings())
@@ -96,12 +100,14 @@ class TokiStore(context: Context) {
         val json = JSONObject().apply {
             put("themeMode", settings.themeMode.name)
             put("dynamicColor", settings.dynamicColor)
+            put("colorPreset", settings.colorPreset.name)
             put("amoled", settings.amoled)
             put("focusMinutes", settings.focusMinutes)
             put("shortBreakMinutes", settings.shortBreakMinutes)
             put("longBreakMinutes", settings.longBreakMinutes)
             put("sessionsBeforeLongBreak", settings.sessionsBeforeLongBreak)
             put("autoStartNext", settings.autoStartNext)
+            put("showTime", settings.showTime)
             put("reduceMotion", settings.reduceMotion)
         }
         prefs.edit().putString(KEY_SETTINGS, json.toString()).apply()
@@ -120,6 +126,7 @@ class TokiStore(context: Context) {
                         FocusSession(
                             endedAt = json.optLong("endedAt", 0L),
                             minutes = json.optInt("minutes", 0),
+                            breakMinutes = json.optInt("breakMinutes", 0),
                         ),
                     )
                 }
@@ -134,6 +141,7 @@ class TokiStore(context: Context) {
                 JSONObject().apply {
                     put("endedAt", session.endedAt)
                     put("minutes", session.minutes)
+                    put("breakMinutes", session.breakMinutes)
                 },
             )
         }
@@ -163,12 +171,14 @@ class TokiStore(context: Context) {
             put("labels", labelsArray)
             put("settings", JSONObject().apply {
                 put("themeMode", settings.themeMode.name)
+                put("colorPreset", settings.colorPreset.name)
                 put("focusMinutes", settings.focusMinutes)
                 put("shortBreakMinutes", settings.shortBreakMinutes)
                 put("longBreakMinutes", settings.longBreakMinutes)
                 put("sessionsBeforeLongBreak", settings.sessionsBeforeLongBreak)
                 put("autoStartNext", settings.autoStartNext)
-                put("reduceMotion", settings.reduceMotion)
+                put("showTime", settings.showTime)
+            put("reduceMotion", settings.reduceMotion)
             })
         }.toString(2)
     }

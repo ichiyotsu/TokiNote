@@ -67,6 +67,9 @@ class FocusViewModel : ViewModel() {
     private val _completed = MutableSharedFlow<Int>(extraBufferCapacity = 4)
     val focusCompleted: SharedFlow<Int> = _completed.asSharedFlow()
 
+    private val _breakCompleted = MutableSharedFlow<Int>(extraBufferCapacity = 4)
+    val breakCompleted: SharedFlow<Int> = _breakCompleted.asSharedFlow()
+
     private var ticker: Job? = null
 
     fun configure(settings: AppSettings) {
@@ -161,6 +164,7 @@ class FocusViewModel : ViewModel() {
                 running = current.settings.autoStartNext,
             )
         } else {
+            _breakCompleted.tryEmit(current.totalSeconds / 60)
             val next = FocusMode.Focus
             val total = next.minutes(current.settings) * 60
             _state.value = current.copy(

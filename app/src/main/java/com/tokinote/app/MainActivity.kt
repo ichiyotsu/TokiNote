@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity() {
                 darkTheme = darkTheme,
                 dynamicColor = settings.dynamicColor,
                 amoled = settings.amoled,
+                colorPreset = settings.colorPreset,
             ) {
                 CompositionLocalProvider(LocalMotionEnabled provides !settings.reduceMotion) {
                     TokiNoteApp(viewModel)

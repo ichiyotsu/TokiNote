@@ -49,10 +49,14 @@
 3. Release 构建加 `-x lintVitalAnalyzeRelease -x lintVitalRelease`
 4. wrapper 超时/重试参数调整（`networkTimeout=120000`、`retries=5`）
 
-**下一步**：
-- 查 Google Maven 可用的 AGP（需支持 compileSdk 37；大概率要降到 8.x 并同步调整 Kotlin/Compose 版本），
-  然后本地 `./gradlew --offline` 与 CI 都要能过
-- 或者接受「本地签名 + API 发布」为固定发版方式（0.1.0 已验证可行）
+**本次排查结论（2026-10-24 第二轮）**：
+- AGP 9.4.1 现在已在 Google Maven 公开发布（marker POM 200），本地用 Gradle 9.8.1 + 空缓存可完整构建通过
+- GitHub runner 上 `downloads.gradle.org` 会被拒绝连接（wrapper 拉不动 9.6.0），`setup-java` 的 gradle 缓存还会让
+  `com.android.application` 解析直接判失败且不下载 → 已改为：不用缓存、直接用 runner 预装的 `gradle`（9.8.1）
+- runner 上 `dl.google.com` 的 curl 探测是 200，但 Gradle 解析仍失败；已在 `settings.gradle.kts` 里加阿里云
+  Google Maven 镜像作为首选仓库，待 CI 验证
+- 小程序：`gradle --version` 输出里有 “Maven mirror settings reuse”，说明 runner 的 Gradle 会复用 Maven 镜像设置，
+  这是唯一还无法解释的差异
 
 ## 5. 代码结构
 
@@ -115,3 +119,21 @@ app/src/main/java/com/tokinote/app/
 2. 真机验证一次应用内更新（含下载、安装、覆盖升级）
 3. 与用户核对版本号 + 更新文案，发 1.0.0（或下一个 beta）
 4. 每完成一块，构建 + 模拟器截图验证，再提交
+
+## 9. 2026-10-24 第二轮改版（用户 12 条反馈）
+
+1. 「媒体」页签改为「相册」：三列网格，点开为全屏查看器（双指/双击缩放），底部悬浮条支持
+   保存到系统相册、查看原笔记、图片信息（大小 / 时间 / 路径）
+2. 地图与文件板块彻底移除：删除 `ui/map`、`DocumentParser`、`DocumentPreview`、相关 Dest 与编辑器入口；
+   `Note.files/location` 字段保留只为兼容旧数据
+3. 日期 + 时间 + 标签合并成一个胶囊，点按弹出统一面板；日期用 `DatePickerDialog`、时间用 `TimePickerDialog`；
+   外观设置新增「显示时间」开关
+4. 心情支持自定义 emoji（EmojiSheet 顶部输入框）
+5. 专注页与设置页删除大标题，只保留底栏
+6. 统计页照 Tomato 重做：今天专注/休息卡片、上周柱状图、上个月迷你柱状图
+7. 统计入口改为底栏右侧独立按钮（柱状图 icon），专注页右上角菜单删除
+8. 重置 / 跳过 后面新增「计时器设置」按钮
+9. 计时设置照 Tomato 简化：大号时间预览 + 场景切换 + 预设胶囊 + 自定义 + 段数步进器
+10. 外观新增配色预设（抹茶 / 晴空 / 紫藤 / 暖橙），与动态取色互斥
+11. 数据页「备份 JSON」「清空全部数据」都改为分段列表组件
+12. 关于页只剩一行设计说明；版本 / 检查更新 / GitHub 合并为一个区块，不再有「链接」小标题

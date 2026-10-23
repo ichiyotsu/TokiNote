@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.tokinote.app.data.ColorPreset
 
 val lightScheme = lightColorScheme(
     primary = primaryLight,
@@ -102,11 +103,69 @@ private fun ColorScheme.trueBlack(): ColorScheme = copy(
     surfaceContainerHighest = Color(0xFF1F2317),
 )
 
+private fun ColorScheme.withPreset(preset: ColorPreset, dark: Boolean): ColorScheme = when (preset) {
+    ColorPreset.Matcha -> this
+    ColorPreset.Blue -> if (dark) {
+        copy(
+            primary = Color(0xFFA6C8FF),
+            onPrimary = Color(0xFF002F52),
+            primaryContainer = Color(0xFF1E3F63),
+            onPrimaryContainer = Color(0xFFCFE4FF),
+            tertiary = Color(0xFF9FCBFF),
+        )
+    } else {
+        copy(
+            primary = Color(0xFF2E5D8C),
+            onPrimary = Color.White,
+            primaryContainer = Color(0xFFCFE4FF),
+            onPrimaryContainer = Color(0xFF0B2E4F),
+            tertiary = Color(0xFF3A6491),
+        )
+    }
+
+    ColorPreset.Purple -> if (dark) {
+        copy(
+            primary = Color(0xFFD5BBFF),
+            onPrimary = Color(0xFF2F1A4A),
+            primaryContainer = Color(0xFF4A3168),
+            onPrimaryContainer = Color(0xFFEADDFF),
+            tertiary = Color(0xFFE3B7FF),
+        )
+    } else {
+        copy(
+            primary = Color(0xFF6A4C93),
+            onPrimary = Color.White,
+            primaryContainer = Color(0xFFEADDFF),
+            onPrimaryContainer = Color(0xFF3A2552),
+            tertiary = Color(0xFF7B4E9E),
+        )
+    }
+
+    ColorPreset.Orange -> if (dark) {
+        copy(
+            primary = Color(0xFFFFB870),
+            onPrimary = Color(0xFF4A2A00),
+            primaryContainer = Color(0xFF663D0E),
+            onPrimaryContainer = Color(0xFFFFDCC2),
+            tertiary = Color(0xFFFFB4A0),
+        )
+    } else {
+        copy(
+            primary = Color(0xFF9A5B12),
+            onPrimary = Color.White,
+            primaryContainer = Color(0xFFFFDCC2),
+            onPrimaryContainer = Color(0xFF4A2A00),
+            tertiary = Color(0xFFA8452E),
+        )
+    }
+}
+
 @Composable
 fun TokiNoteTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
     amoled: Boolean = false,
+    colorPreset: ColorPreset = ColorPreset.Matcha,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -117,7 +176,8 @@ fun TokiNoteTheme(
         darkTheme -> darkScheme
         else -> lightScheme
     }
-    val scheme = if (amoled && darkTheme) base.trueBlack() else base
+    val preset = if (dynamicColor) base else base.withPreset(colorPreset, darkTheme)
+    val scheme = if (amoled && darkTheme) preset.trueBlack() else preset
 
     CompositionLocalProvider(LocalDarkTheme provides darkTheme) {
         MaterialTheme(

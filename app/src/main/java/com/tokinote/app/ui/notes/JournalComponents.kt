@@ -69,9 +69,7 @@ import kotlinx.coroutines.withContext
 
 enum class JournalTab(val labelRes: Int) {
     Journal(R.string.tab_journal),
-    Media(R.string.tab_media),
-    Map(R.string.tab_map),
-    Files(R.string.tab_files),
+    Album(R.string.tab_album),
 }
 
 private val dayFormatter = DateTimeFormatter.ofPattern("M月d日", Locale.CHINA)
@@ -200,7 +198,7 @@ fun SearchResultRow(note: Note, query: String, onClick: () -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            val snippet = note.body.trim().ifBlank { note.files.firstOrNull()?.name ?: "" }
+            val snippet = note.body.trim()
             if (snippet.isNotEmpty()) {
                 Spacer(Modifier.size(2.dp))
                 Text(
@@ -374,6 +372,7 @@ fun JournalCard(
     note: Note,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    showTime: Boolean = true,
 ) {
     val shape = RoundedCornerShape(24.dp)
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
@@ -454,36 +453,13 @@ fun JournalCard(
                 }
             }
 
-            if (note.files.isNotEmpty()) {
+            if (showTime) {
                 Spacer(Modifier.height(10.dp))
-                note.files.take(2).forEach { file ->
-                    CompactFileRow(file)
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = note.updatedAt.timeLabel(),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (note.location != null) {
-                    Spacer(Modifier.width(10.dp))
-                    Icon(
-                        imageVector = Icons.Filled.LocationOn,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(14.dp),
-                    )
-                    Text(
-                        text = note.location.name,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
         }
     }

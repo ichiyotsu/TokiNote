@@ -185,6 +185,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         store.saveSessions(updated)
     }
 
+    fun recordBreakSession(minutes: Int) {
+        if (minutes <= 0) return
+        val updated = _sessions.value + FocusSession(System.currentTimeMillis(), 0, minutes)
+        _sessions.update { updated }
+        store.saveSessions(updated)
+    }
+
     /** 今天的专注分钟数。 */
     fun todayFocusMinutes(): Int {
         val today = LocalDate.now()

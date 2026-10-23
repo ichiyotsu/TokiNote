@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.AppSettings
+import com.tokinote.app.data.ColorPreset
 import com.tokinote.app.data.ReleaseInfo
 import com.tokinote.app.data.ThemeMode
 import com.tokinote.app.data.UpdateChecker
@@ -85,10 +86,6 @@ fun SettingsScreen(
             .fillMaxSize()
             .padding(contentPadding),
     ) {
-        ExpressiveTopBar(
-            title = stringResource(R.string.settings_title),
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -201,6 +198,24 @@ fun AppearanceSettings(
                 onSelect = { mode -> onUpdate { it.copy(themeMode = mode) } },
             )
 
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.color_preset),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+            )
+            PillGroup(
+                options = listOf(
+                    ColorPreset.Matcha to stringResource(R.string.color_default),
+                    ColorPreset.Blue to stringResource(R.string.color_blue),
+                    ColorPreset.Purple to stringResource(R.string.color_purple),
+                    ColorPreset.Orange to stringResource(R.string.color_orange),
+                ),
+                selected = settings.colorPreset,
+                onSelect = { preset -> onUpdate { it.copy(colorPreset = preset) } },
+            )
+
             Spacer(Modifier.height(20.dp))
             SettingSwitch(
                 title = stringResource(R.string.setting_amoled),
@@ -214,6 +229,13 @@ fun AppearanceSettings(
                 description = stringResource(R.string.setting_dynamic_desc),
                 checked = settings.dynamicColor,
                 onCheckedChange = { value -> onUpdate { it.copy(dynamicColor = value) } },
+            )
+            Spacer(Modifier.height(10.dp))
+            SettingSwitch(
+                title = stringResource(R.string.setting_show_time),
+                description = stringResource(R.string.setting_show_time_desc),
+                checked = settings.showTime,
+                onCheckedChange = { value -> onUpdate { it.copy(showTime = value) } },
             )
             Spacer(Modifier.height(10.dp))
             SettingSwitch(
@@ -271,26 +293,28 @@ fun DataSettings(
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    clipboard.setText(AnnotatedString(exportJson()))
-                    Toast.makeText(context, R.string.data_exported, Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = CircleShape,
-            ) {
-                Text(stringResource(R.string.data_export))
-            }
-
-            Spacer(Modifier.height(10.dp))
-            TextButton(
-                onClick = { showClearDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(
-                    text = stringResource(R.string.data_clear),
-                    color = MaterialTheme.colorScheme.error,
+            Spacer(Modifier.height(14.dp))
+            SegmentedColumn {
+                SegmentedListItem(
+                    title = stringResource(R.string.data_export),
+                    subtitle = stringResource(R.string.data_export_sub),
+                    icon = Icons.Filled.Code,
+                    index = 0,
+                    count = 2,
+                    onClick = {
+                        clipboard.setText(AnnotatedString(exportJson()))
+                        Toast.makeText(context, R.string.data_exported, Toast.LENGTH_SHORT).show()
+                    },
+                    trailing = { Chevron() },
+                )
+                SegmentedListItem(
+                    title = stringResource(R.string.data_clear),
+                    subtitle = null,
+                    icon = Icons.Filled.DeleteForever,
+                    index = 1,
+                    count = 2,
+                    onClick = { showClearDialog = true },
+                    trailing = { Chevron() },
                 )
             }
             Spacer(Modifier.height(24.dp))
@@ -405,24 +429,13 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.Start,
         ) {
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = stringResource(R.string.about_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = stringResource(R.string.about_inspired),
+                text = stringResource(R.string.about_tagline),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Spacer(Modifier.height(16.dp))
 
             SegmentedColumn {
                 SegmentedListItem(
@@ -430,7 +443,7 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     subtitle = null,
                     icon = Icons.Filled.Info,
                     index = 0,
-                    count = 2,
+                    count = 3,
                     onClick = {},
                     trailing = {
                         Text(
@@ -445,7 +458,7 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     subtitle = statusRes?.let { stringResource(it) },
                     icon = Icons.Filled.SystemUpdate,
                     index = 1,
-                    count = 2,
+                    count = 3,
                     onClick = { checkForUpdate() },
                     trailing = {
                         if (checking) {
@@ -458,16 +471,12 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                         }
                     },
                 )
-            }
-
-            SettingsSectionTitle(stringResource(R.string.about_links_section))
-            SegmentedColumn {
                 SegmentedListItem(
                     title = stringResource(R.string.about_github),
                     subtitle = stringResource(R.string.about_github_desc),
                     icon = Icons.Filled.Code,
-                    index = 0,
-                    count = 1,
+                    index = 2,
+                    count = 3,
                     onClick = { openGitHub(context) },
                     trailing = { Chevron() },
                 )

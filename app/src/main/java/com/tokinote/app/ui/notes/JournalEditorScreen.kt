@@ -1,5 +1,7 @@
 package com.tokinote.app.ui.notes
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,11 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FormatSize
-import androidx.compose.material.icons.filled.Label
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
@@ -41,6 +39,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,47 +57,46 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.data.Attachments
-import com.tokinote.app.data.JournalFile
-import com.tokinote.app.data.JournalLocation
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.TextWeight
-import com.tokinote.app.data.documentMimeFilter
-import com.tokinote.app.data.formatFileSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val chipDateFormatter = DateTimeFormatter.ofPattern("M月d日 EEEE", Locale.CHINA)
+private val chipTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.CHINA)
 
 @Composable
 fun JournalEditorScreen(
     note: Note,
     labels: List<Label>,
+    showTime: Boolean,
     contentPadding: PaddingValues,
     onBack: () -> Unit,
     onChange: (Note) -> Unit,
     onDelete: () -> Unit,
     onCreateLabel: (String) -> Label?,
     onDeleteLabel: (String) -> Unit,
-    onPickLocation: () -> Unit,
-    onOpenFile: (JournalFile) -> Unit,
     onOpenMedia: (List<String>, Int) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var showEmoji by remember { mutableStateOf(false) }
-    var showAttach by remember { mutableStateOf(false) }
     var showFormat by remember { mutableStateOf(false) }
-    var showLabels by remember { mutableStateOf(false) }
+    var showDateLabels by remember { mutableStateOf(false) }
     var showDelete by remember { mutableStateOf(false) }
 
     val imagePicker = rememberLauncherForActivityResult(
@@ -110,19 +108,6 @@ fun JournalEditorScreen(
                     uris.mapNotNull { Attachments.copyImage(context, it) }
                 }
                 if (paths.isNotEmpty()) onChange(note.copy(media = note.media + paths))
-            }
-        }
-    }
-
-    val filePicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenMultipleDocuments(),
-    ) { uris ->
-        if (uris.isNotEmpty()) {
-            scope.launch {
-                val files = withContext(Dispatchers.IO) {
-                    uris.mapNotNull { Attachments.copyDocument(context, it) }
-                }
-                if (files.isNotEmpty()) onChange(note.copy(files = note.files + files))
             }
         }
     }
@@ -156,7 +141,9 @@ fun JournalEditorScreen(
                 EmojiBadge(note.emoji, 40)
             }
             Spacer(Modifier.width(4.dp))
-            IconButton(onClick = { showAttach = true }) {
+            IconButton(onClick = {
+                imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = stringResource(R.string.action_add),
@@ -221,17 +208,28 @@ fun JournalEditorScreen(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                val labelNames = labels.filter { it.id in note.labelIds }.map { it.name }
+                val chipText = buildString {
+                    append(note.journalDate.format(chipDateFormatter))
+                    if (showTime) {
+                        append("  ")
+                        append(
+                            Instant.ofEpochMilli(note.updatedAt)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalTime()
+                                .format(chipTimeFormatter),
+                        )
+                    }
+                    if (labelNames.isNotEmpty()) {
+                        append("  ·  ")
+                        append(labelNames.joinToString(" "))
+                    }
+                }
                 InfoChip(
                     icon = Icons.Filled.CalendarMonth,
-                    text = note.journalDate.format(chipDateFormatter),
+                    text = chipText,
+                    onClick = { showDateLabels = true },
                 )
-                if (note.labelIds.isNotEmpty()) {
-                    InfoChip(
-                        icon = Icons.Filled.Label,
-                        text = stringResource(R.string.entry_count, note.labelIds.size),
-                        onClick = { showLabels = true },
-                    )
-                }
             }
 
             Spacer(Modifier.height(14.dp))
@@ -247,7 +245,7 @@ fun JournalEditorScreen(
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(240.dp),
+                    .height(280.dp),
                 decorationBox = { inner ->
                     if (note.body.isEmpty()) {
                         Text(
@@ -259,39 +257,6 @@ fun JournalEditorScreen(
                     inner()
                 },
             )
-
-            note.files.forEach { file ->
-                Spacer(Modifier.height(8.dp))
-                FileCard(
-                    file = file,
-                    onClick = { onOpenFile(file) },
-                    onRemove = { onChange(note.copy(files = note.files - file)) },
-                )
-            }
-
-            note.location?.let { location ->
-                Spacer(Modifier.height(10.dp))
-                LocationCard(location = location, onRemove = { onChange(note.copy(location = null)) })
-            }
-
-            if (note.labelIds.isNotEmpty()) {
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    labels.filter { it.id in note.labelIds }.forEach { label ->
-                        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-                            Text(
-                                text = label.name,
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            )
-                        }
-                    }
-                }
-            }
             Spacer(Modifier.height(32.dp))
         }
 
@@ -309,11 +274,9 @@ fun JournalEditorScreen(
             EditorTool(Icons.Filled.Photo, stringResource(R.string.attach_photo)) {
                 imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }
-            EditorTool(Icons.Filled.Description, stringResource(R.string.attach_file)) {
-                filePicker.launch(documentMimeFilter())
+            EditorTool(Icons.Filled.CalendarMonth, stringResource(R.string.editor_date_labels)) {
+                showDateLabels = true
             }
-            EditorTool(Icons.Filled.LocationOn, stringResource(R.string.attach_location)) { onPickLocation() }
-            EditorTool(Icons.Filled.Label, stringResource(R.string.attach_tags)) { showLabels = true }
         }
     }
 
@@ -328,43 +291,19 @@ fun JournalEditorScreen(
         )
     }
 
-    if (showAttach) {
-        AttachSheet(
-            onDismiss = { showAttach = false },
-            onPhoto = {
-                showAttach = false
-                imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            },
-            onFile = {
-                showAttach = false
-                filePicker.launch(documentMimeFilter())
-            },
-            onLocation = {
-                showAttach = false
-                onPickLocation()
-            },
-            onTags = {
-                showAttach = false
-                showLabels = true
-            },
-        )
-    }
-
     if (showFormat) {
         FormatSheet(note = note, onChange = onChange, onDismiss = { showFormat = false })
     }
 
-    if (showLabels) {
-        LabelSheet(
+    if (showDateLabels) {
+        DateLabelSheet(
+            note = note,
             labels = labels,
-            selectedIds = note.labelIds,
-            onToggle = { labelId ->
-                val updated = if (labelId in note.labelIds) note.labelIds - labelId else note.labelIds + labelId
-                onChange(note.copy(labelIds = updated))
-            },
+            showTime = showTime,
+            onChange = onChange,
             onCreate = onCreateLabel,
             onDeleteLabel = onDeleteLabel,
-            onDismiss = { showLabels = false },
+            onDismiss = { showDateLabels = false },
         )
     }
 
@@ -452,110 +391,161 @@ private fun InfoChip(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Spacer(Modifier.width(6.dp))
             Text(text = text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
+/** 日期 + 时间 + 标签合在一个弹层里，改完原地同步。 */
 @Composable
-fun FileCard(
-    file: JournalFile,
-    onClick: () -> Unit,
-    onRemove: (() -> Unit)? = null,
+private fun DateLabelSheet(
+    note: Note,
+    labels: List<Label>,
+    showTime: Boolean,
+    onChange: (Note) -> Unit,
+    onCreate: (String) -> Label?,
+    onDeleteLabel: (String) -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center,
+    val context = LocalContext.current
+    var newLabel by remember { mutableStateOf("") }
+    val zone = ZoneId.systemDefault()
+    val current = Instant.ofEpochMilli(note.updatedAt).atZone(zone)
+
+    fun updateDate(date: LocalDate) {
+        val time = current.toLocalTime()
+        val updated = LocalDateTime.of(date, time).atZone(zone).toInstant().toEpochMilli()
+        onChange(note.copy(day = date.toEpochDay(), updatedAt = updated))
+    }
+
+    fun updateTime(time: LocalTime) {
+        val date = note.journalDate
+        val updated = LocalDateTime.of(date, time).atZone(zone).toInstant().toEpochMilli()
+        onChange(note.copy(updatedAt = updated))
+    }
+
+    SheetContainer(onDismiss = onDismiss) {
+        SheetTitle(stringResource(R.string.editor_date_labels))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val dateButtonInteraction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+            Surface(
+                onClick = {
+                    DatePickerDialog(
+                        context,
+                        { _, year, month, day ->
+                            updateDate(LocalDate.of(year, month + 1, day))
+                        },
+                        note.journalDate.year,
+                        note.journalDate.monthValue - 1,
+                        note.journalDate.dayOfMonth,
+                    ).show()
+                },
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                interactionSource = dateButtonInteraction,
+                modifier = Modifier.weight(1f),
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Description,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(20.dp),
+                Text(
+                    text = note.journalDate.format(chipDateFormatter),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                 )
             }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = file.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = "${file.name.substringAfterLast('.', "").uppercase()} · ${formatFileSize(file.size)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (onRemove != null) {
-                IconButton(onClick = onRemove) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = stringResource(R.string.action_remove),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp),
+            if (showTime) {
+                Surface(
+                    onClick = {
+                        TimePickerDialog(
+                            context,
+                            { _, hour, minute -> updateTime(LocalTime.of(hour, minute)) },
+                            current.hour,
+                            current.minute,
+                            true,
+                        ).show()
+                    },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Text(
+                        text = current.toLocalTime().format(chipTimeFormatter),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                     )
                 }
-            } else {
-                Icon(
-                    imageVector = Icons.Filled.Description,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp),
-                )
             }
         }
-    }
-}
 
-@Composable
-private fun LocationCard(location: JournalLocation, onRemove: () -> Unit) {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.LocationOn,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+        Spacer(Modifier.height(18.dp))
+        Text(
+            text = stringResource(R.string.labels_title),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+        )
+        if (labels.isEmpty()) {
+            Text(
+                text = stringResource(R.string.labels_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
             )
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(text = location.name, style = MaterialTheme.typography.titleSmall)
-                Text(
-                    text = "%.5f, %.5f".format(location.lat, location.lng),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+        }
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            labels.forEach { label ->
+                val selected = label.id in note.labelIds
+                Surface(
+                    onClick = {
+                        val ids = if (selected) note.labelIds - label.id else note.labelIds + label.id
+                        onChange(note.copy(labelIds = ids))
+                    },
+                    shape = CircleShape,
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    },
+                    contentColor = if (selected) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                ) {
+                    Text(
+                        text = label.name,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                    )
+                }
             }
-            IconButton(onClick = onRemove) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(R.string.location_remove),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp),
-                )
+        }
+
+        Spacer(Modifier.height(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = newLabel,
+                onValueChange = { newLabel = it },
+                singleLine = true,
+                label = { Text(stringResource(R.string.label_new_hint)) },
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(
+                onClick = {
+                    onCreate(newLabel)
+                    newLabel = ""
+                },
+                enabled = newLabel.isNotBlank(),
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.label_add))
             }
         }
     }

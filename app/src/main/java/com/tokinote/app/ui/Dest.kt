@@ -10,9 +10,7 @@ sealed interface Dest {
     data object Calendar : Dest
     data object FocusSummary : Dest
     data object Timer : Dest
-    data class Preview(val path: String) : Dest
     data class MediaViewer(val noteId: String, val index: Int) : Dest
-    data class LocationPicker(val noteId: String) : Dest
 }
 
 enum class SettingsPage {
@@ -39,9 +37,7 @@ fun Dest.encode(): String = when (this) {
     Dest.Calendar -> "calendar"
     Dest.FocusSummary -> "focus-summary"
     Dest.Timer -> "timer"
-    is Dest.Preview -> "preview:$path"
     is Dest.MediaViewer -> "media:$noteId:$index"
-    is Dest.LocationPicker -> "location:$noteId"
 }
 
 fun decodeDest(value: String): Dest? = when {
@@ -56,7 +52,6 @@ fun decodeDest(value: String): Dest? = when {
         Dest.SettingsDetail(SettingsPage.valueOf(value.removePrefix("settings:")))
     }.getOrNull()
 
-    value.startsWith("preview:") -> Dest.Preview(value.removePrefix("preview:"))
     value.startsWith("media:") -> {
         val rest = value.removePrefix("media:")
         val index = rest.substringAfterLast(':').toIntOrNull()
@@ -64,6 +59,5 @@ fun decodeDest(value: String): Dest? = when {
         if (index != null && noteId.isNotEmpty()) Dest.MediaViewer(noteId, index) else null
     }
 
-    value.startsWith("location:") -> value.removePrefix("location:").takeIf { it.isNotEmpty() }?.let(Dest::LocationPicker)
     else -> null
 }
