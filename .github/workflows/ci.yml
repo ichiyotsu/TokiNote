@@ -15,8 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 注意：不要给 setup-java 开 cache: gradle。曾经被污染的依赖缓存会让
-      # Gradle 认为 AGP 插件解析失败而不去下载，表现成 "plugin not found"。
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -28,7 +26,6 @@ jobs:
         run: |
           SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
           SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f | head -n 1)"
-          echo "sdkmanager: $SDKMANAGER"
           yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
           "$SDKMANAGER" "platforms;android-37.0" "build-tools;36.0.0"
           echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
@@ -38,30 +35,8 @@ jobs:
       - name: Verify Gradle
         run: gradle --version
 
-      - name: Probe Google Maven
-        run: |
-          P="com/android/application/com.android.application.gradle.plugin/9.4.1/com.android.application.gradle.plugin-9.4.1.pom"
-          code=$(curl -s -o /tmp/agp.pom -w '%{http_code}' --max-time 25 "https://dl.google.com/dl/android/maven2/$P" || true)
-          echo "google GET=$code size=$(wc -c < /tmp/agp.pom 2>/dev/null || echo 0)"
-          code2=$(curl -s -o /tmp/agp2.pom -w '%{http_code}' --max-time 25 "https://maven.aliyun.com/repository/google/$P" || true)
-          echo "aliyun GET=$code2 size=$(wc -c < /tmp/agp2.pom 2>/dev/null || echo 0)"
-          D="com/android/tools/build/gradle/9.4.1/gradle-9.4.1.pom"
-          code3=$(curl -s -o /tmp/agp3.pom -w '%{http_code}' --max-time 25 "https://dl.google.com/dl/android/maven2/$D" || true)
-          echo "google-impl GET=$code3 size=$(wc -c < /tmp/agp3.pom 2>/dev/null || echo 0)"
-          echo "--- proxy env ---"
-          env | grep -i proxy || true
-
-      - name: Probe Gradle launcher
-        run: |
-          which gradle
-          file "$(command -v gradle)" || true
-          echo "--- launcher head ---"
-          sed -n '1,40p' "$(command -v gradle)" 2>/dev/null || true
-          echo "--- env ---"
-          env | grep -i -E 'gradle|offline|proxy' || true
-
       - name: Unit tests
-        run: gradle testDebugUnitTest --no-daemon --stacktrace --info
+        run: gradle testDebugUnitTest --no-daemon --stacktrace
 
       - name: Assemble debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
