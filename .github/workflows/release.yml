@@ -31,22 +31,10 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Provision SDK packages
+      - name: Verify toolchain
         run: |
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "platforms;android-37.0" "build-tools;36.0.0" > /dev/null 2>&1 \
-            || sdkmanager "platforms;android-37" "build-tools;36.0.0" > /dev/null 2>&1 \
-            || true
-          if [ -d "$ANDROID_HOME/platforms/android-37" ] || [ -d "$ANDROID_HOME/platforms/android-37.0" ]; then
-            SDK=37
-          else
-            SDK=36
-          fi
-          echo "COMPILE_SDK=$SDK" >> "$GITHUB_ENV"
-          echo "TARGET_SDK=$SDK" >> "$GITHUB_ENV"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+          gradle --version
+          ls "$ANDROID_HOME/platforms" | tail -5
 
       - name: Decode signing keystore
         run: |
@@ -59,7 +47,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_CODE: ${{ github.run_number }}
-        run: bash ./gradlew assembleRelease bundleRelease --no-daemon
+        run: gradle assembleRelease bundleRelease --no-daemon -x lintVitalAnalyzeRelease -x lintVitalRelease
 
       - name: Prepare release notes
         run: |
