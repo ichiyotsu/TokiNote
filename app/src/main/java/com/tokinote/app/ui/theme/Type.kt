@@ -43,6 +43,15 @@ val GoogleSansFlex = FontFamily(
     ),
 )
 
+/** 左侧抽屉标题使用的展示字体（Google Fonts / Micro 5 Charted）。 */
+val Micro5Charted = FontFamily(
+    Font(
+        resId = R.font.micro5_charted,
+        weight = FontWeight.Normal,
+        style = FontStyle.Normal,
+    ),
+)
+
 private fun Typography.withFont(family: FontFamily): Typography = copy(
     displayLarge = displayLarge.copy(fontFamily = family),
     displayMedium = displayMedium.copy(fontFamily = family),

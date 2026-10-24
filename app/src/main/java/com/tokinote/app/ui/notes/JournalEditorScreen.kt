@@ -8,9 +8,11 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -77,12 +79,14 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.tokinote.app.R
 import com.tokinote.app.data.Attachments
 import com.tokinote.app.data.Label
@@ -180,16 +184,259 @@ fun JournalEditorScreen(
         }
     }
 
-    Column(
+    val scrollState = rememberScrollState()
+    var collapsed by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(scrollState.value) {
+        if (scrollState.value > 72 && !collapsed) collapsed = true
+        if (scrollState.value < 6 && collapsed) collapsed = false
+    }
+    val collapseProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (collapsed) 1f else 0f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = 0.62f,
+            stiffness = 380f,
+        ),
+        label = "editorCollapse",
+    )
+    val titleSize by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (collapsed) 23f else 30f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = 0.62f,
+            stiffness = 380f,
+        ),
+        label = "editorTitleSize",
+    )
+    val headerTint = MaterialTheme.colorScheme.surface
+    var headerHeight by remember { mutableStateOf(0.dp) }
+    val density = androidx.compose.ui.platform.LocalDensity.current
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(pageTint, MaterialTheme.colorScheme.surface)))
             .padding(contentPadding)
             .imePadding(),
     ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val viewport = maxHeight
+            val bodyMin = (viewport - 72.dp - 130.dp - headerHeight)
+                .coerceAtLeast(150.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(top = 72.dp, bottom = 130.dp)
+                    .padding(horizontal = 22.dp),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onSizeChanged { headerHeight = with(density) { it.height.toDp() } },
+                ) {
+                    if (note.media.isNotEmpty()) {
+                        val hero = rememberImage(note.media.first())
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(156.dp)
+                                .clip(RoundedCornerShape(30.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .clickable { onOpenMedia(note.media, 0) },
+                        ) {
+                            if (hero != null) {
+                                Image(
+                                    bitmap = hero,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(28.dp))
+                    }
+                    BasicTextField(
+                        value = note.title,
+                        onValueChange = { onChange(note.copy(title = it)) },
+                        textStyle = MaterialTheme.typography.headlineMedium.copy(
+                            fontSize = titleSize.sp,
+                            lineHeight = (titleSize + 4f).sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.6).sp,
+                            color = titleTint,
+                        ),
+                        cursorBrush = SolidColor(accent),
+                        modifier = Modifier.fillMaxWidth(),
+                        decorationBox = { inner ->
+                            if (note.title.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.title_hint),
+                                    style = MaterialTheme.typography.headlineMedium.copy(
+                                        fontSize = titleSize.sp,
+                                        lineHeight = (titleSize + 4f).sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = (-0.6).sp,
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
+                                )
+                            }
+                            inner()
+                        },
+                    )
+
+                    AnimatedVisibility(
+                        visible = !collapsed,
+                        enter = expandVertically(
+                            animationSpec = androidx.compose.animation.core.spring(
+                                dampingRatio = 0.55f,
+                                stiffness = 460f,
+                            ),
+                        ) + fadeIn(tween(180)),
+                        exit = shrinkVertically(
+                            animationSpec = androidx.compose.animation.core.spring(
+                                dampingRatio = 0.8f,
+                                stiffness = 420f,
+                            ),
+                        ) + fadeOut(tween(120)),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 14.dp)
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            val labelNames = labels.filter { it.id in note.labelIds }.map { it.name }
+                            val chipText = buildString {
+                                append(note.journalDate.format(chipDateFormatter))
+                                if (showTime) {
+                                    append("  ")
+                                    append(
+                                        Instant.ofEpochMilli(note.updatedAt)
+                                            .atZone(ZoneId.systemDefault())
+                                            .toLocalTime()
+                                            .format(chipTimeFormatter),
+                                    )
+                                }
+                                if (labelNames.isNotEmpty()) {
+                                    append("  ·  ")
+                                    append(labelNames.joinToString(" "))
+                                }
+                            }
+                            InfoChip(
+                                icon = Icons.Filled.CalendarMonth,
+                                text = chipText,
+                                onClick = { showDateLabels = true },
+                            )
+                        }
+                    }
+
+                    if (note.checklist.isNotEmpty()) {
+                        Spacer(Modifier.height(14.dp))
+                        note.checklist.forEachIndexed { index, item ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                androidx.compose.material3.Checkbox(
+                                    checked = item.done,
+                                    onCheckedChange = { checked ->
+                                        val list = note.checklist.toMutableList()
+                                        list[index] = item.copy(done = checked)
+                                        onChange(note.copy(checklist = list))
+                                    },
+                                )
+                                BasicTextField(
+                                    value = item.text,
+                                    onValueChange = { text ->
+                                        val list = note.checklist.toMutableList()
+                                        list[index] = item.copy(text = text)
+                                        onChange(note.copy(checklist = list))
+                                    },
+                                    singleLine = true,
+                                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    ),
+                                    cursorBrush = SolidColor(accent),
+                                    modifier = Modifier.weight(1f),
+                                    decorationBox = { inner ->
+                                        if (item.text.isEmpty()) {
+                                            Text(
+                                                text = stringResource(R.string.checklist_empty_item),
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                            )
+                                        }
+                                        inner()
+                                    },
+                                )
+                                IconButton(
+                                    onClick = {
+                                        onChange(
+                                            note.copy(
+                                                checklist = note.checklist.filterIndexed { i, _ -> i != index },
+                                            ),
+                                        )
+                                    },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = stringResource(R.string.action_remove),
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
+                            }
+                        }
+                        TextButton(
+                            onClick = {
+                                onChange(
+                                    note.copy(
+                                        checklist = note.checklist + com.tokinote.app.data.ChecklistItem(),
+                                    ),
+                                )
+                            },
+                        ) {
+                            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.checklist_add))
+                        }
+                    }
+                }
+
+                BasicTextField(
+                    value = note.body,
+                    onValueChange = { onChange(note.copy(body = it)) },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = (17 * note.bodySize.scale).sp,
+                        lineHeight = (27 * note.bodySize.scale).sp,
+                        fontWeight = note.bodyWeight.toFontWeight(),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    ),
+                    cursorBrush = SolidColor(accent),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = bodyMin)
+                        .padding(top = 8.dp),
+                    decorationBox = { inner ->
+                        if (note.body.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.editor_hint),
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = (17 * note.bodySize.scale).sp,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            )
+                        }
+                        inner()
+                    },
+                )
+            }
+        }
+
         Row(
             modifier = Modifier
+                .align(Alignment.TopCenter)
+                .zIndex(2f)
                 .fillMaxWidth()
+                .background(
+                    color = headerTint.copy(alpha = 0.28f + 0.70f * collapseProgress),
+                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+                )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -200,7 +447,38 @@ fun JournalEditorScreen(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
                 )
             }
-            Spacer(Modifier.weight(1f))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 6.dp),
+            ) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = collapsed,
+                    enter = expandHorizontally(
+                        animationSpec = androidx.compose.animation.core.spring(
+                            dampingRatio = 0.55f,
+                            stiffness = 420f,
+                        ),
+                    ) + fadeIn(tween(180)),
+                    exit = shrinkHorizontally(
+                        animationSpec = androidx.compose.animation.core.spring(
+                            dampingRatio = 0.8f,
+                            stiffness = 420f,
+                        ),
+                    ) + fadeOut(tween(120)),
+                ) {
+                    Text(
+                        text = note.title.ifBlank { stringResource(R.string.note_untitled) },
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.2).sp,
+                        ),
+                        color = titleTint,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    )
+                }
+            }
             IconButton(onClick = { showInfo = true }) {
                 Icon(
                     imageVector = Icons.Filled.MoreVert,
@@ -235,198 +513,13 @@ fun JournalEditorScreen(
             }
         }
 
-        BoxWithConstraints(modifier = Modifier.weight(1f)) {
-            val compact = maxHeight < 560.dp
-            val bannerHeight by androidx.compose.animation.core.animateDpAsState(
-                targetValue = if (compact) 96.dp else 156.dp,
-                animationSpec = tween(TokiMotion.standard),
-                label = "editorBannerHeight",
-            )
-            val headerMax = (maxHeight - 130.dp).coerceAtLeast(160.dp)
-            Column(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = headerMax)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 22.dp),
-                ) {
-            if (note.media.isNotEmpty()) {
-                val hero = rememberImage(note.media.first())
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(bannerHeight)
-                        .clip(RoundedCornerShape(30.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .clickable { onOpenMedia(note.media, 0) },
-                ) {
-                    if (hero != null) {
-                        Image(
-                            bitmap = hero,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
-                }
-                Spacer(Modifier.height(28.dp))
-            }
-            BasicTextField(
-                value = note.title,
-                onValueChange = { onChange(note.copy(title = it)) },
-                textStyle = MaterialTheme.typography.headlineMedium.copy(
-                    fontSize = 30.sp,
-                    lineHeight = 34.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.6).sp,
-                    color = titleTint,
-                ),
-                cursorBrush = SolidColor(accent),
-                modifier = Modifier.fillMaxWidth(),
-                decorationBox = { inner ->
-                    if (note.title.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.title_hint),
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontSize = 30.sp,
-                                lineHeight = 34.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = (-0.6).sp,
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
-                        )
-                    }
-                    inner()
-                },
-            )
-
-            Spacer(Modifier.height(14.dp))
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                val labelNames = labels.filter { it.id in note.labelIds }.map { it.name }
-                val chipText = buildString {
-                    append(note.journalDate.format(chipDateFormatter))
-                    if (showTime) {
-                        append("  ")
-                        append(
-                            Instant.ofEpochMilli(note.updatedAt)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalTime()
-                                .format(chipTimeFormatter),
-                        )
-                    }
-                    if (labelNames.isNotEmpty()) {
-                        append("  ·  ")
-                        append(labelNames.joinToString(" "))
-                    }
-                }
-                InfoChip(
-                    icon = Icons.Filled.CalendarMonth,
-                    text = chipText,
-                    onClick = { showDateLabels = true },
-                )
-            }
-
-            if (note.checklist.isNotEmpty()) {
-                Spacer(Modifier.height(14.dp))
-                note.checklist.forEachIndexed { index, item ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        androidx.compose.material3.Checkbox(
-                            checked = item.done,
-                            onCheckedChange = { checked ->
-                                val list = note.checklist.toMutableList()
-                                list[index] = item.copy(done = checked)
-                                onChange(note.copy(checklist = list))
-                            },
-                        )
-                        BasicTextField(
-                            value = item.text,
-                            onValueChange = { text ->
-                                val list = note.checklist.toMutableList()
-                                list[index] = item.copy(text = text)
-                                onChange(note.copy(checklist = list))
-                            },
-                            singleLine = true,
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                color = MaterialTheme.colorScheme.onSurface,
-                            ),
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.weight(1f),
-                            decorationBox = { inner ->
-                                if (item.text.isEmpty()) {
-                                    Text(
-                                        text = stringResource(R.string.checklist_empty_item),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                    )
-                                }
-                                inner()
-                            },
-                        )
-                        IconButton(
-                            onClick = {
-                                onChange(note.copy(checklist = note.checklist.filterIndexed { i, _ -> i != index }))
-                            },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = stringResource(R.string.action_remove),
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-                }
-                TextButton(
-                    onClick = { onChange(note.copy(checklist = note.checklist + com.tokinote.app.data.ChecklistItem())) },
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.checklist_add))
-                }
-            }
-
-                    Spacer(Modifier.height(10.dp))
-                }
-
-                BasicTextField(
-                    value = note.body,
-                    onValueChange = { onChange(note.copy(body = it)) },
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = (17 * note.bodySize.scale).sp,
-                        lineHeight = (27 * note.bodySize.scale).sp,
-                        fontWeight = note.bodyWeight.toFontWeight(),
-                        color = MaterialTheme.colorScheme.onSurface,
-                    ),
-                    cursorBrush = SolidColor(accent),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(horizontal = 22.dp),
-                    decorationBox = { inner ->
-                        if (note.body.isEmpty()) {
-                            Text(
-                                text = stringResource(R.string.editor_hint),
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontSize = (17 * note.bodySize.scale).sp,
-                                ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                            )
-                        }
-                        inner()
-                    },
-                )
-            }
-        }
-
-        Row(
+        Box(
             modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .zIndex(2f)
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
+            contentAlignment = Alignment.Center,
         ) {
             val toggleInteraction = remember {
                 androidx.compose.foundation.interaction.MutableInteractionSource()
@@ -544,6 +637,7 @@ fun JournalEditorScreen(
             }
         }
     }
+
 
     if (showFormat) {
         FormatSheet(

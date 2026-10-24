@@ -82,6 +82,7 @@ fun TimelineScreen(
     var selectedGroupId by rememberSaveable { mutableStateOf<String?>(null) }
     var groupSheetOpen by rememberSaveable { mutableStateOf(false) }
     var editingGroupId by rememberSaveable { mutableStateOf<String?>(null) }
+    var drawerOpen by remember { mutableStateOf(false) }
 
     val activeNotes = remember(notes) {
         notes.filter { !it.archived && it.deletedAt == null }.sortedByDescending { it.updatedAt }
@@ -120,6 +121,9 @@ fun TimelineScreen(
     }
     androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose { onPreviewVisibilityChange(false) }
+    }
+    androidx.compose.runtime.LaunchedEffect(tab) {
+        drawerOpen = false
     }
 
     var headerHeight by remember { mutableIntStateOf(0) }
@@ -211,30 +215,39 @@ fun TimelineScreen(
                     query = ""
                     searchActive = false
                 },
+                showMenu = !searchActive && tab == JournalTab.Journal,
+                onOpenDrawer = { drawerOpen = true },
             )
 
             if (!searchActive) {
                 JournalTabs(selected = tab, onSelect = { tab = it })
-                if (tab == JournalTab.Journal) {
-                    Spacer(Modifier.height(10.dp))
-                    NoteGroupBar(
-                        groups = groups,
-                        selectedId = selectedGroupId,
-                        onSelect = { selectedGroupId = it },
-                        onCreate = {
-                            editingGroupId = null
-                            groupSheetOpen = true
-                        },
-                        onEdit = { group ->
-                            editingGroupId = group.id
-                            groupSheetOpen = true
-                        },
-                    )
-                }
                 Spacer(Modifier.height(14.dp))
             }
         }
     }
+
+    GroupDrawer(
+        open = drawerOpen,
+        groups = groups,
+        selectedGroupId = selectedGroupId,
+        activeNotes = activeNotes,
+        topInset = contentPadding.calculateTopPadding(),
+        onDismiss = { drawerOpen = false },
+        onSelect = { groupId ->
+            selectedGroupId = groupId
+            drawerOpen = false
+        },
+        onCreate = {
+            editingGroupId = null
+            groupSheetOpen = true
+            drawerOpen = false
+        },
+        onEdit = { group ->
+            editingGroupId = group.id
+            groupSheetOpen = true
+            drawerOpen = false
+        },
+    )
 
     previewNote?.let { note ->
         NotePreviewOverlay(

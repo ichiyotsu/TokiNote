@@ -290,4 +290,10 @@
     <string name="note_created">创建于</string>
     <string name="note_last_edited">最后编辑</string>
     <string name="editor_tools">编辑工具</string>
+
+    <!-- 左侧分组抽屉 -->
+    <string name="drawer_open">打开分组抽屉</string>
+    <string name="drawer_subtitle">本地笔记与专注</string>
+    <string name="drawer_groups">分组</string>
+    <string name="drawer_hint">长按分组可编辑或删除</string>
 </resources>

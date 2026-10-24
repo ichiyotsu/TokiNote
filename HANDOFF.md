@@ -46,9 +46,11 @@
 ## 5. 已完成的功能
 
 - 笔记：Journal 卡片（图左文右、置顶/日常分区）、长按预览（打开/归档/删除）、笔记内清单、日期/时间/标签合并面板、M3 日期与时间选择器、编辑页顶栏（关闭/更多/对勾）+ 顶部大图
-- 首页分组：笔记页 Tab 下方「全部 / 分组 / +」；`+` 输入名称并多选笔记建组，长按分组可改名、增删笔记或删除；分组只存 noteId，不复制笔记，删除分组不影响笔记
+- 首页分组：笔记页左侧抽屉（三条杠）内展示「全部 / 分组 / +」；分组只存 noteId，不复制笔记，删除分组不影响笔记；抽屉标题使用 Google Fonts `Micro 5 Charted`
+- 多 Tab 联动：三条杠只在笔记 Tab 显示；切到相册 / 统计时用 Spring 收起，`Note` 标题向左补位，切回时弹回
+- 沉浸式编辑页（0.2.8）：正文和头部作为底层滚动内容，顶栏与工具岛 Overlay；滚动超过阈值时大标题缩小、日期标签 Spring 收起，顶栏显示折叠标题，回到顶部弹回；顶栏使用随 `collapseProgress` 加深的 tonal scrim（编辑页没有用 Haze，避免嵌套滚动下捕获不稳定）
 - Expressive 外形（0.2.8）：卡片 / 分组 / FAB 用不对称圆角；标题加大加粗、时间与标签缩小降噪、卡片 padding 加宽；首页标签改细描边；FAB 用高饱和主色
-- 毛玻璃（0.2.8）：笔记页顶栏 + 分组条 + 悬浮底栏用 Haze 做真实背景模糊；列表/日历从顶栏下方滚过，`headerHeight` 用 px→dp 测量后作为 LazyColumn 的 `topInset`
+- 毛玻璃（0.2.8）：笔记页顶栏 + 悬浮底栏用 Haze 做真实背景模糊；列表/日历从顶栏下方滚过，`headerHeight` 用 px→dp 测量后作为 LazyColumn 的 `topInset`
 - 长按预览（0.2.8）：从卡片 `boundsInRoot` 到屏幕中央目标 bounds 做共享式膨胀，Emphasized easing、背景压暗、底栏自动收起；见 `NotePreviewOverlay.kt`
 - 编辑页（0.2.8）：首图取色（`NotePalette`）驱动背景 / 标题 / 保存按钮 / 工具岛；图片横幅 156dp（键盘弹出时 96dp）；底部悬浮工具岛默认只显示 +，弹性展开四个工具；顶部更多打开笔记信息面板（创建/编辑时间、标签、归档/删除）；正文输入区铺满剩余高度，空白可聚焦，长文内部滚动
 - 标签底色（0.2.8）：首页卡片显示描边标签胶囊；编辑页标签面板选中项使用 8 色 `LabelTints`，随深浅色和当前主色轻微调和
@@ -64,9 +66,10 @@
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
 2. 0.2.8 视觉确认后再发布（本地 release APK 已签名，见第 3 节；本轮是 Expressive 大改，建议真机看一轮）
-3. 真机观察毛玻璃、长按膨胀、编辑页取色的滚动性能与浅色对比度
+3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
-5. 可选：预览动画目前是「测量 bounds + 缩放/位移」的 shared-element 风格，不是 Compose `SharedTransitionLayout`；若要更严格的共享元素，可单独重构
+5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
+6. 可选：编辑页顶栏当前是 tonal scrim，不是真模糊；若 Haze 能在嵌套滚动里稳定捕获，可再换回
 
 ## 7. 已知坑
 
@@ -81,4 +84,6 @@
 - **编辑页取色**：`BitmapFactory` 用 `inSampleSize = 8` 只采样 48×48 网格，避免主线程解码大图；主题色、工具岛、标题分别用 `animateColorAsState` 过渡
 - **正文铺满**：`BoxWithConstraints` 里 header 用 `heightIn(max = maxHeight - 130.dp)` + 独立滚动，正文 `weight(1f)` 占满剩余；不要给正文固定 `height(280.dp)`，否则空白区点不到。键盘弹出时用 `maxHeight < 560.dp` 把横幅收成 96dp
 - **底栏减重**：模糊半径 14dp、tint alpha 0.82；独立按钮 18dp 圆角矩形，不要再套第二层 Surface
+- **编辑页顶栏**：内容在 `verticalScroll` 里，顶栏/工具岛是 Box overlay；顶栏背景用 `surface.copy(alpha = 0.28 + 0.70 * collapseProgress)` 的 tonal scrim，不叠 Haze，避免滚动时文字穿透和双层感
+- **左侧抽屉**：`GroupDrawer` 在 TimelineScreen 根 Box 之外，必须传 `topInset = contentPadding.calculateTopPadding()`，否则会盖住状态栏；面板底部留 92dp 给悬浮底栏
 - 提交信息里的 7 位短哈希（如 `7b0e0c3`）是 git commit SHA，提交时自动生成，不需要手写备注

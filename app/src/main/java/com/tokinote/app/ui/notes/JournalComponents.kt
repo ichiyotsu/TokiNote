@@ -40,6 +40,7 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -125,6 +126,8 @@ fun JournalTopBar(
     onQueryChange: (String) -> Unit,
     onOpenSearch: () -> Unit,
     onCloseSearch: () -> Unit,
+    showMenu: Boolean = false,
+    onOpenDrawer: () -> Unit = {},
 ) {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(searchActive) {
@@ -177,6 +180,29 @@ fun JournalTopBar(
                 }
             }
         } else {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = showMenu,
+                enter = androidx.compose.animation.expandHorizontally(
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = 0.55f,
+                        stiffness = 420f,
+                    ),
+                ) + androidx.compose.animation.fadeIn(),
+                exit = androidx.compose.animation.shrinkHorizontally(
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = 0.7f,
+                        stiffness = 420f,
+                    ),
+                ) + androidx.compose.animation.fadeOut(),
+            ) {
+                IconButton(onClick = onOpenDrawer) {
+                    Icon(
+                        imageVector = Icons.Filled.Menu,
+                        contentDescription = stringResource(R.string.drawer_open),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             Text(
                 text = "Note",
                 style = MaterialTheme.typography.headlineLarge.copy(
