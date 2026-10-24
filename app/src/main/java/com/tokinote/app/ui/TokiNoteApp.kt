@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -127,6 +128,23 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                         .padding(bottom = 8.dp),
                     action = if (selectedTab == Dest.Notes || selectedTab == Dest.Focus) {
                         {
+                            androidx.compose.runtime.remember(selectedTab) { androidx.compose.animation.core.Animatable(0.55f) }.let { pop ->
+                                androidx.compose.runtime.LaunchedEffect(selectedTab) {
+                                    pop.animateTo(
+                                        1f,
+                                        androidx.compose.animation.core.spring(
+                                            dampingRatio = 0.5f,
+                                            stiffness = 420f,
+                                        ),
+                                    )
+                                }
+                                androidx.compose.foundation.layout.Box(
+                                    modifier = Modifier.graphicsLayer {
+                                        scaleX = pop.value
+                                        scaleY = pop.value
+                                        alpha = pop.value.coerceIn(0f, 1f)
+                                    },
+                                ) {
                             NavActionFor(
                                 tab = selectedTab,
                                 onNewNote = {
@@ -135,6 +153,8 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                                 },
                                 onOpenStats = { backStack.add(Dest.FocusSummary) },
                             )
+                                }
+                            }
                         }
                     } else {
                         null

@@ -189,6 +189,10 @@ fun FocusScreen(
             ) {
                 FocusAction(
                     icon = if (state.running) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    width = 132.dp,
+                    height = 72.dp,
+                    shape = RoundedCornerShape(36.dp),
+                    iconSize = 28.dp,
                     label = stringResource(if (state.running) R.string.focus_pause else R.string.focus_play),
                     container = accent,
                     content = onAccent,
@@ -196,6 +200,8 @@ fun FocusScreen(
                 )
                 FocusAction(
                     icon = Icons.Filled.Refresh,
+                    width = 64.dp,
+                    height = 64.dp,
                     label = stringResource(R.string.focus_reset),
                     container = accentContainer,
                     content = onAccentContainer,
@@ -203,6 +209,9 @@ fun FocusScreen(
                 )
                 FocusAction(
                     icon = Icons.Filled.SkipNext,
+                    width = 54.dp,
+                    height = 64.dp,
+                    shape = RoundedCornerShape(27.dp),
                     label = stringResource(R.string.focus_skip),
                     container = MaterialTheme.colorScheme.surfaceContainerHigh,
                     content = colorScheme.onSurfaceVariant,
@@ -210,6 +219,9 @@ fun FocusScreen(
                 )
                 FocusAction(
                     icon = Icons.Filled.Settings,
+                    width = 54.dp,
+                    height = 64.dp,
+                    shape = RoundedCornerShape(27.dp),
                     label = stringResource(R.string.focus_settings),
                     container = MaterialTheme.colorScheme.surfaceContainerHigh,
                     content = colorScheme.onSurfaceVariant,
@@ -270,11 +282,15 @@ private fun FocusAction(
     container: androidx.compose.ui.graphics.Color,
     content: androidx.compose.ui.graphics.Color,
     onClick: () -> Unit,
+    width: androidx.compose.ui.unit.Dp = 64.dp,
+    height: androidx.compose.ui.unit.Dp = 64.dp,
+    shape: androidx.compose.ui.graphics.Shape = CircleShape,
+    iconSize: androidx.compose.ui.unit.Dp = 22.dp,
 ) {
     val interaction = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(26.dp),
+        shape = shape,
         color = container,
         contentColor = content,
         interactionSource = interaction,
@@ -282,11 +298,11 @@ private fun FocusAction(
     ) {
         Box(
             modifier = Modifier
-                .height(64.dp)
-                .width(64.dp),
+                .height(height)
+                .width(width),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(22.dp))
+            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(iconSize))
         }
     }
 }
