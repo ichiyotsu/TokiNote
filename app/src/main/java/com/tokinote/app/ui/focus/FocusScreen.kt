@@ -117,7 +117,8 @@ fun FocusScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(contentPadding),
+            .padding(contentPadding)
+            .padding(vertical = 28.dp),
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
@@ -227,7 +228,7 @@ fun FocusScreen(
                 )
             }
 
-            Spacer(Modifier.height(26.dp))
+            Spacer(Modifier.height(20.dp))
 
             Text(
                 text = stringResource(R.string.focus_up_next),
@@ -250,7 +251,7 @@ fun FocusScreen(
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(7.dp),
-                modifier = Modifier.padding(bottom = 24.dp),
+                modifier = Modifier.padding(bottom = 28.dp),
             ) {
                 val total = state.settings.sessionsBeforeLongBreak
                 val filled = if (state.completedInCycle > 0 && state.completedInCycle % total == 0) {

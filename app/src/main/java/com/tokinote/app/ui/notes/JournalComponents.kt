@@ -163,8 +163,12 @@ fun JournalTopBar(
             }
         } else {
             Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 30.sp, lineHeight = 34.sp),
+                text = "Note",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 32.sp,
+                    lineHeight = 36.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
+                ),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .clip(RoundedCornerShape(14.dp))
@@ -472,7 +476,7 @@ fun JournalCard(
                     Text(
                         text = note.body,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = (14 * note.bodySize.scale).sp,
+                            fontSize = 14.sp,
                             fontWeight = note.bodyWeight.toFontWeight(),
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

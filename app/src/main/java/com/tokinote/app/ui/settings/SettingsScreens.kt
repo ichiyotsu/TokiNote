@@ -83,7 +83,7 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(28.dp))
             SegmentedColumn {
                 SegmentedListItem(
                     title = stringResource(R.string.settings_appearance),

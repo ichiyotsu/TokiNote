@@ -83,7 +83,7 @@ private fun RowScope.NavEntries(
             checked = selected,
             onCheckedChange = { onSelect(entry.dest) },
             shapes = androidx.compose.material3.ToggleButtonShapes(
-                CircleShape,
+                androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                 CircleShape,
                 CircleShape,
             ),
