@@ -17,9 +17,12 @@
 
 ## 笔记
 
-- 顶部左对齐「TokiNote」，点按展开搜索；结果按「标题 / 正文」统计后再按日期分组
-- 分类页签：**日志 / 相册**
+- 顶部左对齐「Note」，点按展开搜索；结果按「标题 / 正文」统计后再按日期分组
+- 分类页签：**笔记 / 相册 / 统计**
+- 首页分组：Tab 下方「全部 / 分组 / +」，`+` 输入名称并多选笔记建组；长按分组可改名、增删笔记或删除
 - 日志：按天分组的卡片，含 emoji、标题、正文预览、图片拼贴与时间（可在外观设置里关闭时间）
+- 长按卡片预览全文，可直接打开 / 归档 / 删除
+- 归档的笔记不进首页且不可编辑；回收站保留 14 天，可恢复或彻底删除
 - 相册：当月图片三列网格；点开进入全屏查看器
   - 双指缩放、双击放大
   - 底部悬浮操作条：保存到系统相册 / 查看原笔记 / 图片信息（大小、时间、路径）
@@ -31,6 +34,7 @@
 
 - 专注 25 / 短休息 5 / 长休息 15，长休息间隔可调
 - 「波浪断点」计时环 + 中心暂停按钮
+- 不定时专注：长按或双击计时数字进入正向计时，重置回到原计时
 - 重置 / 跳过 / 计时器设置三个按钮，右下角独立按钮直接进入统计
 - 统计页照 Tomato：今天专注与休息卡片、上周柱状图、上个月迷你柱状图
 - 计时设置照 Tomato：大号时间预览 + 场景切换 + 预设胶囊 + 自定义（系统时间选择器）
@@ -48,7 +52,7 @@
 
 ## 数据存储
 
-所有数据保存在设备本地（`SharedPreferences` + JSON）：`notes` / `labels` / `settings` / `sessions`。
+所有数据保存在设备本地（`SharedPreferences` + JSON）：`notes` / `labels` / `groups` / `settings` / `sessions`。
 只有「检查更新 / 下载 APK」会访问 `api.github.com` 与 GitHub 下载地址。
 
 ## 构建
@@ -66,6 +70,7 @@ app/src/main/java/com/tokinote/app/
 ├── MainActivity.kt            入口，主题（深色 / 动态取色 / 配色预设 / 纯黑）
 ├── data/
 │   ├── Note.kt                笔记模型
+│   ├── NoteGroup.kt           首页分组模型
 │   ├── AppSettings.kt         设置、配色预设与专注记录
 │   ├── TokiStore.kt           SharedPreferences + JSON 持久化
 │   ├── UpdateChecker.kt       GitHub Releases 检查与 APK 下载
@@ -75,7 +80,7 @@ app/src/main/java/com/tokinote/app/
     ├── Dest.kt                页面路由
     ├── Motion.kt              动效开关、弹簧参数、按压缩放
     ├── components/            顶栏、悬浮导航栏、胶囊按钮组、分段列表
-    ├── notes/                 时间线、相册网格、编辑器、图片查看器、日历
+    ├── notes/                 时间线、分组、相册网格、编辑器、图片查看器、日历
     ├── focus/                 番茄钟、波浪环、统计、计时设置
     └── settings/              外观 / 数据 / 关于、APK 安装器
 ```
@@ -84,7 +89,7 @@ app/src/main/java/com/tokinote/app/
 
 - 视觉基准：[Tomato](https://github.com/nsh07/Tomato)（GPL-3.0）
 - 字体：[Google Sans Flex](https://fonts.google.com/specimen/Google+Sans+Flex)，随应用打包
-- 组件：Jetpack Compose + Material 3（1.4.0）
+- 组件：Jetpack Compose 1.12.1 + Material 3 1.5.0
 
 ## 已知限制
 
