@@ -61,11 +61,16 @@ fun CalendarScreen(
     var monthString by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     val month = remember(monthString) { YearMonth.parse(monthString) }
     var selectedDayString by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
+    var dayOnly by rememberSaveable { mutableStateOf(false) }
     val selectedDay = remember(selectedDayString) { LocalDate.parse(selectedDayString) }
 
     val visibleNotes = remember(notes) { notes.filter { !it.archived && it.deletedAt == null } }
     val yearValue = month.year
-    val rangeNotes = remember(scope, month, selectedDay, visibleNotes) {
+    val rangeNotes = remember(scope, month, selectedDay, dayOnly, visibleNotes) {
+        if (dayOnly) {
+            return@remember visibleNotes.filter { it.journalDate == selectedDay }
+                .sortedByDescending { it.updatedAt }
+        }
         when (scope) {
             StatsScope.Year -> visibleNotes.filter { it.journalDate.year == yearValue }
             StatsScope.Month -> visibleNotes.filter { YearMonth.from(it.journalDate) == month }
@@ -113,7 +118,9 @@ fun CalendarScreen(
                             text = "${month.year}年",
                             style = MaterialTheme.typography.titleLarge,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { dayOnly = false },
                         )
                         IconButton(onClick = { monthString = month.plusYears(1).toString() }) {
                             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
@@ -150,7 +157,10 @@ fun CalendarScreen(
                         month = month,
                         entriesByDay = entriesByDay,
                         selectedDay = selectedDay,
-                        onSelectDay = { selectedDayString = it.toString() },
+                        onSelectDay = {
+                            selectedDayString = it.toString()
+                            dayOnly = true
+                        },
                     )
                 }
             }
@@ -197,7 +207,10 @@ fun CalendarScreen(
                                             MaterialTheme.colorScheme.surfaceContainerHigh
                                         },
                                     )
-                                    .clickable { selectedDayString = day.toString() },
+                                    .clickable {
+                                        selectedDayString = day.toString()
+                                        dayOnly = true
+                                    },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

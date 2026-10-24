@@ -56,8 +56,8 @@ fun ExpressiveTopBar(
         actions = actions,
         titleHorizontalAlignment = if (alignStart) Alignment.Start else Alignment.CenterHorizontally,
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            scrolledContainerColor = androidx.compose.ui.graphics.Color.Transparent,
         ),
     )
 }
