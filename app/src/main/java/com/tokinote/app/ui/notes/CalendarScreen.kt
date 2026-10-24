@@ -115,7 +115,7 @@ fun CalendarScreen(
                             Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
                         }
                         Text(
-                            text = "${month.year}年",
+                            text = "${month.year}" + "\u5E74",
                             style = MaterialTheme.typography.titleLarge,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -142,7 +142,9 @@ fun CalendarScreen(
                             text = month.format(monthTitle),
                             style = MaterialTheme.typography.titleLarge,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { dayOnly = false },
                         )
                         IconButton(onClick = { monthString = month.plusMonths(1).toString() }) {
                             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
@@ -176,10 +178,12 @@ fun CalendarScreen(
                             Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
                         }
                         Text(
-                            text = "${start.format(dayTitle)} – ${start.plusDays(6).format(dayTitle)}",
+                            text = "${start.format(dayTitle)} - ${start.plusDays(6).format(dayTitle)}",
                             style = MaterialTheme.typography.titleMedium,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { dayOnly = false },
                         )
                         IconButton(onClick = { selectedDayString = selectedDay.plusWeeks(1).toString() }) {
                             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
