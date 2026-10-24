@@ -323,6 +323,7 @@ fun DataSettings(
     }
 }
 
+@androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 @Composable
 fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val context = LocalContext.current
