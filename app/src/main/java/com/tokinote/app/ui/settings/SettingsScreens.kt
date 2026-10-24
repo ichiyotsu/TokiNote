@@ -459,17 +459,32 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             ),
         ) {
             androidx.compose.material3.Surface(
-                color = androidx.compose.ui.graphics.Color(0xFF141414),
+                color = androidx.compose.ui.graphics.Color(0xFF0B0B0B),
                 modifier = Modifier.fillMaxSize(),
             ) {
-                Column(Modifier.padding(horizontal = 24.dp, vertical = 48.dp)) {
-                    Text(
-                        text = stringResource(R.string.update_in_progress),
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = androidx.compose.ui.graphics.Color.White,
-                    )
-                    Spacer(Modifier.height(24.dp))
-                    WavyProgress(progress = progress / 100f)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.update_in_progress_short),
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = androidx.compose.ui.graphics.Color.White,
+                        )
+                        Spacer(Modifier.height(20.dp))
+                        WavyProgress(progress = progress / 100f)
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            text = "$progress%",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = androidx.compose.ui.graphics.Color(0xB3FFFFFF),
+                        )
+                    }
                 }
             }
         }
@@ -614,7 +629,7 @@ private fun WavyProgress(progress: Float) {
             }
             drawPath(
                 path = path,
-                color = androidx.compose.ui.graphics.Color(0xFFCFE4FF),
+                color = androidx.compose.ui.graphics.Color(0xFFB1D18A),
                 style = androidx.compose.ui.graphics.drawscope.Stroke(
                     width = stroke,
                     cap = androidx.compose.ui.graphics.StrokeCap.Round,

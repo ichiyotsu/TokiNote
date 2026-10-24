@@ -247,4 +247,5 @@
     <string name="notes_daily">日常</string>
     <string name="update_in_progress">更新中…</string>
     <string name="focus_indefinite">不定时专注</string>
+    <string name="update_in_progress_short">更新中</string>
 </resources>
