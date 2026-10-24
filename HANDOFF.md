@@ -8,7 +8,8 @@
 
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
 - 最新发布：**0.2.7**（release keystore 签名，versionCode 5）；**0.2.8 已构建**（versionCode 6，Haze 毛玻璃 + 标签底色），用户 2026-10-24 决定**暂缓发布**，等待视觉确认
-- 版本规则：正式版 tag `x.y.z`；beta tag `x.y.z-beta.1`（Pre-release）；**发版前必须与用户核对版本号 + 文案**
+- 版本规则：正式版 tag `x.y.z`（如 `0.2.8`）；beta tag `x.y.z-beta` 或 `x.y.z-beta.N`（Pre-release，标题 `TokiNote 0.2.x Beta`）；**发版前必须与用户核对版本号 + 文案**
+- 更新通道严格按 tag 区分，不需要单独分支：Release 只匹配 `0.2.7` 这类纯数字 tag，Beta 只匹配 `0.2.9-beta` 这类带 `-beta` 的 tag（`UpdateChecker.matchesChannel` 有单测）
 - 包名固定 `com.tokinote.app`
 - **CI 与 Release 工作流仍是红的**：GitHub runner 上 Gradle 解析 AGP 插件异常（本地完全正常）。
   发版方式固定为：本地 `assembleRelease`（带 VERSION_* / KEYSTORE_* 环境变量）→ `gh release create <tag> app-release.apk --notes-file ...`
@@ -32,6 +33,8 @@
   $env:KEYSTORE_PASSWORD='…'; $env:KEY_ALIAS='tokinote'; $env:KEY_PASSWORD='…'
   .\gradlew.bat --offline assembleRelease -x lintVitalAnalyzeRelease -x lintVitalRelease
   gh release create 0.2.8 app\build\outputs\apk\release\app-release.apk --title "TokiNote 0.2.8" --notes-file .github\release-notes\0.2.8.md --target main
+  # Beta 通道示例（必须带 --prerelease，tag 必须含 -beta）
+  gh release create 0.2.9-beta app\build\outputs\apk\release\app-release.apk --title "TokiNote 0.2.9 Beta" --notes-file .github\release-notes\0.2.9-beta.md --target main --prerelease
   ```
 - 模拟器 AVD `Pixel_10_Pro`（API 37）；**adb 手势注入对 Compose 不稳定**，长按/点击常无效，交互验证优先真机
 - github.com:443 时不时机翻；`git push` 失败可改用 GitHub Git Data API

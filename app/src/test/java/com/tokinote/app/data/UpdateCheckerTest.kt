@@ -25,4 +25,29 @@ class UpdateCheckerTest {
         assertTrue(UpdateChecker.isNewer("1.0.0-beta.3", "1.0.0-beta.2"))
         assertTrue(UpdateChecker.isNewer("1.0.1-beta", "1.0.0"))
     }
+
+    @Test
+    fun `release channel only accepts standard versions`() {
+        assertTrue(UpdateChecker.matchesChannel(release("0.2.7"), "release"))
+        assertTrue(UpdateChecker.matchesChannel(release("v0.2.8"), "release"))
+        assertFalse(UpdateChecker.matchesChannel(release("0.2.9-beta"), "release"))
+        assertFalse(UpdateChecker.matchesChannel(release("0.2.9-beta.1"), "release"))
+        assertFalse(UpdateChecker.matchesChannel(release("0.2.9-rc1"), "release"))
+    }
+
+    @Test
+    fun `beta channel only accepts beta versions`() {
+        assertTrue(UpdateChecker.matchesChannel(release("0.2.9-beta"), "beta"))
+        assertTrue(UpdateChecker.matchesChannel(release("v0.2.9-BETA.2"), "beta"))
+        assertFalse(UpdateChecker.matchesChannel(release("0.2.7"), "beta"))
+        assertFalse(UpdateChecker.matchesChannel(release("0.2.9-rc1"), "beta"))
+    }
+
+    private fun release(version: String): ReleaseInfo = ReleaseInfo(
+        tag = version,
+        version = version.removePrefix("v"),
+        notes = "",
+        apkUrl = null,
+        pageUrl = "",
+    )
 }

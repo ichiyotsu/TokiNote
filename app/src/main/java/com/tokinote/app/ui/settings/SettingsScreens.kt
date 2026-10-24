@@ -569,12 +569,14 @@ fun AboutScreen(
         statusRes = null
         failureRes = null
         scope.launch {
-            val info = withContext(Dispatchers.IO) {
-                runCatching { UpdateChecker.latest(settings.updateChannel) }.getOrNull()
+            val result = withContext(Dispatchers.IO) {
+                runCatching { UpdateChecker.latest(settings.updateChannel) }
             }
             checking = false
+            val info = result.getOrNull()
             statusRes = when {
-                info == null -> R.string.about_check_failed
+                result.isFailure -> R.string.about_check_failed
+                info == null -> R.string.about_no_release
                 UpdateChecker.isNewer(info.version, appVersionName(context)) -> {
                     release = info
                     null

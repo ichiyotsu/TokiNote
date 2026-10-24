@@ -53,6 +53,7 @@
 
 「检查更新」读取 GitHub Releases API 比对版本；有新版时展示 release notes，
 可下载 APK 并交给系统安装器（未授权「安装未知应用」时自动跳转设置）。
+Release 通道只匹配 `0.2.7` 这类标准 tag；Beta 通道只匹配 `0.2.9-beta` 这类带 `-beta` 的测试 tag，两边的 release 不会互相混入。
 
 ## 数据存储
 

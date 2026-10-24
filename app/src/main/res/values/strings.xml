@@ -187,6 +187,7 @@
     <string name="about_checking">正在检查…</string>
     <string name="about_latest">已是最新</string>
     <string name="about_check_failed">检查失败，点按重试</string>
+    <string name="about_no_release">当前通道暂无可用版本</string>
     <string name="about_links_section">链接</string>
     <string name="about_github">GitHub 主页</string>
     <string name="about_github_desc">github.com/ichiyotsu/TokiNote</string>
