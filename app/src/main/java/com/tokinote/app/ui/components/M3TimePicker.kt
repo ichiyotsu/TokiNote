@@ -8,7 +8,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,13 +40,6 @@ fun M3TimePickerDialog(
             ) {
                 TimePicker(
                     state = state,
-                    colors = TimePickerDefaults.colors(
-                        clockDialColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        selectorColor = MaterialTheme.colorScheme.primary,
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        clockDialSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
-                        clockDialUnselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    ),
                 )
             }
         },
