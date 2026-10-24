@@ -70,6 +70,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val labels by viewModel.labels.collectAsStateWithLifecycle()
     val groups by viewModel.groups.collectAsStateWithLifecycle()
+    val folders by viewModel.folders.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
 
@@ -230,8 +231,9 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                 Dest.Notes -> TimelineScreen(
                     notes = notes,
                     groups = groups,
+                    folders = folders,
                     labels = labels,
-                    showTime = settings.showTime,
+                    settings = settings,
                     contentPadding = padding,
                     onOpenNote = ::openNote,
                     onOpenMedia = { noteId, index -> backStack.add(Dest.MediaViewer(noteId, index)) },
@@ -242,6 +244,10 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     onCreateGroup = viewModel::createGroup,
                     onUpdateGroup = viewModel::updateGroup,
                     onDeleteGroup = viewModel::deleteGroup,
+                    onCreateFolder = viewModel::createFolder,
+                    onUpdateFolder = viewModel::updateFolder,
+                    onDeleteFolder = viewModel::deleteFolder,
+                    onUpdateSettings = viewModel::updateSettings,
                     onPreviewVisibilityChange = { previewOpen = it },
                     onDrawerVisibilityChange = { drawerOpen = it },
                 )

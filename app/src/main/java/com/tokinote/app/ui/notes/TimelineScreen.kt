@@ -14,17 +14,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,11 +39,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
+import com.tokinote.app.data.AlbumFolder
+import com.tokinote.app.data.AppSettings
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
@@ -51,17 +56,20 @@ import dev.chrisbanes.haze.rememberHazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.blur.HazeColorEffect
 import dev.chrisbanes.haze.blur.hazeBlur
-import java.time.LocalDate
-import java.time.YearMonth
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-private data class AlbumItem(val noteId: String, val path: String, val index: Int, val date: LocalDate)
+private val albumFolderDate = DateTimeFormatter.ofPattern("M月d日创建", Locale.CHINA)
 
 @Composable
 fun TimelineScreen(
     notes: List<Note>,
     groups: List<NoteGroup>,
+    folders: List<AlbumFolder>,
     labels: List<Label>,
-    showTime: Boolean,
+    settings: AppSettings,
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
     onOpenMedia: (String, Int) -> Unit,
@@ -72,53 +80,101 @@ fun TimelineScreen(
     onCreateGroup: (String, Set<String>) -> NoteGroup?,
     onUpdateGroup: (String, String, Set<String>) -> Boolean,
     onDeleteGroup: (String) -> Unit,
+    onCreateFolder: (String, Set<String>) -> AlbumFolder?,
+    onUpdateFolder: (String, String, Set<String>) -> Boolean,
+    onDeleteFolder: (String) -> Unit,
+    onUpdateSettings: ((AppSettings) -> AppSettings) -> Unit,
     onPreviewVisibilityChange: (Boolean) -> Unit = {},
     onDrawerVisibilityChange: (Boolean) -> Unit = {},
 ) {
-    var tab by rememberSaveable { mutableStateOf(JournalTab.Journal) }
-    var searchActive by rememberSaveable { mutableStateOf(false) }
+    var tab by rememberSaveable { mutableStateOf(HomeTab.Notes) }
     var query by rememberSaveable { mutableStateOf("") }
-    var previewNote by remember { mutableStateOf<Note?>(null) }
-    var previewBounds by remember { mutableStateOf<Rect?>(null) }
+    var viewMode by rememberSaveable { mutableStateOf(HomeViewMode.List) }
+    var sortAscending by rememberSaveable { mutableStateOf(false) }
     var selectedGroupId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedFolderId by rememberSaveable { mutableStateOf<String?>(null) }
+    var drawerOpen by remember { mutableStateOf(false) }
+    var profileOpen by remember { mutableStateOf(false) }
     var groupSheetOpen by rememberSaveable { mutableStateOf(false) }
     var editingGroupId by rememberSaveable { mutableStateOf<String?>(null) }
-    var drawerOpen by remember { mutableStateOf(false) }
+    var folderSheetOpen by rememberSaveable { mutableStateOf(false) }
+    var editingFolderId by rememberSaveable { mutableStateOf<String?>(null) }
+    var previewNote by remember { mutableStateOf<Note?>(null) }
+    var previewBounds by remember { mutableStateOf<Rect?>(null) }
 
-    val activeNotes = remember(notes) {
-        notes.filter { !it.archived && it.deletedAt == null }.sortedByDescending { it.updatedAt }
+    val comparator = remember(sortAscending) {
+        if (sortAscending) {
+            compareBy<Note> { it.updatedAt }
+        } else {
+            compareByDescending<Note> { it.updatedAt }
+        }
+    }
+    val activeNotes = remember(notes, comparator) {
+        notes.filter { !it.archived && it.deletedAt == null }.sortedWith(comparator)
     }
     val selectedGroup = groups.firstOrNull { it.id == selectedGroupId }
-    val monthNotes = remember(activeNotes, selectedGroup) {
-        if (selectedGroup == null) {
+    val groupNotes = remember(activeNotes, selectedGroup) {
+        if (selectedGroup == null) activeNotes else activeNotes.filter { it.id in selectedGroup.noteIds }
+    }
+    val searchedNotes = remember(groupNotes, query) {
+        if (query.isBlank()) {
+            groupNotes
+        } else {
+            groupNotes.filter {
+                it.title.contains(query, ignoreCase = true) ||
+                    it.body.contains(query, ignoreCase = true)
+            }
+        }
+    }
+    val allPhotos = remember(activeNotes, query) {
+        val matching = if (query.isBlank()) {
             activeNotes
         } else {
-            activeNotes.filter { it.id in selectedGroup.noteIds }
+            activeNotes.filter {
+                it.title.contains(query, ignoreCase = true) ||
+                    it.body.contains(query, ignoreCase = true)
+            }
+        }
+        matching.flatMap { note ->
+            note.media.mapIndexed { index, path ->
+                AlbumPhoto(
+                    noteId = note.id,
+                    path = path,
+                    index = index,
+                    date = note.journalDate,
+                    noteTitle = note.title,
+                )
+            }
+        }.let { photos ->
+            if (sortAscending) photos.sortedBy { it.date } else photos.sortedByDescending { it.date }
         }
     }
-    val album = remember(activeNotes) {
-        activeNotes.flatMap { note ->
-            note.media.mapIndexed { index, path -> AlbumItem(note.id, path, index, note.journalDate) }
-        }
+    val selectedFolder = folders.firstOrNull { it.id == selectedFolderId }
+    val visiblePhotos = remember(allPhotos, selectedFolder) {
+        if (selectedFolder == null) allPhotos else allPhotos.filter { it.path in selectedFolder.paths }
     }
 
-    val results = remember(notes, query) {
-        if (query.isBlank()) {
-            emptyList()
-        } else {
-            notes
-                .filter {
-                    it.title.contains(query, ignoreCase = true) || it.body.contains(query, ignoreCase = true)
-                }
-                .sortedByDescending { it.updatedAt }
-        }
-    }
-    val groupedResults = remember(results) {
-        results.groupBy { it.journalDate }.toSortedMap(compareByDescending { it })
-    }
+    var headerHeight by remember { mutableIntStateOf(0) }
+    val headerInset = with(LocalDensity.current) { headerHeight.toDp() }
 
-    androidx.compose.runtime.LaunchedEffect(previewNote) {
+    val hazeState = rememberHazeState()
+    val headerTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)
+    val headerFallback = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
+    val glass = Modifier.hazeBlur(
+        input = HazeInput.Sources(hazeState),
+        style = HazeBlurStyle {
+            blurRadius(24.dp)
+            noiseFactor(0.05f)
+            colorEffects(listOf(HazeColorEffect.tint(headerTint)))
+            fallbackColorEffect(HazeColorEffect.tint(headerFallback))
+        },
+    )
+
+    LaunchedEffect(previewNote) {
         onPreviewVisibilityChange(previewNote != null)
+    }
+    LaunchedEffect(drawerOpen) {
+        onDrawerVisibilityChange(drawerOpen)
     }
     androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose {
@@ -126,135 +182,202 @@ fun TimelineScreen(
             onDrawerVisibilityChange(false)
         }
     }
-    androidx.compose.runtime.LaunchedEffect(drawerOpen) {
-        onDrawerVisibilityChange(drawerOpen)
-    }
-    androidx.compose.runtime.LaunchedEffect(tab) {
-        drawerOpen = false
-    }
-
-    var headerHeight by remember { mutableIntStateOf(0) }
-    val headerInset = with(androidx.compose.ui.platform.LocalDensity.current) { headerHeight.toDp() }
-    val hazeState = rememberHazeState()
-    val headerTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.68f)
-    val glass = Modifier.hazeBlur(
-        input = HazeInput.Sources(hazeState),
-        style = HazeBlurStyle {
-            blurRadius(28.dp)
-            noiseFactor(0.06f)
-            colorEffects(listOf(HazeColorEffect.tint(headerTint)))
-            fallbackColorEffect(HazeColorEffect.tint(headerTint))
-        },
-    )
-    val headerShape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = contentPadding.calculateTopPadding()),
     ) {
-        // 列表在顶栏下面滚动，顶栏用 Haze 捕获并模糊背后的内容。
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSource(hazeState),
         ) {
-            if (searchActive) {
-                SearchResults(
-                    query = query,
-                    results = results,
-                    groups = groupedResults,
+            when (tab) {
+                HomeTab.Notes -> NoteFeed(
+                    notes = searchedNotes,
+                    labels = labels,
+                    showTime = settings.showTime,
+                    viewMode = viewMode,
+                    contentPadding = contentPadding,
+                    topInset = headerInset,
+                    listTitle = when {
+                        query.isNotBlank() -> stringResource(R.string.search_results)
+                        selectedGroup != null -> selectedGroup.name
+                        else -> stringResource(R.string.drawer_all_notes)
+                    },
+                    onOpenNote = onOpenNote,
+                    onLongPress = { note, bounds ->
+                        previewNote = note
+                        previewBounds = bounds
+                    },
+                )
+
+                HomeTab.Album -> AlbumContent(
+                    photos = visiblePhotos,
+                    viewMode = viewMode,
+                    contentPadding = contentPadding,
+                    topInset = headerInset,
+                    title = selectedFolder?.name ?: stringResource(R.string.drawer_all_photos),
+                    subtitle = selectedFolder?.let {
+                        Instant.ofEpochMilli(it.createdAt)
+                            .atZone(ZoneId.systemDefault())
+                            .format(albumFolderDate)
+                    },
+                    onOpenMedia = onOpenMedia,
+                )
+
+                HomeTab.Stats -> CalendarScreen(
+                    notes = searchedNotes,
                     contentPadding = contentPadding,
                     topInset = headerInset,
                     onOpenNote = onOpenNote,
                 )
-            } else {
-                when (tab) {
-                    JournalTab.Journal -> JournalTabContent(
-                        notes = monthNotes,
-                        labels = labels,
-                        showTime = showTime,
-                        contentPadding = contentPadding,
-                        topInset = headerInset,
-                        emptyText = if (selectedGroup != null) {
-                            stringResource(R.string.group_empty)
-                        } else {
-                            stringResource(R.string.no_entries)
-                        },
-                        onOpenNote = onOpenNote,
-                        onTodoToggle = onTodoToggle,
-                        onLongPress = { note, bounds ->
-                            previewNote = note
-                            previewBounds = bounds
-                        },
-                    )
-
-                    JournalTab.Album -> AlbumTabContent(
-                        items = album,
-                        contentPadding = contentPadding,
-                        topInset = headerInset,
-                        onOpenMedia = onOpenMedia,
-                    )
-
-                    JournalTab.Stats -> CalendarScreen(
-                        notes = notes,
-                        contentPadding = contentPadding,
-                        topInset = headerInset,
-                        onOpenNote = onOpenNote,
-                    )
-                }
             }
         }
 
-        Column(
+        Box(
             modifier = Modifier
+                .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .onSizeChanged { headerHeight = it.height }
-                .clip(headerShape)
-                .then(glass),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
-            JournalTopBar(
-                searchActive = searchActive,
+            TopSearchBar(
                 query = query,
                 onQueryChange = { query = it },
-                onOpenSearch = { searchActive = true },
-                onCloseSearch = {
-                    query = ""
-                    searchActive = false
+                viewMode = viewMode,
+                onToggleView = {
+                    viewMode = if (viewMode == HomeViewMode.List) {
+                        HomeViewMode.Grid
+                    } else {
+                        HomeViewMode.List
+                    }
                 },
-                showMenu = !searchActive && tab == JournalTab.Journal,
-                onOpenDrawer = { drawerOpen = true },
+                sortAscending = sortAscending,
+                onToggleSort = { sortAscending = !sortAscending },
+                avatarEmoji = settings.avatarEmoji,
+                showViewSort = tab != HomeTab.Stats,
+                onMenu = { drawerOpen = true },
+                onAvatar = { profileOpen = true },
+                glass = glass,
             )
-
-            if (!searchActive) {
-                JournalTabs(selected = tab, onSelect = { tab = it })
-                Spacer(Modifier.height(14.dp))
-            }
         }
     }
 
     GroupDrawer(
         open = drawerOpen,
+        selectedTab = tab,
         groups = groups,
+        folders = folders,
         selectedGroupId = selectedGroupId,
+        selectedFolderId = selectedFolderId,
         activeNotes = activeNotes,
+        photos = allPhotos,
         topInset = contentPadding.calculateTopPadding(),
         onDismiss = { drawerOpen = false },
-        onSelect = { groupId ->
-            selectedGroupId = groupId
+        onSelectTab = {
+            tab = it
             drawerOpen = false
         },
-        onCreate = {
+        onSelectGroup = {
+            tab = HomeTab.Notes
+            selectedGroupId = it
+            drawerOpen = false
+        },
+        onSelectFolder = {
+            tab = HomeTab.Album
+            selectedFolderId = it
+            drawerOpen = false
+        },
+        onCreateGroup = {
             editingGroupId = null
             groupSheetOpen = true
             drawerOpen = false
         },
-        onEdit = { group ->
-            editingGroupId = group.id
+        onEditGroup = {
+            editingGroupId = it.id
             groupSheetOpen = true
             drawerOpen = false
         },
+        onCreateFolder = {
+            editingFolderId = null
+            folderSheetOpen = true
+            drawerOpen = false
+        },
+        onEditFolder = {
+            editingFolderId = it.id
+            folderSheetOpen = true
+            drawerOpen = false
+        },
     )
+
+    if (profileOpen) {
+        ProfileSheet(
+            settings = settings,
+            onUpdate = onUpdateSettings,
+            onDismiss = { profileOpen = false },
+        )
+    }
+
+    if (groupSheetOpen) {
+        NoteGroupSheet(
+            group = editingGroupId?.let { id -> groups.firstOrNull { it.id == id } },
+            notes = activeNotes,
+            groups = groups,
+            onDismiss = {
+                groupSheetOpen = false
+                editingGroupId = null
+            },
+            onSave = { name, noteIds ->
+                val editing = editingGroupId
+                if (editing == null) {
+                    onCreateGroup(name, noteIds)?.let { selectedGroupId = it.id }
+                } else {
+                    onUpdateGroup(editing, name, noteIds)
+                }
+            },
+            onDelete = editingGroupId?.let { id ->
+                {
+                    onDeleteGroup(id)
+                    if (selectedGroupId == id) selectedGroupId = null
+                }
+            },
+        )
+    }
+
+    if (folderSheetOpen) {
+        AlbumFolderSheet(
+            folder = editingFolderId?.let { id -> folders.firstOrNull { it.id == id } },
+            photos = allPhotos,
+            existingNames = folders.map { it.name },
+            onDismiss = {
+                folderSheetOpen = false
+                editingFolderId = null
+            },
+            onSave = { name, paths ->
+                val editing = editingFolderId
+                if (editing == null) {
+                    val created = onCreateFolder(name, paths)
+                    if (created != null) {
+                        tab = HomeTab.Album
+                        selectedFolderId = created.id
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    onUpdateFolder(editing, name, paths)
+                }
+            },
+            onDelete = editingFolderId?.let { id ->
+                {
+                    onDeleteFolder(id)
+                    if (selectedFolderId == id) selectedFolderId = null
+                }
+            },
+        )
+    }
 
     previewNote?.let { note ->
         NotePreviewOverlay(
@@ -282,242 +405,257 @@ fun TimelineScreen(
             },
         )
     }
-
-    if (groupSheetOpen) {
-        NoteGroupSheet(
-            group = editingGroupId?.let { id -> groups.firstOrNull { it.id == id } },
-            notes = activeNotes,
-            groups = groups,
-            onDismiss = {
-                groupSheetOpen = false
-                editingGroupId = null
-            },
-            onSave = { name, noteIds ->
-                val editing = editingGroupId
-                if (editing == null) {
-                    onCreateGroup(name, noteIds)?.let { created ->
-                        selectedGroupId = created.id
-                    }
-                } else {
-                    onUpdateGroup(editing, name, noteIds)
-                }
-            },
-            onDelete = editingGroupId?.let { id ->
-                {
-                    onDeleteGroup(id)
-                    if (selectedGroupId == id) selectedGroupId = null
-                }
-            },
-        )
-    }
 }
 
 @Composable
-private fun SearchResults(
-    query: String,
-    results: List<Note>,
-    groups: Map<LocalDate, List<Note>>,
-    contentPadding: PaddingValues,
-    topInset: Dp = 0.dp,
-    onOpenNote: (String) -> Unit,
-) {
-    when {
-        query.isBlank() -> SearchHint(stringResource(R.string.search_prompt))
-        results.isEmpty() -> SearchHint(stringResource(R.string.search_results_empty, query))
-        else -> {
-            val titleHits = results.count { it.title.contains(query, ignoreCase = true) }
-            val bodyHits = results.count { it.body.contains(query, ignoreCase = true) }
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 4.dp + topInset,
-                    bottom = contentPadding.calculateBottomPadding() + 120.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                item(key = "search-summary") {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ResultChip(stringResource(R.string.search_result_count, results.size), emphasized = true)
-                        ResultChip(stringResource(R.string.search_title_match, titleHits))
-                        ResultChip(stringResource(R.string.search_body_match, bodyHits))
-                    }
-                }
-                groups.forEach { (date, dayNotes) ->
-                    item(key = "search-header-$date") { DayHeader(date, dayNotes.size) }
-                    item(key = "search-group-$date") {
-                        Surface(
-                            shape = RoundedCornerShape(28.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerLow,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Column {
-                                dayNotes.forEachIndexed { index, note ->
-                                    if (index > 0) {
-                                        HorizontalDivider(
-                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                                            modifier = Modifier.padding(start = 68.dp),
-                                        )
-                                    }
-                                    SearchResultRow(
-                                        note = note,
-                                        query = query,
-                                        onClick = { onOpenNote(note.id) },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ResultChip(text: String, emphasized: Boolean = false) {
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = if (emphasized) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        },
-        contentColor = if (emphasized) {
-            MaterialTheme.colorScheme.onPrimary
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-        )
-    }
-}
-
-@Composable
-private fun SearchHint(text: String) {
-    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
-private fun JournalTabContent(
+private fun NoteFeed(
     notes: List<Note>,
     labels: List<Label>,
     showTime: Boolean,
+    viewMode: HomeViewMode,
     contentPadding: PaddingValues,
-    topInset: Dp = 0.dp,
-    emptyText: String,
+    topInset: androidx.compose.ui.unit.Dp,
+    listTitle: String,
     onOpenNote: (String) -> Unit,
-    onTodoToggle: (String) -> Unit,
-    onLongPress: (Note, Rect) -> Unit = { _, _ -> },
+    onLongPress: (Note, Rect) -> Unit,
 ) {
     if (notes.isEmpty()) {
-        EmptyMonthHint(emptyText)
+        EmptyHint(stringResource(R.string.no_entries))
         return
     }
-    val pinned = notes.filter { it.pinned }.sortedByDescending { it.updatedAt }
-    val others = notes.filterNot { it.pinned }.sortedByDescending { it.updatedAt }
+    val pinned = notes.filter { it.pinned }
+    val others = notes.filterNot { it.pinned }
+    val padding = PaddingValues(
+        start = 16.dp,
+        end = 16.dp,
+        top = topInset + 4.dp,
+        bottom = contentPadding.calculateBottomPadding() + 120.dp,
+    )
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 4.dp + topInset,
-            bottom = contentPadding.calculateBottomPadding() + 120.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        if (pinned.isNotEmpty()) {
-            items(pinned, key = { it.id }) { note ->
-                JournalCard(
+    if (viewMode == HomeViewMode.Grid) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = padding,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (pinned.isNotEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    SectionHeader(stringResource(R.string.section_pinned))
+                }
+                items(pinned, key = { it.id }) { note ->
+                    NoteCard(
+                        note = note,
+                        labels = labels,
+                        showTime = showTime,
+                        compact = true,
+                        onClick = { onOpenNote(note.id) },
+                        onLongPress = { rect -> onLongPress(note, rect) },
+                    )
+                }
+            }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SectionHeader(listTitle)
+            }
+            items(others, key = { it.id }) { note ->
+                NoteCard(
                     note = note,
-                    showTime = showTime,
                     labels = labels,
+                    showTime = showTime,
+                    compact = true,
                     onClick = { onOpenNote(note.id) },
                     onLongPress = { rect -> onLongPress(note, rect) },
                 )
             }
         }
-        if (pinned.isNotEmpty() && others.isNotEmpty()) {
-            item(key = "section-gap") { Spacer(Modifier.height(14.dp)) }
-        }
-        items(others, key = { it.id }) { note ->
-            JournalCard(
-                note = note,
-                showTime = showTime,
-                labels = labels,
-                onClick = { onOpenNote(note.id) },
-                onLongPress = { rect -> onLongPress(note, rect) },
-            )
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = padding,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (pinned.isNotEmpty()) {
+                item(key = "pinned-header") {
+                    SectionHeader(stringResource(R.string.section_pinned))
+                }
+                items(pinned, key = { it.id }) { note ->
+                    NoteCard(
+                        note = note,
+                        labels = labels,
+                        showTime = showTime,
+                        compact = false,
+                        onClick = { onOpenNote(note.id) },
+                        onLongPress = { rect -> onLongPress(note, rect) },
+                    )
+                }
+            }
+            item(key = "all-header") {
+                SectionHeader(listTitle)
+            }
+            items(others, key = { it.id }) { note ->
+                NoteCard(
+                    note = note,
+                    labels = labels,
+                    showTime = showTime,
+                    compact = false,
+                    onClick = { onOpenNote(note.id) },
+                    onLongPress = { rect -> onLongPress(note, rect) },
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun AlbumTabContent(
-    items: List<AlbumItem>,
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.sp, letterSpacing = 0.2.sp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+        modifier = Modifier.padding(start = 4.dp, top = 10.dp, bottom = 2.dp),
+    )
+}
+
+@Composable
+private fun AlbumContent(
+    photos: List<AlbumPhoto>,
+    viewMode: HomeViewMode,
     contentPadding: PaddingValues,
-    topInset: Dp = 0.dp,
+    topInset: androidx.compose.ui.unit.Dp,
+    title: String,
+    subtitle: String?,
     onOpenMedia: (String, Int) -> Unit,
 ) {
-    if (items.isEmpty()) {
-        EmptyMonthHint(stringResource(R.string.album_empty))
+    if (photos.isEmpty()) {
+        EmptyHint(stringResource(R.string.album_empty))
         return
     }
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 4.dp + topInset,
-            bottom = contentPadding.calculateBottomPadding() + 120.dp,
-        ),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        items(items, key = { "${it.noteId}-${it.path}" }) { item ->
-            AlbumCell(item = item, onClick = { onOpenMedia(item.noteId, item.index) })
+    val padding = PaddingValues(
+        start = 16.dp,
+        end = 16.dp,
+        top = topInset + 4.dp,
+        bottom = contentPadding.calculateBottomPadding() + 120.dp,
+    )
+    if (viewMode == HomeViewMode.Grid) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = padding,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                AlbumHeader(title, subtitle, photos.size)
+            }
+            items(photos, key = { it.path }) { photo ->
+                val image = rememberImage(photo.path)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        .clickable { onOpenMedia(photo.noteId, photo.index) },
+                ) {
+                    if (image != null) {
+                        Image(
+                            bitmap = image,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                }
+            }
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = padding,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            item(key = "album-header") {
+                AlbumHeader(title, subtitle, photos.size)
+            }
+            items(photos, key = { it.path }) { photo ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .clickable { onOpenMedia(photo.noteId, photo.index) }
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val image = rememberImage(photo.path)
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    ) {
+                        if (image != null) {
+                            Image(
+                                bitmap = image,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = photo.noteTitle.ifBlank { stringResource(R.string.note_untitled) },
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = photo.date.dayLabel(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun AlbumCell(item: AlbumItem, onClick: () -> Unit) {
-    val image = rememberImage(item.path)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(onClick = onClick),
+private fun AlbumHeader(title: String, subtitle: String?, count: Int) {
+    Row(
+        modifier = Modifier.padding(start = 4.dp, top = 10.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (image != null) {
-            Image(
-                bitmap = image,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = stringResource(R.string.entry_count, count),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+        )
+        if (subtitle != null) {
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
             )
         }
     }
 }
 
 @Composable
-private fun EmptyMonthHint(text: String) {
+private fun EmptyHint(text: String) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
             text = text,
@@ -525,89 +663,4 @@ private fun EmptyMonthHint(text: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-}
-
-@Composable
-private fun NotePreviewDialog(
-    note: Note,
-    onDismiss: () -> Unit,
-    onOpen: () -> Unit,
-    onArchive: () -> Unit,
-    onTrash: () -> Unit,
-) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(note.title.ifBlank { stringResource(R.string.note_untitled) }) },
-        text = {
-            Column {
-                Text(
-                    text = note.body.ifBlank { stringResource(R.string.editor_hint) },
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 6,
-                )
-                androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))
-                Row {
-                    androidx.compose.material3.TextButton(onClick = onOpen) {
-                        Text(stringResource(R.string.preview_open))
-                    }
-                    androidx.compose.material3.TextButton(onClick = onArchive) {
-                        Text(stringResource(R.string.preview_archive))
-                    }
-                    androidx.compose.material3.TextButton(onClick = onTrash) {
-                        Text(
-                            text = stringResource(R.string.preview_delete),
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        },
-    )
-}
-@Composable
-private fun PreviewHost(
-    note: Note?,
-    onDismiss: () -> Unit,
-    onOpen: (String) -> Unit,
-    onArchive: (String) -> Unit,
-    onTrash: (String) -> Unit,
-) {
-    if (note == null) return
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(note.title.ifBlank { stringResource(R.string.note_untitled) }) },
-        text = {
-            Column {
-                Text(
-                    text = note.body.ifBlank { stringResource(R.string.editor_hint) },
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 6,
-                )
-                androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))
-                Row {
-                    androidx.compose.material3.TextButton(onClick = { onOpen(note.id) }) {
-                        Text(stringResource(R.string.preview_open))
-                    }
-                    androidx.compose.material3.TextButton(onClick = { onArchive(note.id) }) {
-                        Text(stringResource(R.string.preview_archive))
-                    }
-                    androidx.compose.material3.TextButton(onClick = { onTrash(note.id) }) {
-                        Text(stringResource(R.string.preview_delete), color = MaterialTheme.colorScheme.error)
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        },
-    )
 }

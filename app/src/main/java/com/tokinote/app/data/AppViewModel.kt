@@ -28,6 +28,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _groups = MutableStateFlow(store.loadGroups())
     val groups: StateFlow<List<NoteGroup>> = _groups.asStateFlow()
 
+    private val _folders = MutableStateFlow(store.loadFolders())
+    val folders: StateFlow<List<AlbumFolder>> = _folders.asStateFlow()
+
     private val _settings = MutableStateFlow(store.loadSettings())
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
 
@@ -249,6 +252,41 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         store.saveGroups(updated)
     }
 
+    /* ----------------------------- album folders ----------------------------- */
+
+    fun createFolder(name: String, paths: Set<String>): AlbumFolder? {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return null
+        if (_folders.value.any { it.name.equals(trimmed, ignoreCase = true) }) return null
+        val folder = AlbumFolder(
+            id = UUID.randomUUID().toString(),
+            name = trimmed,
+            paths = paths,
+        )
+        val updated = _folders.value + folder
+        _folders.update { updated }
+        store.saveFolders(updated)
+        return folder
+    }
+
+    fun updateFolder(id: String, name: String, paths: Set<String>): Boolean {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return false
+        if (_folders.value.any { it.id != id && it.name.equals(trimmed, ignoreCase = true) }) return false
+        val updated = _folders.value.map { folder ->
+            if (folder.id == id) folder.copy(name = trimmed, paths = paths) else folder
+        }
+        _folders.update { updated }
+        store.saveFolders(updated)
+        return true
+    }
+
+    fun deleteFolder(id: String) {
+        val updated = _folders.value.filterNot { it.id == id }
+        _folders.update { updated }
+        store.saveFolders(updated)
+    }
+
     /* ----------------------------- settings ----------------------------- */
 
     fun updateSettings(transform: (AppSettings) -> AppSettings) {
@@ -284,13 +322,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     /* ----------------------------- data ----------------------------- */
 
-    fun exportJson(): String = store.exportJson(_notes.value, _labels.value, _groups.value, _settings.value)
+    fun exportJson(): String = store.exportJson(
+        _notes.value,
+        _labels.value,
+        _groups.value,
+        _folders.value,
+        _settings.value,
+    )
 
     fun clearAll() {
         store.clearAll()
         _notes.update { emptyList() }
         _labels.update { emptyList() }
         _groups.update { emptyList() }
+        _folders.update { emptyList() }
         _sessions.update { emptyList() }
         _settings.update { AppSettings() }
     }

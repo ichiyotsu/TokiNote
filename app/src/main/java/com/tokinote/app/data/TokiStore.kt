@@ -110,6 +110,46 @@ class TokiStore(context: Context) {
         prefs.edit().putString(KEY_GROUPS, array.toString()).apply()
     }
 
+    /* ----------------------------- album folders ----------------------------- */
+
+    fun loadFolders(): List<AlbumFolder> {
+        val raw = prefs.getString(KEY_FOLDERS, null) ?: return emptyList()
+        return runCatching {
+            val array = JSONArray(raw)
+            buildList {
+                for (index in 0 until array.length()) {
+                    val json = array.getJSONObject(index)
+                    add(
+                        AlbumFolder(
+                            id = json.getString("id"),
+                            name = json.getString("name"),
+                            paths = buildSet {
+                                val paths = json.optJSONArray("paths") ?: JSONArray()
+                                for (i in 0 until paths.length()) add(paths.getString(i))
+                            },
+                            createdAt = json.optLong("createdAt", System.currentTimeMillis()),
+                        ),
+                    )
+                }
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    fun saveFolders(folders: List<AlbumFolder>) {
+        val array = JSONArray()
+        folders.forEach { folder ->
+            array.put(
+                JSONObject().apply {
+                    put("id", folder.id)
+                    put("name", folder.name)
+                    put("paths", JSONArray(folder.paths.sorted()))
+                    put("createdAt", folder.createdAt)
+                },
+            )
+        }
+        prefs.edit().putString(KEY_FOLDERS, array.toString()).apply()
+    }
+
     /* ----------------------------- settings ----------------------------- */
 
     fun loadSettings(): AppSettings {
@@ -133,6 +173,8 @@ class TokiStore(context: Context) {
                 showTime = json.optBoolean("showTime", true),
                 reduceMotion = json.optBoolean("reduceMotion", false),
                 updateChannel = json.optString("updateChannel", "release"),
+                userId = json.optString("userId", "tokinote"),
+                avatarEmoji = json.optString("avatarEmoji", "🌿"),
             )
         }.getOrDefault(AppSettings())
     }
@@ -151,6 +193,8 @@ class TokiStore(context: Context) {
             put("showTime", settings.showTime)
             put("reduceMotion", settings.reduceMotion)
             put("updateChannel", settings.updateChannel)
+            put("userId", settings.userId)
+            put("avatarEmoji", settings.avatarEmoji)
         }
         prefs.edit().putString(KEY_SETTINGS, json.toString()).apply()
     }
@@ -196,6 +240,7 @@ class TokiStore(context: Context) {
         notes: List<Note>,
         labels: List<Label>,
         groups: List<NoteGroup>,
+        folders: List<AlbumFolder>,
         settings: AppSettings,
     ): String {
         val notesArray = JSONArray().apply { notes.forEach { put(it.toJson()) } }
@@ -222,13 +267,26 @@ class TokiStore(context: Context) {
                 )
             }
         }
+        val foldersArray = JSONArray().apply {
+            folders.forEach { folder ->
+                put(
+                    JSONObject().apply {
+                        put("id", folder.id)
+                        put("name", folder.name)
+                        put("paths", JSONArray(folder.paths.sorted()))
+                        put("createdAt", folder.createdAt)
+                    },
+                )
+            }
+        }
         return JSONObject().apply {
             put("app", "TokiNote")
-            put("version", 2)
+            put("version", 3)
             put("exportedAt", System.currentTimeMillis())
             put("notes", notesArray)
             put("labels", labelsArray)
             put("groups", groupsArray)
+            put("folders", foldersArray)
             put("settings", JSONObject().apply {
                 put("themeMode", settings.themeMode.name)
                 put("colorPreset", settings.colorPreset.name)
@@ -238,8 +296,10 @@ class TokiStore(context: Context) {
                 put("sessionsBeforeLongBreak", settings.sessionsBeforeLongBreak)
                 put("autoStartNext", settings.autoStartNext)
                 put("showTime", settings.showTime)
-            put("reduceMotion", settings.reduceMotion)
-            put("updateChannel", settings.updateChannel)
+                put("reduceMotion", settings.reduceMotion)
+                put("updateChannel", settings.updateChannel)
+                put("userId", settings.userId)
+                put("avatarEmoji", settings.avatarEmoji)
             })
         }.toString(2)
     }
@@ -365,6 +425,7 @@ class TokiStore(context: Context) {
         const val KEY_NOTES = "notes"
         const val KEY_LABELS = "labels"
         const val KEY_GROUPS = "groups"
+        const val KEY_FOLDERS = "folders"
         const val KEY_SETTINGS = "settings"
         const val KEY_SESSIONS = "sessions"
     }

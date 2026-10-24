@@ -47,6 +47,8 @@
 
 - 笔记：Journal 卡片（图左文右、置顶/日常分区）、长按预览（打开/归档/删除）、笔记内清单、日期/时间/标签合并面板、M3 日期与时间选择器、编辑页顶栏（关闭/更多/对勾）+ 顶部大图
 - 首页分组：笔记页左侧抽屉（三条杠）内展示「全部 / 分组 / +」；分组只存 noteId，不复制笔记，删除分组不影响笔记；抽屉标题「 TokiNote 」使用 Google Fonts `Micro 5 Charted`，左边距 16dp、宽度 68%（max 320dp）、四角 34dp、阴影 24dp
+- Keep 风格主页（0.2.8）：顶部单条悬浮搜索胶囊（菜单 / 搜索 TokiNote / 网格列表切换 / 排序 / 头像）；「已置顶 / 全部笔记」小标题；两列网格与单列列表；卡片有图时图片顶部铺满、无图时不渲染图片容器
+- 抽屉导航（0.2.8）：笔记 / 相册 / 统计从主页迁入抽屉；分组与相册文件夹做成可折叠小节；相册文件夹支持命名、多选照片、创建时间、编辑/删除；头像打开个人资料设置 emoji 与用户 ID
 - 多 Tab 联动：三条杠只在笔记 Tab 显示；切到相册 / 统计时用 Spring 收起，`Note` 标题向左补位，切回时弹回
 - 沉浸式编辑页（0.2.8）：正文和头部作为底层滚动内容，顶栏与工具岛 Overlay；滚动超过阈值时大标题缩小、日期标签 Spring 收起，顶栏显示折叠标题，回到顶部弹回；顶栏使用随 `collapseProgress` 加深的 tonal scrim（编辑页没有用 Haze，避免嵌套滚动下捕获不稳定）
 - Expressive 外形（0.2.8）：卡片 / 分组 / FAB 用不对称圆角；标题加大加粗、时间与标签缩小降噪、卡片 padding 加宽；首页标签改细描边；FAB 用高饱和主色
@@ -86,4 +88,6 @@
 - **底栏减重**：模糊半径 30dp、smoke 0.16 + frost 0.08，1dp 边缘高光；不要再套 HorizontalFloatingToolbar 或第二层 Surface，`FloatingNavBar` 已经重写成单层 Row
 - **编辑页顶栏**：内容在 `verticalScroll` 里，顶栏/工具岛是 Box overlay；顶栏背景用 `surface.copy(alpha = 0.28 + 0.70 * collapseProgress)` 的 tonal scrim，不叠 Haze，避免滚动时文字穿透和双层感
 - **左侧抽屉**：`GroupDrawer` 在 TimelineScreen 根 Box 之外，必须传 `topInset = contentPadding.calculateTopPadding()`，否则会盖住状态栏；打开时通过 `onDrawerVisibilityChange` 收起底栏，面板底部用 `navigationBarsPadding` 留出安全区
+- **Keep 主页**：顶部胶囊的 Haze source 在整个内容 Box 上，不要把 source 放到 `verticalScroll` 内部；无图卡片不要保留 Image 容器，`NoteCard` 只在 `note.media.firstOrNull() != null` 时渲染图片
+- **相册文件夹**：`AlbumFolder` 保存图片路径（不是 noteId），删除文件夹不删照片；`AlbumFolderSheet` 用 3 列多选，抽屉行显示创建日期
 - 提交信息里的 7 位短哈希（如 `7b0e0c3`）是 git commit SHA，提交时自动生成，不需要手写备注

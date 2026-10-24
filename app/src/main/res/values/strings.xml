@@ -296,4 +296,36 @@
     <string name="drawer_subtitle">本地笔记与专注</string>
     <string name="drawer_groups">分组</string>
     <string name="drawer_hint">长按分组可编辑或删除</string>
+
+    <!-- 主页顶栏 / 列表 / 个人资料 / 相册文件夹 -->
+    <string name="search_tokinote">搜索 TokiNote</string>
+    <string name="view_grid">切换为网格</string>
+    <string name="view_list">切换为列表</string>
+    <string name="sort_ascending">切换为升序</string>
+    <string name="sort_descending">切换为降序</string>
+    <string name="nav_album">相册</string>
+    <string name="section_pinned">已置顶</string>
+    <string name="search_results">搜索结果</string>
+    <string name="drawer_notes_section">笔记</string>
+    <string name="drawer_album_section">相册</string>
+    <string name="drawer_all_notes">全部笔记</string>
+    <string name="drawer_all_photos">全部照片</string>
+    <string name="profile_title">个人资料</string>
+    <string name="profile_anonymous">匿名用户</string>
+    <string name="profile_local_only">仅保存在本机</string>
+    <string name="profile_avatar">头像</string>
+    <string name="profile_user_id">用户 ID</string>
+    <string name="folder_add">新建文件夹</string>
+    <string name="folder_new">新建相册文件夹</string>
+    <string name="folder_edit">编辑相册文件夹</string>
+    <string name="folder_created_at">%1$s</string>
+    <string name="folder_name">文件夹名称</string>
+    <string name="folder_name_hint">例如：旅行</string>
+    <string name="folder_name_exists">已有同名文件夹</string>
+    <string name="folder_need_name">请输入文件夹名称</string>
+    <string name="folder_photos">选择照片</string>
+    <string name="folder_create">创建</string>
+    <string name="folder_delete">删除文件夹</string>
+    <string name="folder_delete_title">删除文件夹「%1$s」？</string>
+    <string name="folder_delete_body">只会删除文件夹，照片本身会保留。</string>
 </resources>
