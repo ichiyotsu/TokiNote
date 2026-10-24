@@ -5,20 +5,13 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M36,28 h36 a10,10 0 0 1 10,10 v32 a10,10 0 0 1 -10,10 h-36 a10,10 0 0 1 -10,-10 v-32 a10,10 0 0 1 10,-10 z" />
-
-    <path
-        android:strokeColor="#FF4C662B"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
-        android:pathData="M40,46 h28 M40,58 h20" />
-
-    <path
-        android:strokeColor="#FF4C662B"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M46,69 l5,5 l11,-11" />
+    <group
+        android:scaleX="0.058"
+        android:scaleY="0.058"
+        android:translateX="27.45"
+        android:translateY="81.84">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M400-280h160v-80H400v80Zm0-160h280v-80H400v80ZM280-600h400v-80H280v80Zm200 120ZM265-80q-79 0-134.5-55.5T75-270q0-57 29.5-102t77.5-68H80v-80h240v240h-80v-97q-37 8-61 38t-24 69q0 46 32.5 78t77.5 32v80Zm135-40v-80h360v-560H200v160h-80v-160q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H400Z" />
+    </group>
 </vector>
