@@ -14,6 +14,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -55,6 +56,11 @@ import com.tokinote.app.ui.settings.AppearanceSettings
 import com.tokinote.app.ui.settings.DataSettings
 import com.tokinote.app.ui.settings.ArchiveListScreen
 import com.tokinote.app.ui.settings.SettingsScreen
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.hazeBlur
 
 @Composable
 fun TokiNoteApp(viewModel: AppViewModel) {
@@ -66,6 +72,14 @@ fun TokiNoteApp(viewModel: AppViewModel) {
 
     val focusViewModel: FocusViewModel = viewModel()
     val focusState by focusViewModel.state.collectAsStateWithLifecycle()
+    val hazeState = rememberHazeState()
+    val glass = Modifier.hazeBlur(
+        input = HazeInput.Sources(hazeState),
+        style = HazeBlurStyle {
+            blurRadius(24.dp)
+            noiseFactor(0.08f)
+        },
+    )
 
     LaunchedEffect(settings) { focusViewModel.configure(settings) }
     LaunchedEffect(focusViewModel) {
@@ -133,6 +147,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     modifier = Modifier
                         .navigationBarsPadding()
                         .padding(bottom = 8.dp),
+                    glass = glass,
                     action = if (selectedTab == Dest.Notes || selectedTab == Dest.Focus || selectedTab == Dest.Settings) {
                         {
                             androidx.compose.runtime.remember(selectedTab) { androidx.compose.animation.core.Animatable(0.55f) }.let { pop ->
@@ -173,6 +188,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     ) { padding ->
         AnimatedContent(
             targetState = current,
+            modifier = Modifier.fillMaxSize().hazeSource(hazeState),
             transitionSpec = {
                 if (!motion) {
                     EnterTransition.None togetherWith ExitTransition.None
@@ -197,6 +213,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                 Dest.Notes -> TimelineScreen(
                     notes = notes,
                     groups = groups,
+                    labels = labels,
                     showTime = settings.showTime,
                     contentPadding = padding,
                     onOpenNote = ::openNote,

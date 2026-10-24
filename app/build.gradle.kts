@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-val releaseVersionName: String = System.getenv("VERSION_NAME") ?: "0.2.7"
+val releaseVersionName: String = System.getenv("VERSION_NAME") ?: "0.2.8"
 val releaseVersionCode: Int = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
 val releaseKeystore: String? = System.getenv("KEYSTORE_FILE")
 val compileSdkVersion: Int = System.getenv("COMPILE_SDK")?.toIntOrNull() ?: 37
@@ -73,6 +73,8 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.haze)
+    implementation(libs.haze.blur)
 
     testImplementation(libs.junit)
 

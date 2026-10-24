@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.StickyNote2
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.StickyNote2
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +26,7 @@ import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -53,12 +56,23 @@ fun FloatingNavBar(
     current: Dest,
     onSelect: (Dest) -> Unit,
     modifier: Modifier = Modifier,
+    glass: Modifier = Modifier,
     action: (@Composable () -> Unit)? = null,
 ) {
+    val shape = RoundedCornerShape(28.dp)
+    val colors = FloatingToolbarDefaults.standardFloatingToolbarColors().copy(
+        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f),
+        MaterialTheme.colorScheme.onSurfaceVariant,
+        MaterialTheme.colorScheme.primaryContainer,
+        MaterialTheme.colorScheme.onPrimaryContainer,
+    )
     Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val toolbarModifier = Modifier.clip(shape).then(glass)
         if (action != null) {
             HorizontalFloatingToolbar(
                 expanded = true,
+                modifier = toolbarModifier,
+                colors = colors,
                 floatingActionButton = { action() },
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                 content = { NavEntries(current, onSelect) },
@@ -66,6 +80,8 @@ fun FloatingNavBar(
         } else {
             HorizontalFloatingToolbar(
                 expanded = true,
+                modifier = toolbarModifier,
+                colors = colors,
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                 content = { NavEntries(current, onSelect) },
             )

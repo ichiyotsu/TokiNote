@@ -26,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,12 +35,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
+import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.hazeBlur
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -49,6 +58,7 @@ private data class AlbumItem(val noteId: String, val path: String, val index: In
 fun TimelineScreen(
     notes: List<Note>,
     groups: List<NoteGroup>,
+    labels: List<Label>,
     showTime: Boolean,
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
@@ -101,52 +111,46 @@ fun TimelineScreen(
         results.groupBy { it.journalDate }.toSortedMap(compareByDescending { it })
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(top = contentPadding.calculateTopPadding())) {
-        JournalTopBar(
-            searchActive = searchActive,
-            query = query,
-            onQueryChange = { query = it },
-            onOpenSearch = { searchActive = true },
-            onCloseSearch = {
-                query = ""
-                searchActive = false
-            },
-        )
+    var headerHeight by remember { mutableIntStateOf(0) }
+    val headerInset = with(androidx.compose.ui.platform.LocalDensity.current) { headerHeight.toDp() }
+    val hazeState = rememberHazeState()
+    val glass = Modifier.hazeBlur(
+        input = HazeInput.Sources(hazeState),
+        style = HazeBlurStyle {
+            blurRadius(28.dp)
+            noiseFactor(0.06f)
+        },
+    )
+    val headerShape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)
 
-        if (searchActive) {
-            SearchResults(
-                query = query,
-                results = results,
-                groups = groupedResults,
-                contentPadding = contentPadding,
-                onOpenNote = onOpenNote,
-            )
-        } else {
-            JournalTabs(selected = tab, onSelect = { tab = it })
-            if (tab == JournalTab.Journal) {
-                Spacer(Modifier.height(10.dp))
-                NoteGroupBar(
-                    groups = groups,
-                    selectedId = selectedGroupId,
-                    onSelect = { selectedGroupId = it },
-                    onCreate = {
-                        editingGroupId = null
-                        groupSheetOpen = true
-                    },
-                    onEdit = { group ->
-                        editingGroupId = group.id
-                        groupSheetOpen = true
-                    },
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = contentPadding.calculateTopPadding()),
+    ) {
+        // 列表在顶栏下面滚动，顶栏用 Haze 捕获并模糊背后的内容。
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSource(hazeState),
+        ) {
+            if (searchActive) {
+                SearchResults(
+                    query = query,
+                    results = results,
+                    groups = groupedResults,
+                    contentPadding = contentPadding,
+                    topInset = headerInset,
+                    onOpenNote = onOpenNote,
                 )
-            }
-            Spacer(Modifier.height(14.dp))
-
-            Box(modifier = Modifier.weight(1f)) {
+            } else {
                 when (tab) {
                     JournalTab.Journal -> JournalTabContent(
                         notes = monthNotes,
+                        labels = labels,
                         showTime = showTime,
                         contentPadding = contentPadding,
+                        topInset = headerInset,
                         emptyText = if (selectedGroup != null) {
                             stringResource(R.string.group_empty)
                         } else {
@@ -160,17 +164,59 @@ fun TimelineScreen(
                     JournalTab.Album -> AlbumTabContent(
                         items = album,
                         contentPadding = contentPadding,
+                        topInset = headerInset,
                         onOpenMedia = onOpenMedia,
                     )
 
                     JournalTab.Stats -> CalendarScreen(
                         notes = notes,
                         contentPadding = contentPadding,
+                        topInset = headerInset,
                         onOpenNote = onOpenNote,
                     )
                 }
             }
-            Spacer(Modifier.height(2.dp))
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .onSizeChanged { headerHeight = it.height }
+                .clip(headerShape)
+                .then(glass)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.68f)),
+        ) {
+            JournalTopBar(
+                searchActive = searchActive,
+                query = query,
+                onQueryChange = { query = it },
+                onOpenSearch = { searchActive = true },
+                onCloseSearch = {
+                    query = ""
+                    searchActive = false
+                },
+            )
+
+            if (!searchActive) {
+                JournalTabs(selected = tab, onSelect = { tab = it })
+                if (tab == JournalTab.Journal) {
+                    Spacer(Modifier.height(10.dp))
+                    NoteGroupBar(
+                        groups = groups,
+                        selectedId = selectedGroupId,
+                        onSelect = { selectedGroupId = it },
+                        onCreate = {
+                            editingGroupId = null
+                            groupSheetOpen = true
+                        },
+                        onEdit = { group ->
+                            editingGroupId = group.id
+                            groupSheetOpen = true
+                        },
+                    )
+                }
+                Spacer(Modifier.height(14.dp))
+            }
         }
     }
 
@@ -217,6 +263,7 @@ private fun SearchResults(
     results: List<Note>,
     groups: Map<LocalDate, List<Note>>,
     contentPadding: PaddingValues,
+    topInset: Dp = 0.dp,
     onOpenNote: (String) -> Unit,
 ) {
     when {
@@ -230,7 +277,7 @@ private fun SearchResults(
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
-                    top = 4.dp,
+                    top = 4.dp + topInset,
                     bottom = contentPadding.calculateBottomPadding() + 120.dp,
                 ),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -311,8 +358,10 @@ private fun SearchHint(text: String) {
 @Composable
 private fun JournalTabContent(
     notes: List<Note>,
+    labels: List<Label>,
     showTime: Boolean,
     contentPadding: PaddingValues,
+    topInset: Dp = 0.dp,
     emptyText: String,
     onOpenNote: (String) -> Unit,
     onTodoToggle: (String) -> Unit,
@@ -330,7 +379,7 @@ private fun JournalTabContent(
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            top = 4.dp,
+            top = 4.dp + topInset,
             bottom = contentPadding.calculateBottomPadding() + 120.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -340,6 +389,7 @@ private fun JournalTabContent(
                 JournalCard(
                     note = note,
                     showTime = showTime,
+                    labels = labels,
                     onClick = { onOpenNote(note.id) },
                     onLongClick = { onLongPress(note) },
                 )
@@ -352,6 +402,7 @@ private fun JournalTabContent(
             JournalCard(
                 note = note,
                 showTime = showTime,
+                labels = labels,
                 onClick = { onOpenNote(note.id) },
                 onLongClick = { onLongPress(note) },
             )
@@ -363,6 +414,7 @@ private fun JournalTabContent(
 private fun AlbumTabContent(
     items: List<AlbumItem>,
     contentPadding: PaddingValues,
+    topInset: Dp = 0.dp,
     onOpenMedia: (String, Int) -> Unit,
 ) {
     if (items.isEmpty()) {
@@ -375,7 +427,7 @@ private fun AlbumTabContent(
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            top = 4.dp,
+            top = 4.dp + topInset,
             bottom = contentPadding.calculateBottomPadding() + 120.dp,
         ),
         horizontalArrangement = Arrangement.spacedBy(6.dp),

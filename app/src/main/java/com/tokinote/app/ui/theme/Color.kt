@@ -1,6 +1,8 @@
 package com.tokinote.app.ui.theme
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 
 // Palette taken from Tomato (nsh07), which follows Material 3 Expressive tokens.
 val primaryLight = Color(0xFF4C662B)
@@ -91,3 +93,23 @@ val NoteTints = listOf(
     NoteTint(Color(0xFFFFF0E0), Color(0xFF382A1C)),
     NoteTint(Color(0xFFF0F0EC), Color(0xFF2B2B27)),
 )
+
+/** 标签底色：8 个柔和的纸色，跟随深浅色主题，并与当前主色轻微调和。 */
+val LabelTints = listOf(
+    NoteTint(Color(0xFFDDEFE2), Color(0xFF20342A)),
+    NoteTint(Color(0xFFD8E9FA), Color(0xFF1D2D3D)),
+    NoteTint(Color(0xFFE8E0FA), Color(0xFF2C2541)),
+    NoteTint(Color(0xFFFBE3D6), Color(0xFF3B2920)),
+    NoteTint(Color(0xFFFADDE4), Color(0xFF3C232C)),
+    NoteTint(Color(0xFFF7EFCF), Color(0xFF36311D)),
+    NoteTint(Color(0xFFE3EBD7), Color(0xFF2A3423)),
+    NoteTint(Color(0xFFE8E8E4), Color(0xFF2F2F2C)),
+)
+
+@Composable
+fun labelTint(index: Int): Color {
+    val dark = LocalDarkTheme.current
+    val base = LabelTints[((index % LabelTints.size) + LabelTints.size) % LabelTints.size]
+    val color = if (dark) base.dark else base.light
+    return lerp(color, androidx.compose.material3.MaterialTheme.colorScheme.primary, 0.08f)
+}

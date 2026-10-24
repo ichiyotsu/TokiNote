@@ -65,6 +65,7 @@ import com.tokinote.app.data.Attachments
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.TextWeight
+import com.tokinote.app.ui.theme.labelTint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -538,12 +539,12 @@ private fun DateLabelSheet(
                     },
                     shape = CircleShape,
                     color = if (selected) {
-                        MaterialTheme.colorScheme.primary
+                        labelTint(label.colorIndex)
                     } else {
                         MaterialTheme.colorScheme.surfaceContainerHigh
                     },
                     contentColor = if (selected) {
-                        MaterialTheme.colorScheme.onPrimary
+                        MaterialTheme.colorScheme.onSurface
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },

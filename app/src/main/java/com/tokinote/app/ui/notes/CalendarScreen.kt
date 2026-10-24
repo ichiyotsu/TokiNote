@@ -54,6 +54,7 @@ private val dayTitle = DateTimeFormatter.ofPattern("M月d日", Locale.CHINA)
 fun CalendarScreen(
     notes: List<Note>,
     contentPadding: PaddingValues,
+    topInset: androidx.compose.ui.unit.Dp = 0.dp,
     onOpenNote: (String) -> Unit,
 ) {
     var scopeName by rememberSaveable { mutableStateOf(StatsScope.Month.name) }
@@ -87,7 +88,7 @@ fun CalendarScreen(
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            top = 4.dp,
+            top = 4.dp + topInset,
             bottom = contentPadding.calculateBottomPadding() + 120.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(8.dp),

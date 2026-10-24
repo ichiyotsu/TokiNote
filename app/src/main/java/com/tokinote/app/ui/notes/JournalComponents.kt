@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -64,9 +65,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.data.JournalFile
+import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.formatFileSize
 import com.tokinote.app.ui.pressScale
+import com.tokinote.app.ui.theme.labelTint
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -402,6 +405,7 @@ fun JournalCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     showTime: Boolean = true,
+    labels: List<Label> = emptyList(),
 ) {
     val shape = RoundedCornerShape(24.dp)
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
@@ -455,6 +459,7 @@ fun JournalCard(
             Spacer(Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
+                val noteLabels = labels.filter { it.id in note.labelIds }
                 Row(verticalAlignment = Alignment.Top) {
                     Text(
                         text = note.title.ifBlank { stringResource(R.string.note_untitled) },
@@ -520,6 +525,39 @@ fun JournalCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+
+                if (noteLabels.isNotEmpty()) {
+                    Spacer(Modifier.height(7.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        noteLabels.take(3).forEach { label ->
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(labelTint(label.colorIndex))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                            ) {
+                                Text(
+                                    text = label.name,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.widthIn(max = 72.dp),
+                                )
+                            }
+                        }
+                        if (noteLabels.size > 3) {
+                            Text(
+                                text = "+${noteLabels.size - 3}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
