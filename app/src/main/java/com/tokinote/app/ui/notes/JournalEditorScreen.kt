@@ -19,6 +19,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -233,18 +235,28 @@ fun JournalEditorScreen(
             }
         }
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 22.dp),
-        ) {
+        BoxWithConstraints(modifier = Modifier.weight(1f)) {
+            val compact = maxHeight < 560.dp
+            val bannerHeight by androidx.compose.animation.core.animateDpAsState(
+                targetValue = if (compact) 96.dp else 156.dp,
+                animationSpec = tween(TokiMotion.standard),
+                label = "editorBannerHeight",
+            )
+            val headerMax = (maxHeight - 130.dp).coerceAtLeast(160.dp)
+            Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = headerMax)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 22.dp),
+                ) {
             if (note.media.isNotEmpty()) {
                 val hero = rememberImage(note.media.first())
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(156.dp)
+                        .height(bannerHeight)
                         .clip(RoundedCornerShape(30.dp))
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .clickable { onOpenMedia(note.media, 0) },
@@ -376,32 +388,37 @@ fun JournalEditorScreen(
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
-            BasicTextField(
-                value = note.body,
-                onValueChange = { onChange(note.copy(body = it)) },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = (17 * note.bodySize.scale).sp,
-                    lineHeight = (27 * note.bodySize.scale).sp,
-                    fontWeight = note.bodyWeight.toFontWeight(),
-                    color = MaterialTheme.colorScheme.onSurface,
-                ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp),
-                decorationBox = { inner ->
-                    if (note.body.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.editor_hint),
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = (17 * note.bodySize.scale).sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        )
-                    }
-                    inner()
-                },
-            )
-            Spacer(Modifier.height(32.dp))
+                    Spacer(Modifier.height(10.dp))
+                }
+
+                BasicTextField(
+                    value = note.body,
+                    onValueChange = { onChange(note.copy(body = it)) },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = (17 * note.bodySize.scale).sp,
+                        lineHeight = (27 * note.bodySize.scale).sp,
+                        fontWeight = note.bodyWeight.toFontWeight(),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    ),
+                    cursorBrush = SolidColor(accent),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 22.dp),
+                    decorationBox = { inner ->
+                        if (note.body.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.editor_hint),
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = (17 * note.bodySize.scale).sp,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            )
+                        }
+                        inner()
+                    },
+                )
+            }
         }
 
         Row(

@@ -50,7 +50,7 @@
 - Expressive 外形（0.2.8）：卡片 / 分组 / FAB 用不对称圆角；标题加大加粗、时间与标签缩小降噪、卡片 padding 加宽；首页标签改细描边；FAB 用高饱和主色
 - 毛玻璃（0.2.8）：笔记页顶栏 + 分组条 + 悬浮底栏用 Haze 做真实背景模糊；列表/日历从顶栏下方滚过，`headerHeight` 用 px→dp 测量后作为 LazyColumn 的 `topInset`
 - 长按预览（0.2.8）：从卡片 `boundsInRoot` 到屏幕中央目标 bounds 做共享式膨胀，Emphasized easing、背景压暗、底栏自动收起；见 `NotePreviewOverlay.kt`
-- 编辑页（0.2.8）：首图取色（`NotePalette`）驱动背景 / 标题 / 保存按钮 / 工具岛；图片横幅 156dp；底部悬浮工具岛默认只显示 +，弹性展开四个工具；顶部更多打开笔记信息面板（创建/编辑时间、标签、归档/删除）
+- 编辑页（0.2.8）：首图取色（`NotePalette`）驱动背景 / 标题 / 保存按钮 / 工具岛；图片横幅 156dp（键盘弹出时 96dp）；底部悬浮工具岛默认只显示 +，弹性展开四个工具；顶部更多打开笔记信息面板（创建/编辑时间、标签、归档/删除）；正文输入区铺满剩余高度，空白可聚焦，长文内部滚动
 - 标签底色（0.2.8）：首页卡片显示描边标签胶囊；编辑页标签面板选中项使用 8 色 `LabelTints`，随深浅色和当前主色轻微调和
 - 相册：三列网格 + 全屏查看器（缩放、下载、定位、信息）
 - 专注：波浪环、主按钮长胶囊 + 圆形重置 + 窄药丸辅助键、垂直居中、长按/双击进入不定时正向计时（0.2.7 修复手势与 00:00 起计）
@@ -79,4 +79,6 @@
 - **毛玻璃不要叠层**：底栏/顶栏容器保持透明，tint 放进 `HazeBlurStyle` 的 `colorEffects` / `fallbackColorEffect`，让模糊本身就是背景；不要再额外加 `surface.copy(alpha=…)` 的 Surface 或 `.background()`，否则会变成两层
 - **长按预览**：source bounds 用 `onGloballyPositioned { boundsInRoot() }`，目标 bounds 也要在 `onGloballyPositioned` 里量；缩放用等比，避免 scaleX/scaleY 独立导致文字挤压；预览打开时通过回调让 TokiNoteApp 收起底栏
 - **编辑页取色**：`BitmapFactory` 用 `inSampleSize = 8` 只采样 48×48 网格，避免主线程解码大图；主题色、工具岛、标题分别用 `animateColorAsState` 过渡
+- **正文铺满**：`BoxWithConstraints` 里 header 用 `heightIn(max = maxHeight - 130.dp)` + 独立滚动，正文 `weight(1f)` 占满剩余；不要给正文固定 `height(280.dp)`，否则空白区点不到。键盘弹出时用 `maxHeight < 560.dp` 把横幅收成 96dp
+- **底栏减重**：模糊半径 14dp、tint alpha 0.82；独立按钮 18dp 圆角矩形，不要再套第二层 Surface
 - 提交信息里的 7 位短哈希（如 `7b0e0c3`）是 git commit SHA，提交时自动生成，不需要手写备注

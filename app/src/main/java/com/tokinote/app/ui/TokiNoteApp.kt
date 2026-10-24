@@ -74,12 +74,12 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val focusViewModel: FocusViewModel = viewModel()
     val focusState by focusViewModel.state.collectAsStateWithLifecycle()
     val hazeState = rememberHazeState()
-    val navTint = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f)
+    val navTint = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f)
     val glass = Modifier.hazeBlur(
         input = HazeInput.Sources(hazeState),
         style = HazeBlurStyle {
-            blurRadius(24.dp)
-            noiseFactor(0.08f)
+            blurRadius(14.dp)
+            noiseFactor(0.05f)
             colorEffects(listOf(HazeColorEffect.tint(navTint)))
             fallbackColorEffect(HazeColorEffect.tint(navTint))
         },

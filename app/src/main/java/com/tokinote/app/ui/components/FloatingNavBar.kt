@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.ui.Dest
 import com.tokinote.app.ui.pressScale
-import com.tokinote.app.ui.theme.ExpressiveFabShape
 
 private data class NavEntry(
     val dest: Dest,
@@ -152,20 +151,20 @@ fun NavActionButton(
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             onClick()
         },
-        shape = ExpressiveFabShape,
+        shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
-        shadowElevation = 8.dp,
+        shadowElevation = 2.dp,
         interactionSource = interaction,
         modifier = Modifier
-            .size(68.dp)
+            .size(64.dp)
             .pressScale(interaction, pressedScale = 0.9f),
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                modifier = Modifier.size(30.dp),
+                modifier = Modifier.size(28.dp),
             )
         }
     }
