@@ -329,6 +329,8 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     )
 
                     SettingsPage.About -> AboutScreen(
+                        settings = settings,
+                        onUpdate = viewModel::updateSettings,
                         contentPadding = padding,
                         onBack = { goBack() },
                     )

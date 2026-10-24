@@ -29,6 +29,8 @@ data class AppSettings(
     val showTime: Boolean = true,
     /** 减弱动效：关闭页面转场、按压回弹等动画。 */
     val reduceMotion: Boolean = false,
+    /** release 或 beta：决定检查更新时拉取的通道。 */
+    val updateChannel: String = "release",
 )
 
 /** 一段已完成的专注记录，用于统计。 */

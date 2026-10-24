@@ -92,6 +92,7 @@ class TokiStore(context: Context) {
                 autoStartNext = json.optBoolean("autoStartNext", true),
                 showTime = json.optBoolean("showTime", true),
                 reduceMotion = json.optBoolean("reduceMotion", false),
+                updateChannel = json.optString("updateChannel", "release"),
             )
         }.getOrDefault(AppSettings())
     }
@@ -109,6 +110,7 @@ class TokiStore(context: Context) {
             put("autoStartNext", settings.autoStartNext)
             put("showTime", settings.showTime)
             put("reduceMotion", settings.reduceMotion)
+            put("updateChannel", settings.updateChannel)
         }
         prefs.edit().putString(KEY_SETTINGS, json.toString()).apply()
     }
@@ -179,6 +181,7 @@ class TokiStore(context: Context) {
                 put("autoStartNext", settings.autoStartNext)
                 put("showTime", settings.showTime)
             put("reduceMotion", settings.reduceMotion)
+            put("updateChannel", settings.updateChannel)
             })
         }.toString(2)
     }

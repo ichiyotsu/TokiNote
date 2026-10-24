@@ -40,6 +40,8 @@ fun <T> PillGroup(
     customLabel: String? = null,
     customSelected: Boolean = false,
     onCustom: (() -> Unit)? = null,
+    enabled: Boolean = true,
+    onDisabledClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -55,6 +57,8 @@ fun <T> PillGroup(
                 selected = value == selected,
                 onClick = { onSelect(value) },
                 modifier = Modifier.weight(1f),
+                enabled = enabled,
+                onDisabledClick = onDisabledClick,
             )
         }
         if (customLabel != null && onCustom != null) {
@@ -76,6 +80,8 @@ private fun Segment(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    enabled: Boolean = true,
+    onDisabledClick: (() -> Unit)? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
     Row(
@@ -89,7 +95,9 @@ private fun Segment(
                     androidx.compose.ui.graphics.Color.Transparent
                 },
             )
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .clickable(interactionSource = interaction, indication = null) {
+                if (enabled) onClick() else onDisabledClick?.invoke()
+            }
             .pressScale(interaction, pressedScale = 0.97f),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -128,6 +136,8 @@ fun Pill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    enabled: Boolean = true,
+    onDisabledClick: (() -> Unit)? = null,
 ) {
     Segment(label = label, selected = selected, onClick = onClick, modifier = modifier, icon = icon)
 }

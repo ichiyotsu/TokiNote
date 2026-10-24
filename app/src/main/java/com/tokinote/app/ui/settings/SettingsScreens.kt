@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.SdStorage
@@ -185,6 +186,7 @@ fun AppearanceSettings(
     onBack: () -> Unit,
     onUpdate: ((AppSettings) -> AppSettings) -> Unit,
 ) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -229,6 +231,10 @@ fun AppearanceSettings(
                 ),
                 selected = settings.colorPreset,
                 onSelect = { preset -> onUpdate { it.copy(colorPreset = preset) } },
+                enabled = !settings.dynamicColor,
+                onDisabledClick = {
+                    Toast.makeText(context, R.string.need_disable_dynamic, Toast.LENGTH_SHORT).show()
+                },
             )
             Spacer(Modifier.height(20.dp))
             SettingSwitch(
@@ -278,6 +284,7 @@ fun DataSettings(
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     var showClearDialog by remember { mutableStateOf(false) }
+    var cacheBytes by remember { mutableStateOf(dirSize(context.cacheDir)) }
 
     Column(
         modifier = Modifier
@@ -292,6 +299,7 @@ fun DataSettings(
                 .padding(horizontal = 20.dp),
         ) {
             Spacer(Modifier.height(8.dp))
+
             SegmentedColumn {
                 SegmentedListItem(
                     title = stringResource(R.string.data_notes),
@@ -309,11 +317,45 @@ fun DataSettings(
                     },
                 )
                 SegmentedListItem(
+                    title = stringResource(R.string.data_archive),
+                    subtitle = null,
+                    icon = Icons.Filled.Archive,
+                    index = 1,
+                    count = 3,
+                    onClick = onOpenArchive,
+                    trailing = {
+                        Text(
+                            text = archiveCount.toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                )
+                SegmentedListItem(
+                    title = stringResource(R.string.data_trash),
+                    subtitle = null,
+                    icon = Icons.Filled.Delete,
+                    index = 2,
+                    count = 3,
+                    onClick = onOpenTrash,
+                    trailing = {
+                        Text(
+                            text = trashCount.toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+            SegmentedColumn {
+                SegmentedListItem(
                     title = stringResource(R.string.data_export),
                     subtitle = stringResource(R.string.data_export_sub),
                     icon = Icons.Filled.Code,
-                    index = 1,
-                    count = 3,
+                    index = 0,
+                    count = 4,
                     onClick = {
                         clipboard.setText(AnnotatedString(exportJson()))
                         Toast.makeText(context, R.string.data_exported, Toast.LENGTH_SHORT).show()
@@ -321,50 +363,22 @@ fun DataSettings(
                     trailing = { Chevron() },
                 )
                 SegmentedListItem(
-                    title = stringResource(R.string.data_clear),
-                    subtitle = null,
-                    icon = Icons.Filled.DeleteForever,
-                    index = 2,
-                    count = 3,
-                    onClick = { showClearDialog = true },
-                    trailing = { Chevron() },
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-            SegmentedColumn {
-                SegmentedListItem(
-                    title = stringResource(R.string.data_archive),
-                    subtitle = archiveCount.toString(),
-                    icon = Icons.Filled.Archive,
-                    index = 0,
-                    count = 4,
-                    onClick = onOpenArchive,
-                    trailing = { Chevron() },
-                )
-                SegmentedListItem(
-                    title = stringResource(R.string.data_trash),
-                    subtitle = trashCount.toString(),
-                    icon = Icons.Filled.Delete,
+                    title = stringResource(R.string.data_cache),
+                    subtitle = formatSize(cacheBytes),
+                    icon = Icons.Filled.CleaningServices,
                     index = 1,
                     count = 4,
-                    onClick = onOpenTrash,
-                    trailing = { Chevron() },
-                )
-                SegmentedListItem(
-                    title = stringResource(R.string.data_cache),
-                    subtitle = null,
-                    icon = Icons.Filled.CleaningServices,
-                    index = 2,
-                    count = 4,
-                    onClick = { clearCache(context.cacheDir) },
+                    onClick = {
+                        clearCache(context.cacheDir)
+                        cacheBytes = 0L
+                    },
                     trailing = { Chevron() },
                 )
                 SegmentedListItem(
                     title = stringResource(R.string.data_storage),
                     subtitle = stringResource(R.string.data_storage_desc),
                     icon = Icons.Filled.SdStorage,
-                    index = 3,
+                    index = 2,
                     count = 4,
                     onClick = {},
                     trailing = {
@@ -374,6 +388,15 @@ fun DataSettings(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     },
+                )
+                SegmentedListItem(
+                    title = stringResource(R.string.data_clear),
+                    subtitle = null,
+                    icon = Icons.Filled.DeleteForever,
+                    index = 3,
+                    count = 4,
+                    onClick = { showClearDialog = true },
+                    trailing = { Chevron() },
                 )
             }
             Spacer(Modifier.height(24.dp))
@@ -393,10 +416,7 @@ fun DataSettings(
                         onClearAll()
                     },
                 ) {
-                    Text(
-                        text = stringResource(R.string.data_clear),
-                        color = MaterialTheme.colorScheme.error,
-                    )
+                    Text(stringResource(R.string.data_clear), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -408,9 +428,27 @@ fun DataSettings(
     }
 }
 
+private fun dirSize(dir: java.io.File): Long =
+    if (!dir.exists()) 0L else dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+
+private fun clearCache(dir: java.io.File) {
+    dir.listFiles()?.forEach { file -> runCatching { file.deleteRecursively() } }
+}
+
+private fun formatSize(bytes: Long): String = when {
+    bytes >= 1L shl 30 -> String.format(java.util.Locale.US, "%.1f GB", bytes / (1L shl 30).toDouble())
+    bytes >= 1L shl 20 -> String.format(java.util.Locale.US, "%.1f MB", bytes / (1L shl 20).toDouble())
+    bytes >= 1L shl 10 -> String.format(java.util.Locale.US, "%.0f KB", bytes / (1L shl 10).toDouble())
+    else -> "$bytes B"
+}
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
+fun AboutScreen(
+    settings: AppSettings,
+    onUpdate: ((AppSettings) -> AppSettings) -> Unit,
+    contentPadding: PaddingValues,
+    onBack: () -> Unit,
+) {
     val context = LocalContext.current
     val version = remember(context) { appVersionName(context) }
     val scope = rememberCoroutineScope()
@@ -429,7 +467,7 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         failureRes = null
         scope.launch {
             val info = withContext(Dispatchers.IO) {
-                runCatching { UpdateChecker.latest() }.getOrNull()
+                runCatching { UpdateChecker.latest(settings.updateChannel) }.getOrNull()
             }
             checking = false
             statusRes = when {
@@ -580,7 +618,15 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         AlertDialog(
             onDismissRequest = { if (!downloading) release = null },
             icon = { Icon(Icons.Filled.SystemUpdate, contentDescription = null) },
-            title = { Text(stringResource(R.string.update_title, currentRelease.version)) },
+            title = {
+                Text(
+                    if (currentRelease.isPrerelease) {
+                        "TokiNote ${currentRelease.version} Beta"
+                    } else {
+                        stringResource(R.string.update_title, currentRelease.version)
+                    },
+                )
+            },
             text = {
                 Column {
                     Text(
@@ -722,17 +768,4 @@ private fun WavyProgress(progress: Float) {
             )
         }
     }
-}
-private fun dirSize(dir: java.io.File): Long =
-    if (!dir.exists()) 0L else dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-
-private fun clearCache(dir: java.io.File) {
-    dir.listFiles()?.forEach { file -> runCatching { file.deleteRecursively() } }
-}
-
-private fun formatSize(bytes: Long): String = when {
-    bytes >= 1L shl 30 -> String.format(java.util.Locale.US, "%.1f GB", bytes / (1L shl 30).toDouble())
-    bytes >= 1L shl 20 -> String.format(java.util.Locale.US, "%.1f MB", bytes / (1L shl 20).toDouble())
-    bytes >= 1L shl 10 -> String.format(java.util.Locale.US, "%.0f KB", bytes / (1L shl 10).toDouble())
-    else -> "$bytes B"
 }

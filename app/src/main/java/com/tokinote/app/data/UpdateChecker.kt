@@ -14,6 +14,7 @@ data class ReleaseInfo(
     val notes: String,
     val apkUrl: String?,
     val pageUrl: String,
+    val isPrerelease: Boolean = false,
 )
 
 /**
@@ -26,15 +27,20 @@ object UpdateChecker {
         "https://api.github.com/repos/ichiyotsu/TokiNote/releases?per_page=10"
     private const val USER_AGENT = "TokiNote-Android"
 
-    /** 最新版本；优先正式版，没有正式版时退回最新的预发布版。 */
-    fun latest(): ReleaseInfo? {
+    /** 最新版本：release 通道只看正式版，beta 通道优先预发布版。 */
+    fun latest(channel: String = "release"): ReleaseInfo? {
         val array = JSONArray(httpGet(RELEASES_URL))
         var preRelease: ReleaseInfo? = null
         for (index in 0 until array.length()) {
             val json = array.optJSONObject(index) ?: continue
             if (json.optBoolean("draft", false)) continue
             val info = json.toReleaseInfo()
-            if (json.optBoolean("prerelease", false)) {
+            val pre = json.optBoolean("prerelease", false)
+            if (pre != (channel == "beta")) {
+                if (preRelease == null) preRelease = info
+                continue
+            }
+            if (false) {
                 if (preRelease == null) preRelease = info
                 continue
             }
@@ -132,6 +138,7 @@ object UpdateChecker {
             notes = optString("body"),
             apkUrl = apkUrl,
             pageUrl = optString("html_url"),
+            isPrerelease = optBoolean("prerelease", false),
         )
     }
 

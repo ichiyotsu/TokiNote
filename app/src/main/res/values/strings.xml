@@ -223,7 +223,7 @@
     <string name="stats_per_day">日均专注 %1$s</string>
     <string name="stats_avg">日均 %1$s</string>
     <string name="stats_avg_focus">日均专注</string>
-    <string name="color_preset">配色</string>
+    <string name="color_preset">莫奈取色</string>
     <string name="color_default">抹茶</string>
     <string name="color_blue">晴空</string>
     <string name="color_purple">紫藤</string>
@@ -264,4 +264,5 @@
     <string name="preview_open">打开</string>
     <string name="preview_archive">归档</string>
     <string name="preview_delete">删除</string>
+    <string name="need_disable_dynamic">请先关闭动态取色</string>
 </resources>
