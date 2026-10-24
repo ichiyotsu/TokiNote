@@ -50,7 +50,6 @@ fun TimelineScreen(
     showTime: Boolean,
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
-    onOpenCalendar: () -> Unit,
     onOpenMedia: (String, Int) -> Unit,
     onOpenFocusStats: () -> Unit,
     onTodoToggle: (String) -> Unit,
@@ -94,7 +93,6 @@ fun TimelineScreen(
                 query = ""
                 searchActive = false
             },
-            onOpenCalendar = onOpenCalendar,
         )
 
         if (searchActive) {
@@ -291,7 +289,7 @@ private fun SectionLabel(text: String) {
         text = text,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 2.dp),
+        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
     )
 }
 

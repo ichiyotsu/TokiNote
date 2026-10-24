@@ -33,3 +33,14 @@ fun isToday(epochMillis: Long): Boolean =
     Instant.ofEpochMilli(epochMillis)
         .atZone(ZoneId.systemDefault())
         .toLocalDate() == LocalDate.now()
+
+/** 正向计时：超过一小时显示 h:mm:ss。 */
+fun formatElapsed(totalSeconds: Int): String {
+    val safe = totalSeconds.coerceAtLeast(0)
+    val hours = safe / 3600
+    return if (hours > 0) {
+        "%d:%02d:%02d".format(Locale.US, hours, (safe % 3600) / 60, safe % 60)
+    } else {
+        "%02d:%02d".format(Locale.US, safe / 60, safe % 60)
+    }
+}

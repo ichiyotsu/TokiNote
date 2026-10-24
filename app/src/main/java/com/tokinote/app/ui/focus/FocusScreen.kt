@@ -39,6 +39,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.tokinote.app.ui.formatElapsed
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,6 +66,7 @@ fun FocusScreen(
     onReset: () -> Unit,
     onSkip: () -> Unit,
     onOpenTimerSettings: () -> Unit,
+    onStartIndefinite: () -> Unit,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val motion = LocalMotionEnabled.current
@@ -73,6 +82,30 @@ fun FocusScreen(
         colorScheme.onPrimaryContainer
     } else {
         colorScheme.onTertiaryContainer
+    }
+
+    var animatingOut by remember { mutableStateOf(false) }
+    val timeScale by animateFloatAsState(
+        targetValue = if (animatingOut) 2.6f else 1f,
+        animationSpec = tween(420),
+        label = "timeScale",
+    )
+    val timeAlpha by animateFloatAsState(
+        targetValue = if (animatingOut) 0f else 1f,
+        animationSpec = tween(420),
+        label = "timeAlpha",
+    )
+    val timeBlur by animateFloatAsState(
+        targetValue = if (animatingOut) 26f else 0f,
+        animationSpec = tween(420),
+        label = "timeBlur",
+    )
+    LaunchedEffect(animatingOut) {
+        if (animatingOut) {
+            kotlinx.coroutines.delay(440)
+            onStartIndefinite()
+            animatingOut = false
+        }
     }
 
     val animatedProgress by animateFloatAsState(
@@ -127,7 +160,13 @@ fun FocusScreen(
                             ),
                             color = colorScheme.onSurface,
                         )
-                        if (state.mode == FocusMode.Focus) {
+                        if (state.indefinite) {
+                            Text(
+                                text = stringResource(R.string.focus_indefinite),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = colorScheme.onSurfaceVariant,
+                            )
+                        } else if (state.mode == FocusMode.Focus) {
                             Text(
                                 text = stringResource(
                                     R.string.focus_session,
@@ -243,8 +282,8 @@ private fun FocusAction(
     ) {
         Box(
             modifier = Modifier
-                .height(56.dp)
-                .width(56.dp),
+                .height(64.dp)
+                .width(64.dp),
             contentAlignment = Alignment.Center,
         ) {
             Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(22.dp))

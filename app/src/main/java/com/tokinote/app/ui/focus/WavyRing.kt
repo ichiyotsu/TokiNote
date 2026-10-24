@@ -31,12 +31,14 @@ fun WavyRing(
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 16.dp,
     amplitude: Dp = 4.dp,
+    gap: Dp = 4.dp,
     content: @Composable BoxScope.() -> Unit = {},
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val stroke = strokeWidth.toPx()
             val radius = size.minDimension / 2f - stroke / 2f
+            val progressRadius = radius - gap.toPx()
             drawCircle(
                 color = track,
                 radius = radius,
@@ -57,7 +59,7 @@ fun WavyRing(
                     // 两端收窄波幅，让线头落在轨道上，不会突兀。
                     val taper = minOf(1f, t * 12f, (1f - t) * 12f)
                     val wave = sin(angleDeg / waveLength * 2.0 * PI).toFloat() * amp * taper
-                    val r = radius + wave
+                    val r = progressRadius + wave
                     val x = center.x + cos(angle).toFloat() * r
                     val y = center.y + sin(angle).toFloat() * r
                     if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)

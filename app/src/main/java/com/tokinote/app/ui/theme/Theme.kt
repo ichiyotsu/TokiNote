@@ -97,10 +97,10 @@ private fun ColorScheme.trueBlack(): ColorScheme = copy(
     background = Color.Black,
     surface = Color.Black,
     surfaceContainerLowest = Color.Black,
-    surfaceContainerLow = Color(0xFF0A0C07),
-    surfaceContainer = Color(0xFF101208),
-    surfaceContainerHigh = Color(0xFF171A11),
-    surfaceContainerHighest = Color(0xFF1F2317),
+    surfaceContainerLow = Color(0xFF121212),
+    surfaceContainer = Color(0xFF171915),
+    surfaceContainerHigh = Color(0xFF1D1F1A),
+    surfaceContainerHighest = Color(0xFF24271F),
 )
 
 private fun ColorScheme.withPreset(preset: ColorPreset, dark: Boolean): ColorScheme = when (preset) {

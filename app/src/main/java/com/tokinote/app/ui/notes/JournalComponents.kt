@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.StickyNote2
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.LocationOn
@@ -109,7 +110,6 @@ fun JournalTopBar(
     onQueryChange: (String) -> Unit,
     onOpenSearch: () -> Unit,
     onCloseSearch: () -> Unit,
-    onOpenCalendar: () -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(searchActive) {
@@ -174,13 +174,6 @@ fun JournalTopBar(
             Spacer(Modifier.weight(1f))
         }
 
-        IconButton(onClick = onOpenCalendar) {
-            Icon(
-                imageVector = Icons.Filled.CalendarMonth,
-                contentDescription = stringResource(R.string.action_calendar),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
     }
 }
 
@@ -297,60 +290,39 @@ fun JournalTabs(selected: JournalTab, onSelect: (JournalTab) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 8.dp),
     ) {
         JournalTab.entries.forEach { tab ->
             val active = tab == selected
-            Box(
+            Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(44.dp)
-                    .clip(if (active) CircleShape else RoundedCornerShape(14.dp))
-                    .background(
-                        if (active) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.surfaceContainerHigh
-                        },
-                    )
-                    .clickable { onSelect(tab) },
-                contentAlignment = Alignment.Center,
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onSelect(tab) }
+                    .padding(vertical = 6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = stringResource(tab.labelRes),
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = if (active) {
-                        MaterialTheme.colorScheme.onPrimary
+                        MaterialTheme.colorScheme.primary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
                 )
+                Spacer(Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier
+                        .height(3.dp)
+                        .width(if (active) 32.dp else 0.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                )
             }
         }
     }
-}@Composable
-fun DayHeader(date: LocalDate, count: Int) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 4.dp, top = 14.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = date.dayLabel(),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = stringResource(R.string.entry_count, count),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
 }
-
 @Composable
 fun JournalCard(
     note: Note,
@@ -371,7 +343,7 @@ fun JournalCard(
             )
             .pressScale(interaction),
         shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = if (note.pinned) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -394,7 +366,7 @@ fun JournalCard(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Filled.Description,
+                        imageVector = Icons.Outlined.Description,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(26.dp),
@@ -514,6 +486,28 @@ fun CompactFileRow(file: JournalFile) {
         Text(
             text = formatFileSize(file.size),
             style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+fun DayHeader(date: LocalDate, count: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, top = 14.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = date.dayLabel(),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = stringResource(R.string.entry_count, count),
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

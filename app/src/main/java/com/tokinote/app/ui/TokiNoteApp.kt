@@ -171,7 +171,6 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     showTime = settings.showTime,
                     contentPadding = padding,
                     onOpenNote = ::openNote,
-                    onOpenCalendar = { backStack.add(Dest.Calendar) },
                     onOpenMedia = { noteId, index -> backStack.add(Dest.MediaViewer(noteId, index)) },
                     onOpenFocusStats = { backStack.add(Dest.FocusSummary) },
                     onTodoToggle = viewModel::toggleDone,
@@ -185,6 +184,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     onReset = focusViewModel::reset,
                     onSkip = focusViewModel::skip,
                     onOpenTimerSettings = { backStack.add(Dest.Timer) },
+                    onStartIndefinite = focusViewModel::startIndefinite,
                 )
 
                 Dest.Settings -> SettingsScreen(

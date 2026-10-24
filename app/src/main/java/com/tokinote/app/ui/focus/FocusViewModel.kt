@@ -34,6 +34,8 @@ data class FocusState(
     val totalSeconds: Int = 25 * 60,
     val completedInCycle: Int = 0,
     val settings: AppSettings = AppSettings(),
+    val indefinite: Boolean = false,
+    val elapsedSeconds: Int = 0,
 ) {
     val progress: Float
         get() = if (totalSeconds <= 0) 0f else {
@@ -84,13 +86,50 @@ class FocusViewModel : ViewModel() {
     }
 
     fun toggle() {
-        if (_state.value.running) pause() else start()
+        if (_state.value.running) pause() else if (_state.value.indefinite) resumeIndefinite() else start()
+    }
+
+    /** 长按数字进入不定时专注：从 0 开始正向计时。 */
+    fun startIndefinite() {
+        stopTicker()
+        _state.value = _state.value.copy(
+            indefinite = true,
+            running = true,
+            elapsedSeconds = 0,
+            remainingSeconds = 0,
+            totalSeconds = 0,
+        )
+        tickUp()
+    }
+
+    private fun resumeIndefinite() {
+        _state.value = _state.value.copy(running = true)
+        tickUp()
+    }
+
+    private fun tickUp() {
+        stopTicker()
+        ticker = viewModelScope.launch {
+            while (isActive) {
+                delay(1000)
+                val current = _state.value
+                if (!current.running || !current.indefinite) break
+                _state.value = current.copy(elapsedSeconds = current.elapsedSeconds + 1)
+            }
+        }
     }
 
     fun reset() {
         stopTicker()
         val current = _state.value
-        _state.value = current.copy(running = false, remainingSeconds = current.totalSeconds)
+        val total = current.mode.minutes(current.settings) * 60
+        _state.value = current.copy(
+            running = false,
+            indefinite = false,
+            elapsedSeconds = 0,
+            totalSeconds = total,
+            remainingSeconds = total,
+        )
     }
 
     fun skip() {

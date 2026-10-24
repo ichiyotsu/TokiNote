@@ -16,7 +16,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -78,10 +81,10 @@ fun FloatingNavBar(
         ) {
             Surface(
                 shape = CircleShape,
-                color = colorScheme.surface.copy(alpha = 0.92f),
+                color = colorScheme.surfaceContainer,
                 contentColor = colorScheme.onSurface,
                 tonalElevation = 6.dp,
-                shadowElevation = 10.dp,
+                shadowElevation = 6.dp,
                 border = androidx.compose.foundation.BorderStroke(
                     width = 1.dp,
                     color = colorScheme.outlineVariant.copy(alpha = 0.35f),
@@ -113,49 +116,50 @@ fun FloatingNavBar(
 private fun NavItem(entry: NavEntry, selected: Boolean, onClick: () -> Unit) {
     val colorScheme = MaterialTheme.colorScheme
     val interaction = remember { MutableInteractionSource() }
-    val container by animateColorAsState(
-        targetValue = if (selected) colorScheme.primary else Color.Transparent,
+    val indicator by animateColorAsState(
+        targetValue = if (selected) colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
         animationSpec = tween(TokiMotion.quick),
-        label = "navContainer",
+        label = "navIndicator",
     )
     val content by animateColorAsState(
-        targetValue = if (selected) colorScheme.onPrimary else colorScheme.onPrimaryContainer,
+        targetValue = if (selected) colorScheme.onPrimary else colorScheme.onSurfaceVariant,
         animationSpec = tween(TokiMotion.quick),
         label = "navContent",
     )
 
-    Row(
+    Column(
         modifier = Modifier
-            .height(52.dp)
+            .width(78.dp)
             .clip(CircleShape)
-            .background(container)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
-            .pressScale(interaction, pressedScale = 0.94f)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .pressScale(interaction, pressedScale = 0.95f)
+            .padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(
-            imageVector = if (selected) entry.selectedIcon else entry.icon,
-            contentDescription = stringResource(entry.label),
-            tint = content,
-            modifier = Modifier.size(22.dp),
-        )
-        AnimatedVisibility(
-            visible = selected,
-            enter = expandHorizontally(tween(TokiMotion.quick)) + fadeIn(tween(TokiMotion.quick)),
-            exit = shrinkHorizontally(tween(TokiMotion.quick)) + fadeOut(tween(TokiMotion.quick)),
+        Box(
+            modifier = Modifier
+                .width(56.dp)
+                .height(30.dp)
+                .clip(CircleShape)
+                .background(indicator),
+            contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = stringResource(entry.label),
-                style = MaterialTheme.typography.labelLarge,
-                color = content,
-                maxLines = 1,
-                modifier = Modifier.padding(start = 8.dp),
+            Icon(
+                imageVector = if (selected) entry.selectedIcon else entry.icon,
+                contentDescription = stringResource(entry.label),
+                tint = content,
+                modifier = Modifier.size(20.dp),
             )
         }
+        Spacer(Modifier.height(3.dp))
+        Text(
+            text = stringResource(entry.label),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (selected) colorScheme.onSurface else colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
     }
 }
-
 /** 底栏右侧的独立圆形按钮。 */
 @Composable
 fun NavActionButton(
