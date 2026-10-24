@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -81,6 +82,18 @@ private fun RowScope.NavEntries(
         ToggleButton(
             checked = selected,
             onCheckedChange = { onSelect(entry.dest) },
+            shapes = androidx.compose.material3.ToggleButtonShapes(
+                CircleShape,
+                CircleShape,
+                CircleShape,
+            ),
+            colors = androidx.compose.material3.ToggleButtonDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                checkedContainerColor = MaterialTheme.colorScheme.primary,
+                checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            modifier = Modifier.height(56.dp),
             icon = {
                 Icon(
                     imageVector = if (selected) entry.selectedIcon else entry.icon,
