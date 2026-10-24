@@ -31,9 +31,12 @@ data class AppSettings(
     val reduceMotion: Boolean = false,
     /** release 或 beta：决定检查更新时拉取的通道。 */
     val updateChannel: String = "release",
-    /** 个人资料：头像 emoji 与用户 ID。 */
+    /** 个人资料：头像 emoji、用户 ID、名称、邮箱与相册头像路径。 */
     val userId: String = "tokinote",
     val avatarEmoji: String = "🌿",
+    val userName: String = "ichiyo tokisaki",
+    val userEmail: String = "ichiyo@tokinote.app",
+    val avatarPath: String = "",
 )
 
 /** 一段已完成的专注记录，用于统计。 */

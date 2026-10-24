@@ -175,6 +175,9 @@ class TokiStore(context: Context) {
                 updateChannel = json.optString("updateChannel", "release"),
                 userId = json.optString("userId", "tokinote"),
                 avatarEmoji = json.optString("avatarEmoji", "🌿"),
+                userName = json.optString("userName", "ichiyo tokisaki"),
+                userEmail = json.optString("userEmail", "ichiyo@tokinote.app"),
+                avatarPath = json.optString("avatarPath", ""),
             )
         }.getOrDefault(AppSettings())
     }
@@ -195,6 +198,9 @@ class TokiStore(context: Context) {
             put("updateChannel", settings.updateChannel)
             put("userId", settings.userId)
             put("avatarEmoji", settings.avatarEmoji)
+            put("userName", settings.userName)
+            put("userEmail", settings.userEmail)
+            put("avatarPath", settings.avatarPath)
         }
         prefs.edit().putString(KEY_SETTINGS, json.toString()).apply()
     }
@@ -300,6 +306,9 @@ class TokiStore(context: Context) {
                 put("updateChannel", settings.updateChannel)
                 put("userId", settings.userId)
                 put("avatarEmoji", settings.avatarEmoji)
+                put("userName", settings.userName)
+                put("userEmail", settings.userEmail)
+                put("avatarPath", settings.avatarPath)
             })
         }.toString(2)
     }

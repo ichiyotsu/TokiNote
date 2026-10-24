@@ -297,7 +297,7 @@
     <string name="drawer_groups">分组</string>
     <string name="drawer_hint">长按分组可编辑或删除</string>
 
-    <!-- 主页顶栏 / 列表 / 个人资料 / 相册文件夹 -->
+    <!-- 主页顶栏 / 列表 / 个人中心 / 相册文件夹 -->
     <string name="search_tokinote">搜索 TokiNote</string>
     <string name="view_grid">切换为网格</string>
     <string name="view_list">切换为列表</string>
@@ -310,7 +310,7 @@
     <string name="drawer_album_section">相册</string>
     <string name="drawer_all_notes">全部笔记</string>
     <string name="drawer_all_photos">全部照片</string>
-    <string name="profile_title">个人资料</string>
+    <string name="profile_title">个人中心</string>
     <string name="profile_anonymous">匿名用户</string>
     <string name="profile_local_only">仅保存在本机</string>
     <string name="profile_avatar">头像</string>
@@ -328,4 +328,17 @@
     <string name="folder_delete">删除文件夹</string>
     <string name="folder_delete_title">删除文件夹「%1$s」？</string>
     <string name="folder_delete_body">只会删除文件夹，照片本身会保留。</string>
+
+    <!-- 账号面板 / 状态栏 -->
+    <string name="profile_manage_account">管理你的 Toki 账号</string>
+    <string name="feature_not_supported">功能暂不支持</string>
+    <string name="profile_name">用户名</string>
+    <string name="profile_email">邮箱</string>
+    <string name="profile_edit_avatar">更换头像</string>
+    <string name="profile_expand">展开个人中心</string>
+    <string name="profile_collapse">收起个人中心</string>
+    <string name="profile_live_hint">修改会立即同步到全局</string>
+    <string name="profile_storage_title">TokiNote 存储空间</string>
+    <string name="profile_storage_used">应用已占用 %1$s</string>
+    <string name="storage_settings_failed">无法打开系统存储设置</string>
 </resources>
