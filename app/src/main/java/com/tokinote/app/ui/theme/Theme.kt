@@ -176,7 +176,27 @@ fun TokiNoteTheme(
         darkTheme -> darkScheme
         else -> lightScheme
     }
-    val preset = if (dynamicColor) base else base.withPreset(colorPreset, darkTheme)
+    val presetBase = if (dynamicColor) base else base.withPreset(colorPreset, darkTheme)
+    val seed = if (dynamicColor) {
+        androidx.compose.ui.graphics.Color.Transparent
+    } else {
+        presetBase.primary
+    }
+    val preset = if (seed == androidx.compose.ui.graphics.Color.Transparent) {
+        presetBase
+    } else {
+        val blend: (androidx.compose.ui.graphics.Color, Float) -> androidx.compose.ui.graphics.Color =
+            { color, amount -> androidx.compose.ui.graphics.lerp(color, seed, amount) }
+        presetBase.copy(
+            background = blend(presetBase.background, 0.04f),
+            surface = blend(presetBase.surface, 0.04f),
+            surfaceContainerLowest = blend(presetBase.surfaceContainerLowest, 0.03f),
+            surfaceContainerLow = blend(presetBase.surfaceContainerLow, 0.06f),
+            surfaceContainer = blend(presetBase.surfaceContainer, 0.08f),
+            surfaceContainerHigh = blend(presetBase.surfaceContainerHigh, 0.10f),
+            surfaceContainerHighest = blend(presetBase.surfaceContainerHighest, 0.13f),
+        )
+    }
     val scheme = if (amoled && darkTheme) preset.trueBlack() else preset
 
     CompositionLocalProvider(LocalDarkTheme provides darkTheme) {

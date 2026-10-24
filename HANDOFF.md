@@ -1,139 +1,60 @@
 # TokiNote — 交接文档（HANDOFF）
 
-> 用途：新会话开局先读本文件，即可无损接续。最后更新：2026-10-24（功能 1–5 实现并验证后）
->
-> **工作区已迁移**：工程在 `D:\DSH\TokiNote\project`（git 仓库），工具在 `..\tools`，签名密钥副本在 `..\keys`。
-> 旧的 `C:\Users\tokisaki\Documents\deepseek-harness\default-workspace\TokiNote` 与 `.tools` 已于 2026-10-24 删除。
+> 最后更新：2026-10-24（0.2.6 已发布，0.2.7 待发）
+> 工作区：`D:\DSH\TokiNote\project`（git 仓库）；工具：`..\tools`；密钥：`..\keys`
+> 新会话先读本文件，再读 `docs/design-refs/`。
 
 ## 1. 仓库与发布
 
-- 仓库：https://github.com/ichiyotsu/TokiNote （public，默认分支 `main`）
-- 已发布：**0.1.0** https://github.com/ichiyotsu/TokiNote/releases/tag/0.1.0
-  - 附件 `app-release.apk`（14.3 MB，release keystore 签名）
-  - 该版本是**本地签名构建 + GitHub API 上传**发的，不是 CI 产物
-- 版本规则（用户明确要求，务必遵守）：
-  - 正式版 `1.0.0` → tag `1.0.0`，标 Latest
-  - Beta `1.4.0-beta` → tag `1.4.0-beta.1`（后续 `.2` `.3`），标 Pre-release
-  - Alpha `1.5.5-alpha` → tag `1.5.5-a` + CI 构建号前四位，标 Pre-release
-  - **每次发布前必须与用户核对「版本号 + 更新介绍」**，然后才打 tag
-- 应用包名固定 `com.tokinote.app`（不可变，否则老用户无法覆盖安装）
+- 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
+- 最新发布：**0.2.6**（release keystore 签名，versionCode 4）；0.2.5、0.2.0、0.1.0 均在 Releases
+- 版本规则：正式版 tag `x.y.z`；beta tag `x.y.z-beta.1`（Pre-release）；**发版前必须与用户核对版本号 + 文案**
+- 包名固定 `com.tokinote.app`
+- **CI 与 Release 工作流仍是红的**：GitHub runner 上 Gradle 解析 AGP 插件异常（本地完全正常）。
+  发版方式固定为：本地 `assembleRelease`（带 KEYSTORE_* 环境变量）→ `gh release create <tag> app-release.apk --notes-file ...`
 
 ## 2. 签名密钥（重要）
 
-- 工作副本：`D:\DSH\TokiNote\keys\`（`release.jks` / `release.jks.b64` / `keystore-info.txt`）
-- 原始副本：`C:\Users\tokisaki\TokiNote-keys\`（**不要删**，目前是唯一离线备份；建议再拷一份到 U 盘/网盘）
-- 两个目录都已被 `.gitignore` 排除（`*.jks` / `*.keystore` / `*.b64`），**永远不要提交**
-- 密码 / 别名在 `keystore-info.txt`（别名 `tokinote`，两个密码相同）
-- GitHub Secrets 已由用户填好 4 个：`KEYSTORE_BASE64`、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`
+- `D:\DSH\TokiNote\keys\release.jks|.b64|keystore-info.txt`
+- 原始备份：`C:\Users\tokisaki\TokiNote-keys`（唯一离线备份，务必再拷一份外部介质）
+- 一律不进 git；密码见 `keystore-info.txt`
 
-## 3. 环境与工具（新路径）
+## 3. 环境
 
-- 本机无 `git` / `gh`，用便携版：
-  - `D:\DSH\TokiNote\tools\mingit\cmd\git.exe`
-  - `D:\DSH\TokiNote\tools\gh\bin\gh.exe`（登录态在 Windows 凭据管理器，配置目录 `tools\gh-config`）
-  - gh 需要 `GH_CONFIG_DIR` 与 `LOCALAPPDATA=tools\gh-la`（见 `D:\DSH\TokiNote\README.md`）
-- 本地构建：`cd D:\DSH\TokiNote\project; .\gradlew.bat --offline assembleDebug`
-  - JDK：`D:\Application\Android Studio\jbr`，ANDROID_HOME：`C:\Users\tokisaki\AppData\Local\Android\Sdk`
-- 模拟器：AVD `Pixel_10_Pro`（1280×2856）；截图：`adb shell screencap -p /sdcard/s.png` + `adb pull`
-- `local.properties` 里的 SDK 路径只在本机有效，换机器要改
+- 无系统 git/gh：`tools\mingit\cmd\git.exe`、`tools\gh\bin\gh.exe`
+- gh：`GH_CONFIG_DIR=tools\gh-config`、`LOCALAPPDATA=tools\gh-la`
+- 构建：`$env:JAVA_HOME="D:\Application\Android Studio\jbr"; $env:ANDROID_HOME="C:\Users\tokisaki\AppData\Local\Android\Sdk"; .\gradlew.bat --offline assembleDebug`
+- 模拟器 AVD `Pixel_10_Pro`（API 37）；**adb 手势注入对 Compose 不稳定**，长按/点击常无效，交互验证优先真机
+- github.com:443 时不时机翻；`git push` 失败可改用 GitHub Git Data API
 
-## 4. CI 现状（仍未修完，根因已确认）
+## 4. 技术栈（已全面升级）
 
-**根因**：`gradle/libs.versions.toml` 的 `agp = "9.4.1"` 是本地缓存里的内部版本，**公共 Maven 上不存在**，
-所以 CI 必然报 `Plugin [id: 'com.android.application', version: '9.4.1'] was not found`。
-本地能构建只是因为 `~/.gradle` 里有这个包。
+- Kotlin **2.4.21**、Compose **1.12.1**、Material3 **1.5.0-beta02**、AGP 9.4.1、Gradle 9.6
+- **minSdk 36（Android 16）**、compileSdk/targetSdk 37
+- 新增依赖 `com.google.android.material:material:1.13.0`（Monet）
+- Compose 动态色：`dynamicLight/DarkColorScheme`（SDK 31+）；传统 View：`TokiNoteApplication` + `DynamicColors.applyToActivitiesIfAvailable`；`themes.xml` 继承 `Theme.Material3.DynamicColors.DayNight.NoActionBar`
 
-已经修好并在 main 上的 CI 问题：
-1. 移除 `android-actions/setup-android@v3`
-2. `./gradlew Permission denied` → 改用 runner 预装 Gradle 9.8.1（`gradle` 命令）
-3. Release 构建加 `-x lintVitalAnalyzeRelease -x lintVitalRelease`
-4. wrapper 超时/重试参数调整（`networkTimeout=120000`、`retries=5`）
+## 5. 已完成的功能
 
-**本次排查结论（2026-10-24 第二轮）**：
-- AGP 9.4.1 现在已在 Google Maven 公开发布（marker POM 200），本地用 Gradle 9.8.1 + 空缓存可完整构建通过
-- GitHub runner 上 `downloads.gradle.org` 会被拒绝连接（wrapper 拉不动 9.6.0），`setup-java` 的 gradle 缓存还会让
-  `com.android.application` 解析直接判失败且不下载 → 已改为：不用缓存、直接用 runner 预装的 `gradle`（9.8.1）
-- runner 上 `dl.google.com` 的 curl 探测是 200，但 Gradle 解析仍失败；已在 `settings.gradle.kts` 里加阿里云
-  Google Maven 镜像作为首选仓库，待 CI 验证
-- 小程序：`gradle --version` 输出里有 “Maven mirror settings reuse”，说明 runner 的 Gradle 会复用 Maven 镜像设置，
-  这是唯一还无法解释的差异
+- 笔记：Journal 卡片（图左文右、置顶/日常分区）、长按预览（打开/归档/删除）、笔记内清单、日期/时间/标签合并面板、M3 日期与时间选择器、编辑页顶栏（关闭/删除/对勾）+ 顶部大图
+- 相册：三列网格 + 全屏查看器（缩放、下载、定位、信息）
+- 专注：波浪环、主按钮长胶囊 + 圆形重置 + 窄药丸辅助键、垂直居中、长按/双击进入不定时正向计时
+- 统计（笔记页第三栏）：年/月/周切换；年无日历只列全年，月显示月历，周显示 7 天条；整页 LazyColumn 可滚动；点日期只看当天，点范围标题回到范围并取消高亮
+- 设置：外观（主题模式、莫奈取色预设、纯黑、动态取色、显示时间、减弱动效）、数据（笔记数量/归档/回收站一组；备份/清缓存/存储占用/清空一组）、关于（版本、检查更新 + Release/Beta 下拉、GitHub）
+- 归档/回收站：归档不进主页且不可编辑；回收站保留 14 天自动清理
+- 底栏：HorizontalFloatingToolbar + ToggleButton；设置页独立搜索按钮 + 设置内搜索
+- 图标：Material Symbols `article-shortcut`，`#1E3C38` 底
 
-## 5. 代码结构
+## 6. 待办（下一会话优先）
 
-```
-app/src/main/java/com/tokinote/app/
-├── MainActivity.kt
-├── data/  Note.kt AppSettings.kt TokiStore.kt UpdateChecker.kt AppViewModel.kt Attachments.kt Label.kt
-└── ui/
-    ├── TokiNoteApp.kt（导航栈、底栏、转场）
-    ├── Dest.kt（Notes/Focus/Settings/Editor/Calendar/FocusSummary/Timer/Preview/MediaViewer/LocationPicker）
-    ├── Motion.kt（LocalMotionEnabled、弹簧参数、pressScale）
-    ├── Format.kt
-    ├── components/（ExpressiveTopBar、FloatingNavBar、NavActionButton、PillGroup、SegmentedListItem）
-    ├── notes/（TimelineScreen、JournalComponents、JournalEditorScreen、NoteSheets、CalendarScreen、DocumentParser、DocumentPreview）
-    ├── focus/（FocusViewModel、FocusScreen、WavyRing、FocusSummaryScreen、TimerSettingsScreen）
-    ├── map/（TencentMap + LocationPicker）
-    ├── settings/（SettingsScreens：外观/数据/关于；ApkInstaller）
-    └── theme/（Tomato 调色板、Google Sans Flex、Expressive 形状）
-```
+1. **首页分组**：顶栏 `全部 / 2026 / +`，`+` 弹出笔记多选加入分组；分组过滤列表（建议复用 labels 或新增 groups）
+2. 核对预设/动态色下的背景与标签底色（本轮已给预设 surface 混色）
+3. 发 **0.2.7**（日历修复、检查更新通道下拉、动态色/预设背景、设置搜索）
+4. 真机验证长按预览、不定时专注
+5. 未做：真模糊（顶栏/底栏 backdrop blur）、选中行独立字号
 
-## 6. 本次会话完成的功能（2026-10-24，均已构建 + 模拟器截图验证）
+## 7. 已知坑
 
-1. **笔记页顶栏**
-   - 「写日记」FAB 并入底栏：胶囊导航 + 右侧独立圆形「+」按钮
-   - 「TokiNote」标题左对齐，点按展开搜索栏（自动聚焦）
-   - 搜索结果：先给「N 条结果 / 标题命中 / 正文命中」容器化统计，再按日期分组放进大圆角容器
-   - 底栏按钮随页面变化：笔记页「+」、专注页「调整时钟」（四方块图标）
-2. **专注页**
-   - 右上角改为 ⋮ 菜单 →「专注总结」/「计时器」
-   - 总结页：本周大数字 + 7 天柱状图（当天高亮）+ 最近记录，可切换上周
-   - 计时设置：三选一胶囊按钮组 +「自定义（铅笔）」→ 系统 TimePickerDialog；长休息间隔用段数胶囊 + 自定义滑杆
-   - 计时环改为「波浪断点」：平滑轨道 + 正弦波浪粗线进度，中心暂停/开始按钮
-3. **设置整理**
-   - 设置页删除重复「计时器」入口（只剩 外观 / 数据 / 关于）
-   - 所有二级页标题左对齐（ExpressiveTopBar 的 `alignStart`；日历页也换用它）
-   - 关于页去掉大「T」，版本号独立成组，底部挂 GitHub 主页链接
-4. **应用内更新**
-   - `UpdateChecker`：`api.github.com/repos/ichiyotsu/TokiNote/releases`（正式版优先），语义化版本比较
-   - 有新版 → 弹框展示 notes + 「取消 / 下载安装」，下载到 cache，`FileProvider` 交给系统安装器
-   - 未授权时跳转「安装未知应用」设置；`REQUEST_INSTALL_PACKAGES` + `res/xml/file_paths.xml` 已配置
-   - 已在模拟器上用 0.0.1 版实测：检查 → 弹框 → 下载 15 MB → 系统「Update this app?」
-5. **动效系统**
-   - `Motion.kt`：`LocalMotionEnabled`（由设置驱动）、弹簧参数、`Modifier.pressScale`
-   - 页面转场按导航深度做「前进滑入 / 返回淡出缩放」；底栏、卡片、胶囊按钮均有按压缩放
-   - 外观设置新增「减弱动效」开关，关闭后转场与按压缩放直接落终态
-
-截图已更新到 `screenshots/`（journal / search / focus / focus-summary / timer / about / settings / calendar）。
-
-## 7. 已知限制
-
-- 地图瓦片需联网；离线只显示标记
-- Office 预览是文本级（docx/pptx/xlsx 解析 OOXML），旧版 `.doc/.ppt/.xls` 仅可导入
-- 计时器仅前台运行（未接前台 Service）
-- 富文本为整条日记级字号/字重，非局部加粗
-- 应用内更新依赖 GitHub 可达；无法安装时引导用户去系统设置授权
-
-## 8. 继续工作的建议顺序
-
-1. 修 CI 的 AGP 版本（见第 4 节）→ 让「打 tag 自动发版」跑通
-2. 真机验证一次应用内更新（含下载、安装、覆盖升级）
-3. 与用户核对版本号 + 更新文案，发 1.0.0（或下一个 beta）
-4. 每完成一块，构建 + 模拟器截图验证，再提交
-
-## 9. 2026-10-24 第二轮改版（用户 12 条反馈）
-
-1. 「媒体」页签改为「相册」：三列网格，点开为全屏查看器（双指/双击缩放），底部悬浮条支持
-   保存到系统相册、查看原笔记、图片信息（大小 / 时间 / 路径）
-2. 地图与文件板块彻底移除：删除 `ui/map`、`DocumentParser`、`DocumentPreview`、相关 Dest 与编辑器入口；
-   `Note.files/location` 字段保留只为兼容旧数据
-3. 日期 + 时间 + 标签合并成一个胶囊，点按弹出统一面板；日期用 `DatePickerDialog`、时间用 `TimePickerDialog`；
-   外观设置新增「显示时间」开关
-4. 心情支持自定义 emoji（EmojiSheet 顶部输入框）
-5. 专注页与设置页删除大标题，只保留底栏
-6. 统计页照 Tomato 重做：今天专注/休息卡片、上周柱状图、上个月迷你柱状图
-7. 统计入口改为底栏右侧独立按钮（柱状图 icon），专注页右上角菜单删除
-8. 重置 / 跳过 后面新增「计时器设置」按钮
-9. 计时设置照 Tomato 简化：大号时间预览 + 场景切换 + 预设胶囊 + 自定义 + 段数步进器
-10. 外观新增配色预设（抹茶 / 晴空 / 紫藤 / 暖橙），与动态取色互斥
-11. 数据页「备份 JSON」「清空全部数据」都改为分段列表组件
-12. 关于页只剩一行设计说明；版本 / 检查更新 / GitHub 合并为一个区块，不再有「链接」小标题
+- PowerShell 5.1 写中文易乱码：含中文的 Kotlin 字符串优先用 `write`/`edit` 工具或 `[char]0xXXXX` 拼接
+- 正则批量替换要确认没吞掉相邻 composable（本会话多次发生）
+- 离线构建依赖已缓存；新增依赖需联网构建一次

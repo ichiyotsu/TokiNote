@@ -158,7 +158,7 @@ fun CalendarScreen(
                     MonthGrid(
                         month = month,
                         entriesByDay = entriesByDay,
-                        selectedDay = selectedDay,
+                        selectedDay = if (dayOnly) selectedDay else LocalDate.MIN,
                         onSelectDay = {
                             selectedDayString = it.toString()
                             dayOnly = true
