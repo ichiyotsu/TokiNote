@@ -34,6 +34,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -56,6 +57,7 @@ import com.tokinote.app.ui.settings.AppearanceSettings
 import com.tokinote.app.ui.settings.DataSettings
 import com.tokinote.app.ui.settings.ArchiveListScreen
 import com.tokinote.app.ui.settings.SettingsScreen
+import com.tokinote.app.ui.theme.LocalDarkTheme
 import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -74,14 +76,22 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val focusViewModel: FocusViewModel = viewModel()
     val focusState by focusViewModel.state.collectAsStateWithLifecycle()
     val hazeState = rememberHazeState()
-    val navTint = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f)
+    val darkTheme = LocalDarkTheme.current
+    val smoke = if (darkTheme) Color.Black.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.03f)
+    val frost = if (darkTheme) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.10f)
+    val glassFallback = Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f)
     val glass = Modifier.hazeBlur(
         input = HazeInput.Sources(hazeState),
         style = HazeBlurStyle {
-            blurRadius(14.dp)
-            noiseFactor(0.05f)
-            colorEffects(listOf(HazeColorEffect.tint(navTint)))
-            fallbackColorEffect(HazeColorEffect.tint(navTint))
+            blurRadius(30.dp)
+            noiseFactor(0.02f)
+            colorEffects(
+                listOf(
+                    HazeColorEffect.tint(smoke),
+                    HazeColorEffect.tint(frost),
+                ),
+            )
+            fallbackColorEffect(HazeColorEffect.tint(glassFallback))
         },
     )
 
@@ -117,7 +127,9 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     }
     var settingsSearch by remember { mutableStateOf(false) }
     var previewOpen by remember { mutableStateOf(false) }
-    val showNavBar = (current.isTopLevel() || current is Dest.SettingsDetail) && !previewOpen
+    var drawerOpen by remember { mutableStateOf(false) }
+    val showNavBar = (current.isTopLevel() || current is Dest.SettingsDetail) &&
+        !previewOpen && !drawerOpen
     val motion = LocalMotionEnabled.current
 
     fun goBack() {
@@ -231,6 +243,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     onUpdateGroup = viewModel::updateGroup,
                     onDeleteGroup = viewModel::deleteGroup,
                     onPreviewVisibilityChange = { previewOpen = it },
+                    onDrawerVisibilityChange = { drawerOpen = it },
                 )
 
                 Dest.Focus -> FocusScreen(

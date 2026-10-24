@@ -73,6 +73,7 @@ fun TimelineScreen(
     onUpdateGroup: (String, String, Set<String>) -> Boolean,
     onDeleteGroup: (String) -> Unit,
     onPreviewVisibilityChange: (Boolean) -> Unit = {},
+    onDrawerVisibilityChange: (Boolean) -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableStateOf(JournalTab.Journal) }
     var searchActive by rememberSaveable { mutableStateOf(false) }
@@ -120,7 +121,13 @@ fun TimelineScreen(
         onPreviewVisibilityChange(previewNote != null)
     }
     androidx.compose.runtime.DisposableEffect(Unit) {
-        onDispose { onPreviewVisibilityChange(false) }
+        onDispose {
+            onPreviewVisibilityChange(false)
+            onDrawerVisibilityChange(false)
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(drawerOpen) {
+        onDrawerVisibilityChange(drawerOpen)
     }
     androidx.compose.runtime.LaunchedEffect(tab) {
         drawerOpen = false

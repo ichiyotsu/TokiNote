@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -72,7 +73,12 @@ fun GroupDrawer(
 ) {
     BackHandler(enabled = open, onBack = onDismiss)
 
-    Box(Modifier.fillMaxSize().padding(top = topInset)) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .padding(top = topInset)
+            .navigationBarsPadding(),
+    ) {
         AnimatedVisibility(
             visible = open,
             enter = fadeIn(tween(180)),
@@ -106,12 +112,12 @@ fun GroupDrawer(
             Surface(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.86f)
-                    .widthIn(max = 360.dp)
-                    .padding(top = 8.dp, bottom = 92.dp),
-                shape = RoundedCornerShape(topEnd = 34.dp, bottomEnd = 34.dp),
+                    .fillMaxWidth(0.68f)
+                    .widthIn(max = 320.dp)
+                    .padding(start = 16.dp, top = 12.dp, bottom = 16.dp),
+                shape = RoundedCornerShape(34.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
-                shadowElevation = 18.dp,
+                shadowElevation = 24.dp,
             ) {
                 Column(
                     modifier = Modifier
@@ -119,20 +125,15 @@ fun GroupDrawer(
                         .padding(horizontal = 20.dp, vertical = 22.dp),
                 ) {
                     Text(
-                        text = "TokiNote",
+                        text = " TokiNote ",
                         style = MaterialTheme.typography.headlineLarge.copy(
                             fontFamily = Micro5Charted,
-                            fontSize = 34.sp,
-                            lineHeight = 38.sp,
+                            fontSize = 31.sp,
+                            lineHeight = 35.sp,
                             fontWeight = FontWeight.Normal,
                             letterSpacing = 0.sp,
                         ),
                         color = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = stringResource(R.string.drawer_subtitle),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     )
                     Spacer(Modifier.height(24.dp))
                     Text(
