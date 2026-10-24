@@ -428,10 +428,7 @@ fun AboutScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     onClick = { checkForUpdate() },
                     trailing = {
                         if (checking) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp,
-                            )
+                            androidx.compose.material3.LoadingIndicator(modifier = Modifier.size(20.dp))
                         } else {
                             Chevron()
                         }
