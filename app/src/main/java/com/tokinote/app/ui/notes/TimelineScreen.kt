@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
@@ -71,11 +72,13 @@ fun TimelineScreen(
     onCreateGroup: (String, Set<String>) -> NoteGroup?,
     onUpdateGroup: (String, String, Set<String>) -> Boolean,
     onDeleteGroup: (String) -> Unit,
+    onPreviewVisibilityChange: (Boolean) -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableStateOf(JournalTab.Journal) }
     var searchActive by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var previewNote by remember { mutableStateOf<Note?>(null) }
+    var previewBounds by remember { mutableStateOf<Rect?>(null) }
     var selectedGroupId by rememberSaveable { mutableStateOf<String?>(null) }
     var groupSheetOpen by rememberSaveable { mutableStateOf(false) }
     var editingGroupId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -110,6 +113,13 @@ fun TimelineScreen(
     }
     val groupedResults = remember(results) {
         results.groupBy { it.journalDate }.toSortedMap(compareByDescending { it })
+    }
+
+    androidx.compose.runtime.LaunchedEffect(previewNote) {
+        onPreviewVisibilityChange(previewNote != null)
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose { onPreviewVisibilityChange(false) }
     }
 
     var headerHeight by remember { mutableIntStateOf(0) }
@@ -162,7 +172,10 @@ fun TimelineScreen(
                         },
                         onOpenNote = onOpenNote,
                         onTodoToggle = onTodoToggle,
-                        onLongPress = { previewNote = it },
+                        onLongPress = { note, bounds ->
+                            previewNote = note
+                            previewBounds = bounds
+                        },
                     )
 
                     JournalTab.Album -> AlbumTabContent(
@@ -223,13 +236,32 @@ fun TimelineScreen(
         }
     }
 
-    PreviewHost(
-        note = previewNote,
-        onDismiss = { previewNote = null },
-        onOpen = { previewNote = null; onOpenNote(it) },
-        onArchive = { previewNote = null; onArchiveNote(it) },
-        onTrash = { previewNote = null; onTrashNote(it) },
-    )
+    previewNote?.let { note ->
+        NotePreviewOverlay(
+            note = note,
+            labels = labels,
+            sourceBounds = previewBounds,
+            onDismiss = {
+                previewNote = null
+                previewBounds = null
+            },
+            onOpen = { id ->
+                previewNote = null
+                previewBounds = null
+                onOpenNote(id)
+            },
+            onArchive = { id ->
+                previewNote = null
+                previewBounds = null
+                onArchiveNote(id)
+            },
+            onTrash = { id ->
+                previewNote = null
+                previewBounds = null
+                onTrashNote(id)
+            },
+        )
+    }
 
     if (groupSheetOpen) {
         NoteGroupSheet(
@@ -368,7 +400,7 @@ private fun JournalTabContent(
     emptyText: String,
     onOpenNote: (String) -> Unit,
     onTodoToggle: (String) -> Unit,
-    onLongPress: (Note) -> Unit = {},
+    onLongPress: (Note, Rect) -> Unit = { _, _ -> },
 ) {
     if (notes.isEmpty()) {
         EmptyMonthHint(emptyText)
@@ -394,7 +426,7 @@ private fun JournalTabContent(
                     showTime = showTime,
                     labels = labels,
                     onClick = { onOpenNote(note.id) },
-                    onLongClick = { onLongPress(note) },
+                    onLongPress = { rect -> onLongPress(note, rect) },
                 )
             }
         }
@@ -407,7 +439,7 @@ private fun JournalTabContent(
                 showTime = showTime,
                 labels = labels,
                 onClick = { onOpenNote(note.id) },
-                onLongClick = { onLongPress(note) },
+                onLongPress = { rect -> onLongPress(note, rect) },
             )
         }
     }

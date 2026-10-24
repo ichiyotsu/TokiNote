@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
@@ -49,15 +50,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -69,6 +77,8 @@ import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.formatFileSize
 import com.tokinote.app.ui.pressScale
+import com.tokinote.app.ui.theme.ExpressiveCardShape
+import com.tokinote.app.ui.theme.labelInk
 import com.tokinote.app.ui.theme.labelTint
 import java.time.LocalDate
 import java.time.YearMonth
@@ -305,7 +315,7 @@ fun JournalTabs(selected: JournalTab, onSelect: (JournalTab) -> Unit) {
         JournalTab.entries.forEach { tab ->
             val active = tab == selected
             val radius by animateDpAsState(
-                targetValue = if (active) 24.dp else 12.dp,
+                targetValue = if (active) 26.dp else 10.dp,
                 animationSpec = androidx.compose.animation.core.spring(
                     dampingRatio = 0.72f,
                     stiffness = 420f,
@@ -403,21 +413,27 @@ fun DayHeader(date: LocalDate, count: Int) {
 fun JournalCard(
     note: Note,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onLongPress: (Rect) -> Unit,
     showTime: Boolean = true,
     labels: List<Label> = emptyList(),
 ) {
-    val shape = RoundedCornerShape(24.dp)
+    val shape = ExpressiveCardShape
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    var bounds by remember { mutableStateOf(Rect.Zero) }
+    val haptic = LocalHapticFeedback.current
     androidx.compose.material3.Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .onGloballyPositioned { bounds = it.boundsInRoot() }
             .clip(shape)
             .combinedClickable(
                 interactionSource = interaction,
                 indication = androidx.compose.foundation.LocalIndication.current,
                 onClick = onClick,
-                onLongClick = onLongClick,
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (bounds != Rect.Zero) onLongPress(bounds)
+                },
             )
             .pressScale(interaction),
         shape = shape,
@@ -428,7 +444,7 @@ fun JournalCard(
         },
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
             verticalAlignment = Alignment.Top,
         ) {
             val image = note.media.firstOrNull()?.let { rememberImage(it) }
@@ -463,7 +479,12 @@ fun JournalCard(
                 Row(verticalAlignment = Alignment.Top) {
                     Text(
                         text = note.title.ifBlank { stringResource(R.string.note_untitled) },
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 25.sp,
+                            lineHeight = 29.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp,
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -485,7 +506,8 @@ fun JournalCard(
                     Text(
                         text = note.body,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
+                            fontSize = 15.sp,
+                            lineHeight = 21.sp,
                             fontWeight = note.bodyWeight.toFontWeight(),
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -537,19 +559,23 @@ fun JournalCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         noteLabels.take(3).forEach { label ->
+                            val ink = labelInk(label.colorIndex)
                             Box(
                                 modifier = Modifier
                                     .clip(CircleShape)
-                                    .background(labelTint(label.colorIndex))
-                                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                                    .border(1.dp, ink.copy(alpha = 0.72f), CircleShape)
+                                    .padding(horizontal = 9.dp, vertical = 2.dp),
                             ) {
                                 Text(
                                     text = label.name,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        letterSpacing = 0.2.sp,
+                                    ),
+                                    color = ink,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.widthIn(max = 72.dp),
+                                    modifier = Modifier.widthIn(max = 76.dp),
                                 )
                             }
                         }
@@ -563,7 +589,7 @@ fun JournalCard(
                     }
                 }
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(10.dp))
                 Text(
                     text = buildString {
                         append(note.journalDate.dayLabel())
@@ -572,8 +598,11 @@ fun JournalCard(
                             append(note.updatedAt.timeLabel())
                         }
                     },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = 11.sp,
+                        letterSpacing = 0.25.sp,
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
                 )
             }
         }

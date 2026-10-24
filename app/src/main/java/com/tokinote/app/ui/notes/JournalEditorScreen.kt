@@ -3,8 +3,18 @@ package com.tokinote.app.ui.notes
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -27,23 +37,29 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,9 +69,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -65,6 +86,11 @@ import com.tokinote.app.data.Attachments
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.TextWeight
+import com.tokinote.app.ui.TokiMotion
+import com.tokinote.app.ui.pressScale
+import com.tokinote.app.ui.theme.ExpressiveChipShape
+import com.tokinote.app.ui.theme.ExpressiveIslandShape
+import com.tokinote.app.ui.theme.labelInk
 import com.tokinote.app.ui.theme.labelTint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -89,16 +115,55 @@ fun JournalEditorScreen(
     onBack: () -> Unit,
     onChange: (Note) -> Unit,
     onDelete: () -> Unit,
+    onArchive: () -> Unit,
     onCreateLabel: (String) -> Label?,
     onDeleteLabel: (String) -> Unit,
     onOpenMedia: (List<String>, Int) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
 
     var showFormat by remember { mutableStateOf(false) }
     var showDateLabels by remember { mutableStateOf(false) }
-    var showDelete by remember { mutableStateOf(false) }
+    var showInfo by remember { mutableStateOf(false) }
+    var toolsExpanded by remember { mutableStateOf(false) }
+    var activeTool by remember { mutableStateOf<EditorToolKind?>(null) }
+
+    val colors = MaterialTheme.colorScheme
+    val palette = rememberNotePalette(
+        path = note.media.firstOrNull(),
+        fallbackAccent = colors.primary,
+        surface = colors.surface,
+        onSurface = colors.onSurface,
+        toolbarBase = colors.surfaceContainerHigh,
+    )
+    val emphasis = TokiMotion.emphasizedEasing
+    val pageTint by animateColorAsState(
+        targetValue = palette.scrim,
+        animationSpec = tween(650, easing = emphasis),
+        label = "editorScrim",
+    )
+    val accent by animateColorAsState(
+        targetValue = palette.accent,
+        animationSpec = tween(650, easing = emphasis),
+        label = "editorAccent",
+    )
+    val onAccent by animateColorAsState(
+        targetValue = palette.onAccent,
+        animationSpec = tween(650, easing = emphasis),
+        label = "editorOnAccent",
+    )
+    val toolbarTint by animateColorAsState(
+        targetValue = palette.toolbar,
+        animationSpec = tween(650, easing = emphasis),
+        label = "editorToolbar",
+    )
+    val titleTint by animateColorAsState(
+        targetValue = palette.title,
+        animationSpec = tween(650, easing = emphasis),
+        label = "editorTitle",
+    )
 
     val imagePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(9),
@@ -116,38 +181,55 @@ fun JournalEditorScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
+            .background(Brush.verticalGradient(listOf(pageTint, MaterialTheme.colorScheme.surface)))
             .padding(contentPadding)
             .imePadding(),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.Filled.Close,
                     contentDescription = stringResource(R.string.action_close),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
                 )
             }
             Spacer(Modifier.weight(1f))
-            IconButton(onClick = { showDelete = true }) {
+            IconButton(onClick = { showInfo = true }) {
                 Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.action_delete),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = stringResource(R.string.note_info),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
                 )
             }
-            Spacer(Modifier.weight(1f))
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = stringResource(R.string.action_save),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
+            Spacer(Modifier.width(6.dp))
+            val saveInteraction = remember {
+                androidx.compose.foundation.interaction.MutableInteractionSource()
+            }
+            Surface(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onBack()
+                },
+                shape = CircleShape,
+                color = accent,
+                contentColor = onAccent,
+                interactionSource = saveInteraction,
+                modifier = Modifier
+                    .size(52.dp)
+                    .pressScale(saveInteraction, pressedScale = 0.9f),
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = stringResource(R.string.action_save),
+                        modifier = Modifier.size(26.dp),
+                    )
+                }
             }
         }
 
@@ -155,15 +237,15 @@ fun JournalEditorScreen(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 22.dp),
         ) {
             if (note.media.isNotEmpty()) {
                 val hero = rememberImage(note.media.first())
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(26.dp))
+                        .height(156.dp)
+                        .clip(RoundedCornerShape(30.dp))
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .clickable { onOpenMedia(note.media, 0) },
                 ) {
@@ -176,30 +258,38 @@ fun JournalEditorScreen(
                         )
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(28.dp))
             }
             BasicTextField(
                 value = note.title,
                 onValueChange = { onChange(note.copy(title = it)) },
                 textStyle = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 30.sp,
+                    lineHeight = 34.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.6).sp,
+                    color = titleTint,
                 ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                cursorBrush = SolidColor(accent),
                 modifier = Modifier.fillMaxWidth(),
                 decorationBox = { inner ->
                     if (note.title.isEmpty()) {
                         Text(
                             text = stringResource(R.string.title_hint),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontSize = 30.sp,
+                                lineHeight = 34.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.6).sp,
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
                         )
                     }
                     inner()
                 },
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(14.dp))
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -317,28 +407,136 @@ fun JournalEditorScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+                .padding(horizontal = 20.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            EditorTool(Icons.Filled.FormatSize, stringResource(R.string.action_format)) { showFormat = true }
-            EditorTool(Icons.Filled.Photo, stringResource(R.string.attach_photo)) {
-                imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            val toggleInteraction = remember {
+                androidx.compose.foundation.interaction.MutableInteractionSource()
             }
-            EditorTool(Icons.Filled.Checklist, stringResource(R.string.checklist_title)) {
-                onChange(note.copy(checklist = note.checklist + com.tokinote.app.data.ChecklistItem()))
-            }
-            EditorTool(Icons.Filled.CalendarMonth, stringResource(R.string.editor_date_labels)) {
-                showDateLabels = true
+            val rotation by androidx.compose.animation.core.animateFloatAsState(
+                targetValue = if (toolsExpanded) 45f else 0f,
+                animationSpec = TokiMotion.emphasized,
+                label = "toolToggle",
+            )
+            Row(
+                modifier = Modifier
+                    .animateContentSize(
+                        animationSpec = androidx.compose.animation.core.spring(
+                            dampingRatio = 0.72f,
+                            stiffness = 380f,
+                        ),
+                    )
+                    .clip(ExpressiveIslandShape)
+                    .background(toolbarTint.copy(alpha = 0.94f))
+                    .border(1.dp, accent.copy(alpha = 0.22f), ExpressiveIslandShape)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(accent)
+                        .pressScale(toggleInteraction, pressedScale = 0.86f)
+                        .clickable(
+                            interactionSource = toggleInteraction,
+                            indication = ripple(color = accent),
+                        ) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            toolsExpanded = !toolsExpanded
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = stringResource(R.string.editor_tools),
+                        tint = onAccent,
+                        modifier = Modifier
+                            .graphicsLayer { rotationZ = rotation }
+                            .size(24.dp),
+                    )
+                }
+                AnimatedVisibility(
+                    visible = toolsExpanded,
+                    enter = expandHorizontally(
+                        animationSpec = androidx.compose.animation.core.spring(
+                            dampingRatio = 0.62f,
+                            stiffness = 420f,
+                        ),
+                    ) + fadeIn(tween(TokiMotion.standard)),
+                    exit = shrinkHorizontally(
+                        animationSpec = androidx.compose.animation.core.spring(
+                            dampingRatio = 0.8f,
+                            stiffness = 420f,
+                        ),
+                    ) + fadeOut(tween(TokiMotion.quick)),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(start = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        EditorTool(
+                            icon = Icons.Filled.FormatSize,
+                            label = stringResource(R.string.action_format),
+                            selected = activeTool == EditorToolKind.Format,
+                            accent = accent,
+                            onClick = {
+                                activeTool = EditorToolKind.Format
+                                showFormat = true
+                            },
+                        )
+                        EditorTool(
+                            icon = Icons.Filled.Photo,
+                            label = stringResource(R.string.attach_photo),
+                            selected = false,
+                            accent = accent,
+                            onClick = {
+                                imagePicker.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                )
+                            },
+                        )
+                        EditorTool(
+                            icon = Icons.Filled.Checklist,
+                            label = stringResource(R.string.checklist_title),
+                            selected = false,
+                            accent = accent,
+                            onClick = {
+                                onChange(
+                                    note.copy(
+                                        checklist = note.checklist + com.tokinote.app.data.ChecklistItem(),
+                                    ),
+                                )
+                                toolsExpanded = false
+                            },
+                        )
+                        EditorTool(
+                            icon = Icons.Filled.CalendarMonth,
+                            label = stringResource(R.string.editor_date_labels),
+                            selected = activeTool == EditorToolKind.DateLabels,
+                            accent = accent,
+                            onClick = {
+                                activeTool = EditorToolKind.DateLabels
+                                showDateLabels = true
+                            },
+                        )
+                    }
+                }
             }
         }
     }
 
     if (showFormat) {
-        FormatSheet(note = note, onChange = onChange, onDismiss = { showFormat = false })
+        FormatSheet(
+            note = note,
+            onChange = onChange,
+            onDismiss = {
+                showFormat = false
+                activeTool = null
+            },
+        )
     }
 
     if (showDateLabels) {
@@ -349,30 +547,20 @@ fun JournalEditorScreen(
             onChange = onChange,
             onCreate = onCreateLabel,
             onDeleteLabel = onDeleteLabel,
-            onDismiss = { showDateLabels = false },
+            onDismiss = {
+                showDateLabels = false
+                activeTool = null
+            },
         )
     }
 
-    if (showDelete) {
-        AlertDialog(
-            onDismissRequest = { showDelete = false },
-            title = { Text(stringResource(R.string.delete_note_title)) },
-            text = { Text(stringResource(R.string.delete_note_body)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDelete = false
-                        onDelete()
-                    },
-                ) {
-                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDelete = false }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            },
+    if (showInfo) {
+        NoteInfoSheet(
+            note = note,
+            labels = labels,
+            onDismiss = { showInfo = false },
+            onArchive = onArchive,
+            onDelete = onDelete,
         )
     }
 }
@@ -429,9 +617,15 @@ private fun InfoChip(
     onClick: (() -> Unit)? = null,
 ) {
     Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = if (onClick != null) Modifier.clip(CircleShape).clickable(onClick = onClick) else Modifier,
+        shape = ExpressiveChipShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
+        modifier = if (onClick != null) {
+            Modifier
+                .clip(ExpressiveChipShape)
+                .clickable(onClick = onClick)
+        } else {
+            Modifier
+        },
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -440,11 +634,15 @@ private fun InfoChip(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(15.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             )
             Spacer(Modifier.width(6.dp))
-            Text(text = text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+            )
         }
     }
 }
@@ -581,14 +779,217 @@ private fun DateLabelSheet(
     }
 }
 
+private enum class EditorToolKind { Format, DateLabels }
+
+@Composable
+private fun NoteInfoSheet(
+    note: Note,
+    labels: List<Label>,
+    onDismiss: () -> Unit,
+    onArchive: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    var confirmDelete by remember { mutableStateOf(false) }
+    val zone = ZoneId.systemDefault()
+    val formatter = remember {
+        DateTimeFormatter.ofPattern("yyyy年M月d日 HH:mm", Locale.CHINA)
+    }
+    val noteLabels = labels.filter { it.id in note.labelIds }
+
+    SheetContainer(onDismiss = onDismiss) {
+        SheetTitle(stringResource(R.string.note_info))
+        Text(
+            text = note.title.ifBlank { stringResource(R.string.note_untitled) },
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.4).sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(14.dp))
+        InfoRow(
+            icon = Icons.Filled.CalendarMonth,
+            label = stringResource(R.string.note_created),
+            value = Instant.ofEpochMilli(note.createdAt).atZone(zone).format(formatter),
+        )
+        InfoRow(
+            icon = Icons.Filled.Edit,
+            label = stringResource(R.string.note_last_edited),
+            value = Instant.ofEpochMilli(note.updatedAt).atZone(zone).format(formatter),
+        )
+
+        if (noteLabels.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.labels_title),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                modifier = Modifier.padding(start = 2.dp, bottom = 8.dp),
+            )
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                noteLabels.forEach { label ->
+                    val ink = labelInk(label.colorIndex)
+                    Text(
+                        text = label.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ink,
+                        modifier = Modifier
+                            .clip(ExpressiveChipShape)
+                            .border(1.dp, ink.copy(alpha = 0.72f), ExpressiveChipShape)
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(22.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    onDismiss()
+                    onArchive()
+                },
+                shape = ExpressiveChipShape,
+                modifier = Modifier.weight(1f),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Archive,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.preview_archive))
+            }
+            OutlinedButton(
+                onClick = { confirmDelete = true },
+                shape = ExpressiveChipShape,
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.55f),
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+                modifier = Modifier.weight(1f),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.action_delete))
+            }
+        }
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.delete_note_title)) },
+            text = { Text(stringResource(R.string.delete_note_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmDelete = false
+                        onDismiss()
+                        onDelete()
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.action_delete),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDelete = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun InfoRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.width(14.dp))
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
+}
+
 @Composable
 private fun EditorTool(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
+    selected: Boolean,
+    accent: Color,
     onClick: () -> Unit,
 ) {
-    IconButton(onClick = onClick) {
-        Icon(imageVector = icon, contentDescription = label, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    val interaction = remember {
+        androidx.compose.foundation.interaction.MutableInteractionSource()
+    }
+    val haptic = LocalHapticFeedback.current
+    Box(
+        modifier = Modifier
+            .size(46.dp)
+            .clip(ExpressiveChipShape)
+            .background(if (selected) accent.copy(alpha = 0.28f) else Color.Transparent)
+            .pressScale(interaction, pressedScale = 0.86f)
+            .clickable(
+                interactionSource = interaction,
+                indication = ripple(color = accent),
+            ) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onClick()
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(21.dp),
+            tint = if (selected) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+            },
+        )
     }
 }
 

@@ -261,7 +261,7 @@ fun CalendarScreen(
                     note = note,
                     showTime = true,
                     onClick = { onOpenNote(note.id) },
-                    onLongClick = {},
+                    onLongPress = {},
                 )
             }
         }

@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
+import com.tokinote.app.ui.theme.ExpressiveChipShape
+import com.tokinote.app.ui.theme.ExpressiveFabShape
 
 /**
  * 首页顶部的分组筛选条：全部、各个分组，以及最右侧的新建按钮。
@@ -85,8 +87,8 @@ fun NoteGroupBar(
         }
         Box(
             modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
+                .size(36.dp)
+                .clip(ExpressiveFabShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 .clickable(onClick = onCreate),
             contentAlignment = Alignment.Center,
@@ -122,13 +124,14 @@ private fun GroupChip(
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
+    val shape = if (selected) CircleShape else ExpressiveChipShape
     Box(
         modifier = Modifier
-            .height(34.dp)
-            .clip(CircleShape)
+            .height(36.dp)
+            .clip(shape)
             .background(container)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

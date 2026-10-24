@@ -30,22 +30,22 @@ import androidx.compose.ui.unit.dp
  * 与 Tomato 设置页的 SegmentedListItem 视觉一致。
  */
 fun segmentedShape(index: Int, count: Int): Shape = when {
-    count <= 1 -> RoundedCornerShape(26.dp)
+    count <= 1 -> RoundedCornerShape(30.dp)
     index == 0 -> RoundedCornerShape(
-        topStart = 26.dp,
-        topEnd = 26.dp,
-        bottomStart = 8.dp,
-        bottomEnd = 8.dp,
+        topStart = 30.dp,
+        topEnd = 30.dp,
+        bottomStart = 10.dp,
+        bottomEnd = 10.dp,
     )
 
     index == count - 1 -> RoundedCornerShape(
-        topStart = 8.dp,
-        topEnd = 8.dp,
-        bottomStart = 26.dp,
-        bottomEnd = 26.dp,
+        topStart = 10.dp,
+        topEnd = 10.dp,
+        bottomStart = 30.dp,
+        bottomEnd = 30.dp,
     )
 
-    else -> RoundedCornerShape(8.dp)
+    else -> RoundedCornerShape(10.dp)
 }
 
 @Composable

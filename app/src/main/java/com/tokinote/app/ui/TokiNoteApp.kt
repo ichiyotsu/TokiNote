@@ -116,7 +116,8 @@ fun TokiNoteApp(viewModel: AppViewModel) {
         else -> current
     }
     var settingsSearch by remember { mutableStateOf(false) }
-    val showNavBar = current.isTopLevel() || current is Dest.SettingsDetail
+    var previewOpen by remember { mutableStateOf(false) }
+    val showNavBar = (current.isTopLevel() || current is Dest.SettingsDetail) && !previewOpen
     val motion = LocalMotionEnabled.current
 
     fun goBack() {
@@ -229,6 +230,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     onCreateGroup = viewModel::createGroup,
                     onUpdateGroup = viewModel::updateGroup,
                     onDeleteGroup = viewModel::deleteGroup,
+                    onPreviewVisibilityChange = { previewOpen = it },
                 )
 
                 Dest.Focus -> FocusScreen(
@@ -269,6 +271,10 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                             onChange = viewModel::updateNote,
                             onDelete = {
                                 viewModel.deleteNote(note.id)
+                                goBack()
+                            },
+                            onArchive = {
+                                viewModel.archive(note.id)
                                 goBack()
                             },
                             onCreateLabel = viewModel::addLabel,

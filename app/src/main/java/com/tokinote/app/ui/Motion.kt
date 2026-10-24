@@ -1,5 +1,6 @@
 package com.tokinote.app.ui
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.InteractionSource
@@ -20,10 +21,15 @@ val LocalMotionEnabled = staticCompositionLocalOf { true }
 object TokiMotion {
     val spatial = spring<Float>(dampingRatio = 0.82f, stiffness = 380f)
     val emphasized = spring<Float>(dampingRatio = 0.62f, stiffness = 420f)
+    val overshoot = spring<Float>(dampingRatio = 0.5f, stiffness = 460f)
+
+    /** Material 3 emphasized decelerate，用于展开 / 悬浮窗。 */
+    val emphasizedEasing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
 
     const val quick = 140
     const val standard = 220
     const val expressive = 340
+    const val slow = 520
 }
 
 /**

@@ -113,3 +113,12 @@ fun labelTint(index: Int): Color {
     val color = if (dark) base.dark else base.light
     return lerp(color, androidx.compose.material3.MaterialTheme.colorScheme.primary, 0.08f)
 }
+
+/** 标签描边 / 文字：保留标签色相，同时保证在卡片上的可读性。 */
+@Composable
+fun labelInk(index: Int): Color {
+    val dark = LocalDarkTheme.current
+    val base = labelTint(index)
+    val onSurface = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+    return lerp(base, onSurface, if (dark) 0.62f else 0.34f)
+}

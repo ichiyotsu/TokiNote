@@ -284,4 +284,10 @@
     <string name="group_delete_body">只会删除分组，笔记本身会保留。</string>
     <string name="group_empty">这个分组还没有笔记</string>
     <string name="group_no_notes">还没有可以加入分组的笔记</string>
+
+    <!-- 编辑页 Expressive -->
+    <string name="note_info">笔记信息</string>
+    <string name="note_created">创建于</string>
+    <string name="note_last_edited">最后编辑</string>
+    <string name="editor_tools">编辑工具</string>
 </resources>
