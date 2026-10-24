@@ -1,5 +1,6 @@
 package com.tokinote.app.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,8 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * 顶栏，复刻 Tomato 的 32sp 粗标题 + 副标题结构。
- * 一级页面居中，二级页面通过 [alignStart] 统一左对齐。
+ * 顶栏对齐 Tomato 的实现：32sp 标题 + 副标题（Expressive 的 subtitle 槽位），
+ * 居中（二级页左对齐），容器色与页面一致。
  */
 @Composable
 fun ExpressiveTopBar(
@@ -33,7 +34,6 @@ fun ExpressiveTopBar(
     navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    val alignment = if (alignStart) Alignment.CenterStart else Alignment.Center
     val horizontal = when {
         alignStart && navigationIcon != null -> 68.dp
         alignStart -> 20.dp
@@ -42,9 +42,10 @@ fun ExpressiveTopBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 68.dp)
+            .background(MaterialTheme.colorScheme.surface)
+            .heightIn(min = if (subtitle != null) 84.dp else 64.dp)
             .padding(horizontal = 8.dp),
-        contentAlignment = alignment,
+        contentAlignment = if (alignStart) Alignment.CenterStart else Alignment.Center,
     ) {
         if (navigationIcon != null) {
             Row(
@@ -57,17 +58,17 @@ fun ExpressiveTopBar(
 
         Column(
             horizontalAlignment = if (alignStart) Alignment.Start else Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = horizontal, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = horizontal, vertical = 6.dp),
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 30.sp, lineHeight = 34.sp),
+                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 32.sp, lineHeight = 34.sp),
                 color = titleColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = if (alignStart) TextAlign.Start else TextAlign.Center,
             )
-            if (subtitle != null) {
+            if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.labelLarge,
