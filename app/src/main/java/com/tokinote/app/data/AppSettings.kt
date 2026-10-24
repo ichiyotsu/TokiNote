@@ -17,7 +17,7 @@ enum class ColorPreset {
 /** 专注计时器的时长设置，默认值与 Tomato 一致（25 / 5 / 15 / 4）。 */
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.System,
-    val dynamicColor: Boolean = false,
+    val dynamicColor: Boolean = true,
     val amoled: Boolean = false,
     val colorPreset: ColorPreset = ColorPreset.Matcha,
     val focusMinutes: Int = 25,

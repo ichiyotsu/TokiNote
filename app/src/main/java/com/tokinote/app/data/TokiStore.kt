@@ -80,7 +80,7 @@ class TokiStore(context: Context) {
                 themeMode = runCatching {
                     ThemeMode.valueOf(json.optString("themeMode", ThemeMode.System.name))
                 }.getOrDefault(ThemeMode.System),
-                dynamicColor = json.optBoolean("dynamicColor", false),
+                dynamicColor = json.optBoolean("dynamicColor", true),
                 colorPreset = runCatching {
                     ColorPreset.valueOf(json.optString("colorPreset", ColorPreset.Matcha.name))
                 }.getOrDefault(ColorPreset.Matcha),

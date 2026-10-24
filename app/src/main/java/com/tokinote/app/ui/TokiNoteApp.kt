@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -25,7 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
@@ -91,6 +94,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
         is Dest.Editor, Dest.Calendar, is Dest.MediaViewer -> Dest.Notes
         else -> current
     }
+    var settingsSearch by remember { mutableStateOf(false) }
     val showNavBar = current.isTopLevel() || current is Dest.SettingsDetail
     val motion = LocalMotionEnabled.current
 
@@ -126,7 +130,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     modifier = Modifier
                         .navigationBarsPadding()
                         .padding(bottom = 8.dp),
-                    action = if (selectedTab == Dest.Notes || selectedTab == Dest.Focus) {
+                    action = if (selectedTab == Dest.Notes || selectedTab == Dest.Focus || selectedTab == Dest.Settings) {
                         {
                             androidx.compose.runtime.remember(selectedTab) { androidx.compose.animation.core.Animatable(0.55f) }.let { pop ->
                                 androidx.compose.runtime.LaunchedEffect(selectedTab) {
@@ -152,6 +156,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                                     openNote(note.id)
                                 },
                                 onOpenStats = { backStack.add(Dest.FocusSummary) },
+                                onOpenSettingsSearch = { settingsSearch = true },
                             )
                                 }
                             }
@@ -208,6 +213,8 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                 )
 
                 Dest.Settings -> SettingsScreen(
+                    searchActive = settingsSearch,
+                    onCloseSearch = { settingsSearch = false },
                     settings = settings,
                     noteCount = notes.size,
                     contentPadding = padding,
@@ -308,12 +315,19 @@ private fun NavActionFor(
     tab: Dest,
     onNewNote: () -> Unit,
     onOpenStats: () -> Unit,
+    onOpenSettingsSearch: () -> Unit,
 ) {
     when (tab) {
         Dest.Notes -> NavActionButton(
             icon = Icons.Filled.Add,
             contentDescription = stringResource(R.string.entry_new),
             onClick = onNewNote,
+        )
+
+        Dest.Settings -> NavActionButton(
+            icon = Icons.Filled.Search,
+            contentDescription = "搜索设置",
+            onClick = onOpenSettingsSearch,
         )
 
         Dest.Focus -> NavActionButton(

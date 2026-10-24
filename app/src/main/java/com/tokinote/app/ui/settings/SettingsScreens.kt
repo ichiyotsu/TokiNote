@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
@@ -71,7 +73,15 @@ fun SettingsScreen(
     noteCount: Int,
     contentPadding: PaddingValues,
     onOpen: (SettingsPage) -> Unit,
+    searchActive: Boolean = false,
+    onCloseSearch: () -> Unit = {},
 ) {
+    var query by remember { mutableStateOf("") }
+    val items = listOf(
+        Triple(SettingsPage.Appearance, stringResource(R.string.settings_appearance), stringResource(R.string.settings_appearance_sub)),
+        Triple(SettingsPage.Data, stringResource(R.string.settings_data), stringResource(R.string.settings_data_sub)),
+        Triple(SettingsPage.About, stringResource(R.string.settings_about), stringResource(R.string.settings_about_sub, appVersionName(LocalContext.current))),
+    ).filter { searchActive.not() || query.isBlank() || it.second.contains(query, true) || it.third.contains(query, true) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,34 +94,51 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(Modifier.height(28.dp))
+            if (searchActive) {
+                androidx.compose.material3.OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    singleLine = true,
+                    label = { Text("搜索设置") },
+                    leadingIcon = {
+                        androidx.compose.material3.Icon(
+                            androidx.compose.material.icons.Icons.Filled.Search,
+                            contentDescription = null,
+                        )
+                    },
+                    trailingIcon = {
+                        androidx.compose.material3.IconButton(onClick = onCloseSearch) {
+                            androidx.compose.material3.Icon(
+                                androidx.compose.material.icons.Icons.Filled.Close,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(16.dp))
+            }
             SegmentedColumn {
-                SegmentedListItem(
-                    title = stringResource(R.string.settings_appearance),
-                    subtitle = stringResource(R.string.settings_appearance_sub),
-                    icon = Icons.Filled.Palette,
-                    index = 0,
-                    count = 3,
-                    onClick = { onOpen(SettingsPage.Appearance) },
-                    trailing = { Chevron() },
-                )
-                SegmentedListItem(
-                    title = stringResource(R.string.settings_data),
-                    subtitle = stringResource(R.string.settings_data_sub),
-                    icon = Icons.Filled.Storage,
-                    index = 1,
-                    count = 3,
-                    onClick = { onOpen(SettingsPage.Data) },
-                    trailing = { Chevron() },
-                )
-                SegmentedListItem(
-                    title = stringResource(R.string.settings_about),
-                    subtitle = stringResource(R.string.settings_about_sub, appVersionName(LocalContext.current)),
-                    icon = Icons.Filled.Info,
-                    index = 2,
-                    count = 3,
-                    onClick = { onOpen(SettingsPage.About) },
-                    trailing = { Chevron() },
-                )
+                items.forEachIndexed { index, item ->
+                    val icon = when (item.first) {
+                        SettingsPage.Appearance -> Icons.Filled.Palette
+                        SettingsPage.Data -> Icons.Filled.Storage
+                        SettingsPage.About -> Icons.Filled.Info
+                    }
+                    SegmentedListItem(
+                        title = item.second,
+                        subtitle = item.third,
+                        icon = icon,
+                        index = index,
+                        count = items.size.coerceAtLeast(1),
+                        onClick = {
+                            onCloseSearch()
+                            onOpen(item.first)
+                        },
+                        trailing = { Chevron() },
+                    )
+                }
             }
             Spacer(Modifier.height(24.dp))
         }
