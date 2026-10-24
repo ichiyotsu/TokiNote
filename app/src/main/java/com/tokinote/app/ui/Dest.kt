@@ -10,6 +10,8 @@ sealed interface Dest {
     data object Calendar : Dest
     data object FocusSummary : Dest
     data object Timer : Dest
+    data object Archive : Dest
+    data object Trash : Dest
     data class MediaViewer(val noteId: String, val index: Int) : Dest
 }
 
@@ -37,6 +39,8 @@ fun Dest.encode(): String = when (this) {
     Dest.Calendar -> "calendar"
     Dest.FocusSummary -> "focus-summary"
     Dest.Timer -> "timer"
+    Dest.Archive -> "archive"
+    Dest.Trash -> "trash"
     is Dest.MediaViewer -> "media:$noteId:$index"
 }
 
@@ -47,6 +51,8 @@ fun decodeDest(value: String): Dest? = when {
     value == "calendar" -> Dest.Calendar
     value == "focus-summary" -> Dest.FocusSummary
     value == "timer" -> Dest.Timer
+    value == "archive" -> Dest.Archive
+    value == "trash" -> Dest.Trash
     value.startsWith("editor:") -> value.removePrefix("editor:").takeIf { it.isNotEmpty() }?.let(Dest::Editor)
     value.startsWith("settings:") -> runCatching {
         Dest.SettingsDetail(SettingsPage.valueOf(value.removePrefix("settings:")))

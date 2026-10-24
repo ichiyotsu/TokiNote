@@ -46,6 +46,8 @@ data class Note(
     val colorIndex: Int = 0,
     val pinned: Boolean = false,
     val done: Boolean = false,
+    val archived: Boolean = false,
+    val deletedAt: Long? = null,
     val checklist: List<ChecklistItem> = emptyList(),
     val labelIds: Set<String> = emptySet(),
     val titleSize: TextSize = TextSize.Medium,

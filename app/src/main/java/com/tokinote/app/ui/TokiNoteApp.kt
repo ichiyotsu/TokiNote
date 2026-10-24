@@ -53,6 +53,7 @@ import com.tokinote.app.ui.notes.TimelineScreen
 import com.tokinote.app.ui.settings.AboutScreen
 import com.tokinote.app.ui.settings.AppearanceSettings
 import com.tokinote.app.ui.settings.DataSettings
+import com.tokinote.app.ui.settings.ArchiveListScreen
 import com.tokinote.app.ui.settings.SettingsScreen
 
 @Composable
@@ -91,6 +92,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val selectedTab: Dest = when (current) {
         is Dest.SettingsDetail -> Dest.Settings
         Dest.Timer, Dest.FocusSummary -> Dest.Focus
+        Dest.Archive, Dest.Trash -> Dest.Settings
         is Dest.Editor, Dest.Calendar, is Dest.MediaViewer -> Dest.Notes
         else -> current
     }
@@ -198,6 +200,8 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     onOpenNote = ::openNote,
                     onOpenMedia = { noteId, index -> backStack.add(Dest.MediaViewer(noteId, index)) },
                     onOpenFocusStats = { backStack.add(Dest.FocusSummary) },
+                    onArchiveNote = viewModel::archive,
+                    onTrashNote = viewModel::trash,
                     onTodoToggle = viewModel::toggleDone,
                 )
 
@@ -261,6 +265,26 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     onBack = { goBack() },
                 )
 
+                Dest.Archive -> ArchiveListScreen(
+                    title = stringResource(R.string.archive_title),
+                    subtitle = stringResource(R.string.archive_subtitle),
+                    notes = notes.filter { it.archived },
+                    onBack = { goBack() },
+                    onRestore = viewModel::unarchive,
+                    onDelete = viewModel::trash,
+                    deleteLabel = stringResource(R.string.archive_delete),
+                )
+
+                Dest.Trash -> ArchiveListScreen(
+                    title = stringResource(R.string.trash_title),
+                    subtitle = stringResource(R.string.trash_subtitle),
+                    notes = notes.filter { it.deletedAt != null },
+                    onBack = { goBack() },
+                    onRestore = viewModel::restore,
+                    onDelete = viewModel::deletePermanently,
+                    deleteLabel = stringResource(R.string.archive_delete_forever),
+                )
+
                 Dest.Timer -> TimerSettingsScreen(
                     settings = settings,
                     contentPadding = padding,
@@ -293,7 +317,11 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     )
 
                     SettingsPage.Data -> DataSettings(
-                        noteCount = notes.size,
+                        noteCount = notes.count { !it.archived && it.deletedAt == null },
+                        archiveCount = notes.count { it.archived },
+                        trashCount = notes.count { it.deletedAt != null },
+                        onOpenArchive = { backStack.add(Dest.Archive) },
+                        onOpenTrash = { backStack.add(Dest.Trash) },
                         contentPadding = padding,
                         onBack = { goBack() },
                         exportJson = viewModel::exportJson,

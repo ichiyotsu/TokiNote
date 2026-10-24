@@ -24,6 +24,14 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.SdStorage
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.SdStorage
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Storage
@@ -258,8 +266,12 @@ fun AppearanceSettings(
 @Composable
 fun DataSettings(
     noteCount: Int,
+    archiveCount: Int,
+    trashCount: Int,
     contentPadding: PaddingValues,
     onBack: () -> Unit,
+    onOpenArchive: () -> Unit,
+    onOpenTrash: () -> Unit,
     exportJson: () -> String,
     onClearAll: () -> Unit,
 ) {
@@ -316,6 +328,52 @@ fun DataSettings(
                     count = 3,
                     onClick = { showClearDialog = true },
                     trailing = { Chevron() },
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+            SegmentedColumn {
+                SegmentedListItem(
+                    title = stringResource(R.string.data_archive),
+                    subtitle = archiveCount.toString(),
+                    icon = Icons.Filled.Archive,
+                    index = 0,
+                    count = 4,
+                    onClick = onOpenArchive,
+                    trailing = { Chevron() },
+                )
+                SegmentedListItem(
+                    title = stringResource(R.string.data_trash),
+                    subtitle = trashCount.toString(),
+                    icon = Icons.Filled.Delete,
+                    index = 1,
+                    count = 4,
+                    onClick = onOpenTrash,
+                    trailing = { Chevron() },
+                )
+                SegmentedListItem(
+                    title = stringResource(R.string.data_cache),
+                    subtitle = null,
+                    icon = Icons.Filled.CleaningServices,
+                    index = 2,
+                    count = 4,
+                    onClick = { clearCache(context.cacheDir) },
+                    trailing = { Chevron() },
+                )
+                SegmentedListItem(
+                    title = stringResource(R.string.data_storage),
+                    subtitle = stringResource(R.string.data_storage_desc),
+                    icon = Icons.Filled.SdStorage,
+                    index = 3,
+                    count = 4,
+                    onClick = {},
+                    trailing = {
+                        Text(
+                            text = formatSize(dirSize(context.filesDir) + dirSize(context.cacheDir)),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
                 )
             }
             Spacer(Modifier.height(24.dp))
@@ -664,4 +722,17 @@ private fun WavyProgress(progress: Float) {
             )
         }
     }
+}
+private fun dirSize(dir: java.io.File): Long =
+    if (!dir.exists()) 0L else dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+
+private fun clearCache(dir: java.io.File) {
+    dir.listFiles()?.forEach { file -> runCatching { file.deleteRecursively() } }
+}
+
+private fun formatSize(bytes: Long): String = when {
+    bytes >= 1L shl 30 -> String.format(java.util.Locale.US, "%.1f GB", bytes / (1L shl 30).toDouble())
+    bytes >= 1L shl 20 -> String.format(java.util.Locale.US, "%.1f MB", bytes / (1L shl 20).toDouble())
+    bytes >= 1L shl 10 -> String.format(java.util.Locale.US, "%.0f KB", bytes / (1L shl 10).toDouble())
+    else -> "$bytes B"
 }

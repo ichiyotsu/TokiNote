@@ -248,4 +248,20 @@
     <string name="update_in_progress">更新中…</string>
     <string name="focus_indefinite">不定时专注</string>
     <string name="update_in_progress_short">更新中</string>
+    <string name="archive_title">归档</string>
+    <string name="archive_subtitle">归档的笔记不会出现在主页，且不可编辑</string>
+    <string name="trash_title">回收站</string>
+    <string name="trash_subtitle">保留 14 天，之后自动删除</string>
+    <string name="archive_empty">这里还没有内容</string>
+    <string name="archive_restore">恢复</string>
+    <string name="archive_delete">删除</string>
+    <string name="archive_delete_forever">彻底删除</string>
+    <string name="data_archive">归档</string>
+    <string name="data_trash">回收站</string>
+    <string name="data_cache">清除缓存</string>
+    <string name="data_storage">存储占用</string>
+    <string name="data_storage_desc">笔记、附件与缓存</string>
+    <string name="preview_open">打开</string>
+    <string name="preview_archive">归档</string>
+    <string name="preview_delete">删除</string>
 </resources>

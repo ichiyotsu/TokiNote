@@ -53,12 +53,17 @@ fun TimelineScreen(
     onOpenMedia: (String, Int) -> Unit,
     onOpenFocusStats: () -> Unit,
     onTodoToggle: (String) -> Unit,
+    onArchiveNote: (String) -> Unit,
+    onTrashNote: (String) -> Unit,
 ) {
     var tab by rememberSaveable { mutableStateOf(JournalTab.Journal) }
     var searchActive by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
+    var previewNote by remember { mutableStateOf<Note?>(null) }
 
-    val monthNotes = remember(notes) { notes.sortedByDescending { it.updatedAt } }
+    val monthNotes = remember(notes) {
+        notes.filter { !it.archived && it.deletedAt == null }.sortedByDescending { it.updatedAt }
+    }
     val groups = remember(monthNotes) {
         monthNotes.groupBy { it.journalDate }.toSortedMap(compareByDescending { it })
     }
@@ -115,6 +120,7 @@ fun TimelineScreen(
                         contentPadding = contentPadding,
                         onOpenNote = onOpenNote,
                         onTodoToggle = onTodoToggle,
+                        onLongPress = { previewNote = it },
                     )
 
                     JournalTab.Album -> AlbumTabContent(
@@ -136,6 +142,14 @@ fun TimelineScreen(
             Spacer(Modifier.height(2.dp))
         }
     }
+
+    PreviewHost(
+        note = previewNote,
+        onDismiss = { previewNote = null },
+        onOpen = { previewNote = null; onOpenNote(it) },
+        onArchive = { previewNote = null; onArchiveNote(it) },
+        onTrash = { previewNote = null; onTrashNote(it) },
+    )
 }
 
 @Composable
@@ -242,6 +256,7 @@ private fun JournalTabContent(
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
     onTodoToggle: (String) -> Unit,
+    onLongPress: (Note) -> Unit = {},
 ) {
     if (notes.isEmpty()) {
         EmptyMonthHint(stringResource(R.string.no_entries))
@@ -266,7 +281,7 @@ private fun JournalTabContent(
                     note = note,
                     showTime = showTime,
                     onClick = { onOpenNote(note.id) },
-                    onLongClick = {},
+                    onLongClick = { onLongPress(note) },
                 )
             }
         }
@@ -343,4 +358,89 @@ private fun EmptyMonthHint(text: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+}
+
+@Composable
+private fun NotePreviewDialog(
+    note: Note,
+    onDismiss: () -> Unit,
+    onOpen: () -> Unit,
+    onArchive: () -> Unit,
+    onTrash: () -> Unit,
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(note.title.ifBlank { stringResource(R.string.note_untitled) }) },
+        text = {
+            Column {
+                Text(
+                    text = note.body.ifBlank { stringResource(R.string.editor_hint) },
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 6,
+                )
+                androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))
+                Row {
+                    androidx.compose.material3.TextButton(onClick = onOpen) {
+                        Text(stringResource(R.string.preview_open))
+                    }
+                    androidx.compose.material3.TextButton(onClick = onArchive) {
+                        Text(stringResource(R.string.preview_archive))
+                    }
+                    androidx.compose.material3.TextButton(onClick = onTrash) {
+                        Text(
+                            text = stringResource(R.string.preview_delete),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
+}
+@Composable
+private fun PreviewHost(
+    note: Note?,
+    onDismiss: () -> Unit,
+    onOpen: (String) -> Unit,
+    onArchive: (String) -> Unit,
+    onTrash: (String) -> Unit,
+) {
+    if (note == null) return
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(note.title.ifBlank { stringResource(R.string.note_untitled) }) },
+        text = {
+            Column {
+                Text(
+                    text = note.body.ifBlank { stringResource(R.string.editor_hint) },
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 6,
+                )
+                androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))
+                Row {
+                    androidx.compose.material3.TextButton(onClick = { onOpen(note.id) }) {
+                        Text(stringResource(R.string.preview_open))
+                    }
+                    androidx.compose.material3.TextButton(onClick = { onArchive(note.id) }) {
+                        Text(stringResource(R.string.preview_archive))
+                    }
+                    androidx.compose.material3.TextButton(onClick = { onTrash(note.id) }) {
+                        Text(stringResource(R.string.preview_delete), color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
 }

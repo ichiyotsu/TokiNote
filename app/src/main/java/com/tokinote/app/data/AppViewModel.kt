@@ -28,6 +28,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _settings = MutableStateFlow(store.loadSettings())
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
 
+    init {
+        // 回收站保留 14 天，启动时清理过期笔记
+        val cutoff = System.currentTimeMillis() - 14L * 24 * 60 * 60 * 1000
+        val purged = _notes.value.filterNot { it.deletedAt != null && it.deletedAt < cutoff }
+        if (purged.size != _notes.value.size) {
+            _notes.value = purged
+            store.saveNotes(purged)
+        }
+    }
+
     private val _sessions = MutableStateFlow(store.loadSessions())
     val sessions: StateFlow<List<FocusSession>> = _sessions.asStateFlow()
 
@@ -54,6 +64,26 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteNote(id: String) {
         updateNotes { notes -> notes.filterNot { it.id == id } }
+    }
+
+    fun archive(id: String) {
+        updateNotes { notes -> notes.map { if (it.id == id) it.copy(archived = true, pinned = false) else it } }
+    }
+
+    fun unarchive(id: String) {
+        updateNotes { notes -> notes.map { if (it.id == id) it.copy(archived = false) else it } }
+    }
+
+    fun trash(id: String) {
+        updateNotes { notes -> notes.map { if (it.id == id) it.copy(deletedAt = System.currentTimeMillis(), pinned = false) else it } }
+    }
+
+    fun restore(id: String) {
+        updateNotes { notes -> notes.map { if (it.id == id) it.copy(deletedAt = null) else it } }
+    }
+
+    fun deletePermanently(id: String) {
+        deleteNote(id)
     }
 
     fun toggleDone(id: String) {

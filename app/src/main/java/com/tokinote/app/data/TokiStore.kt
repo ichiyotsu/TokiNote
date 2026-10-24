@@ -197,6 +197,8 @@ class TokiStore(context: Context) {
         put("colorIndex", colorIndex)
         put("pinned", pinned)
         put("done", done)
+        put("archived", archived)
+        put("deletedAt", deletedAt)
         put(
             "checklist",
             JSONArray().apply {
@@ -248,6 +250,8 @@ class TokiStore(context: Context) {
         colorIndex = optInt("colorIndex", 0).coerceIn(0, 7),
         pinned = optBoolean("pinned", false),
         done = optBoolean("done", false),
+        archived = optBoolean("archived", false),
+        deletedAt = if (has("deletedAt")) optLong("deletedAt", 0L) else null,
         checklist = buildList {
             val array = optJSONArray("checklist") ?: JSONArray()
             for (i in 0 until array.length()) {
