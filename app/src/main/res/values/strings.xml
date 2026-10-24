@@ -265,4 +265,23 @@
     <string name="preview_archive">归档</string>
     <string name="preview_delete">删除</string>
     <string name="need_disable_dynamic">请先关闭动态取色</string>
+
+    <!-- 首页分组 -->
+    <string name="group_add">新建分组</string>
+    <string name="group_new">新建分组</string>
+    <string name="group_edit">编辑分组</string>
+    <string name="group_name">分组名称</string>
+    <string name="group_name_hint">例如：2026</string>
+    <string name="group_pick_notes">选择笔记</string>
+    <string name="group_selected_count">已选 %1$d 条</string>
+    <string name="group_need_name">请输入分组名称</string>
+    <string name="group_name_exists">已有同名分组</string>
+    <string name="group_need_notes">至少选择一条笔记</string>
+    <string name="group_create">创建</string>
+    <string name="group_save">保存</string>
+    <string name="group_delete">删除分组</string>
+    <string name="group_delete_title">删除分组「%1$s」？</string>
+    <string name="group_delete_body">只会删除分组，笔记本身会保留。</string>
+    <string name="group_empty">这个分组还没有笔记</string>
+    <string name="group_no_notes">还没有可以加入分组的笔记</string>
 </resources>

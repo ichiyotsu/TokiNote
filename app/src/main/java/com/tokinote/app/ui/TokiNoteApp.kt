@@ -60,6 +60,7 @@ import com.tokinote.app.ui.settings.SettingsScreen
 fun TokiNoteApp(viewModel: AppViewModel) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val labels by viewModel.labels.collectAsStateWithLifecycle()
+    val groups by viewModel.groups.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
 
@@ -195,6 +196,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
             when (dest) {
                 Dest.Notes -> TimelineScreen(
                     notes = notes,
+                    groups = groups,
                     showTime = settings.showTime,
                     contentPadding = padding,
                     onOpenNote = ::openNote,
@@ -203,6 +205,9 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     onArchiveNote = viewModel::archive,
                     onTrashNote = viewModel::trash,
                     onTodoToggle = viewModel::toggleDone,
+                    onCreateGroup = viewModel::createGroup,
+                    onUpdateGroup = viewModel::updateGroup,
+                    onDeleteGroup = viewModel::deleteGroup,
                 )
 
                 Dest.Focus -> FocusScreen(

@@ -70,6 +70,46 @@ class TokiStore(context: Context) {
         prefs.edit().putString(KEY_LABELS, array.toString()).apply()
     }
 
+    /* ----------------------------- groups ----------------------------- */
+
+    fun loadGroups(): List<NoteGroup> {
+        val raw = prefs.getString(KEY_GROUPS, null) ?: return emptyList()
+        return runCatching {
+            val array = JSONArray(raw)
+            buildList {
+                for (index in 0 until array.length()) {
+                    val json = array.getJSONObject(index)
+                    add(
+                        NoteGroup(
+                            id = json.getString("id"),
+                            name = json.getString("name"),
+                            noteIds = buildSet {
+                                val ids = json.optJSONArray("noteIds") ?: JSONArray()
+                                for (i in 0 until ids.length()) add(ids.getString(i))
+                            },
+                            createdAt = json.optLong("createdAt", System.currentTimeMillis()),
+                        ),
+                    )
+                }
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    fun saveGroups(groups: List<NoteGroup>) {
+        val array = JSONArray()
+        groups.forEach { group ->
+            array.put(
+                JSONObject().apply {
+                    put("id", group.id)
+                    put("name", group.name)
+                    put("noteIds", JSONArray(group.noteIds.sorted()))
+                    put("createdAt", group.createdAt)
+                },
+            )
+        }
+        prefs.edit().putString(KEY_GROUPS, array.toString()).apply()
+    }
+
     /* ----------------------------- settings ----------------------------- */
 
     fun loadSettings(): AppSettings {
@@ -152,7 +192,12 @@ class TokiStore(context: Context) {
 
     /* ----------------------------- backup ----------------------------- */
 
-    fun exportJson(notes: List<Note>, labels: List<Label>, settings: AppSettings): String {
+    fun exportJson(
+        notes: List<Note>,
+        labels: List<Label>,
+        groups: List<NoteGroup>,
+        settings: AppSettings,
+    ): String {
         val notesArray = JSONArray().apply { notes.forEach { put(it.toJson()) } }
         val labelsArray = JSONArray().apply {
             labels.forEach { label ->
@@ -165,12 +210,25 @@ class TokiStore(context: Context) {
                 )
             }
         }
+        val groupsArray = JSONArray().apply {
+            groups.forEach { group ->
+                put(
+                    JSONObject().apply {
+                        put("id", group.id)
+                        put("name", group.name)
+                        put("noteIds", JSONArray(group.noteIds.sorted()))
+                        put("createdAt", group.createdAt)
+                    },
+                )
+            }
+        }
         return JSONObject().apply {
             put("app", "TokiNote")
-            put("version", 1)
+            put("version", 2)
             put("exportedAt", System.currentTimeMillis())
             put("notes", notesArray)
             put("labels", labelsArray)
+            put("groups", groupsArray)
             put("settings", JSONObject().apply {
                 put("themeMode", settings.themeMode.name)
                 put("colorPreset", settings.colorPreset.name)
@@ -306,6 +364,7 @@ class TokiStore(context: Context) {
         const val PREFS_NAME = "tokinote_prefs"
         const val KEY_NOTES = "notes"
         const val KEY_LABELS = "labels"
+        const val KEY_GROUPS = "groups"
         const val KEY_SETTINGS = "settings"
         const val KEY_SESSIONS = "sessions"
     }

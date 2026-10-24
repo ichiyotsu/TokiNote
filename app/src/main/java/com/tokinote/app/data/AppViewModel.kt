@@ -25,6 +25,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _labels = MutableStateFlow(store.loadLabels())
     val labels: StateFlow<List<Label>> = _labels.asStateFlow()
 
+    private val _groups = MutableStateFlow(store.loadGroups())
+    val groups: StateFlow<List<NoteGroup>> = _groups.asStateFlow()
+
     private val _settings = MutableStateFlow(store.loadSettings())
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
 
@@ -64,6 +67,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteNote(id: String) {
         updateNotes { notes -> notes.filterNot { it.id == id } }
+        if (_groups.value.any { id in it.noteIds }) {
+            val updated = _groups.value.map { group ->
+                if (id in group.noteIds) group.copy(noteIds = group.noteIds - id) else group
+            }
+            _groups.update { updated }
+            store.saveGroups(updated)
+        }
     }
 
     fun archive(id: String) {
@@ -204,6 +214,41 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /* ----------------------------- groups ----------------------------- */
+
+    fun createGroup(name: String, noteIds: Set<String>): NoteGroup? {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return null
+        if (_groups.value.any { it.name.equals(trimmed, ignoreCase = true) }) return null
+        val group = NoteGroup(
+            id = UUID.randomUUID().toString(),
+            name = trimmed,
+            noteIds = noteIds,
+        )
+        val updated = _groups.value + group
+        _groups.update { updated }
+        store.saveGroups(updated)
+        return group
+    }
+
+    fun updateGroup(id: String, name: String, noteIds: Set<String>): Boolean {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return false
+        if (_groups.value.any { it.id != id && it.name.equals(trimmed, ignoreCase = true) }) return false
+        val updated = _groups.value.map { group ->
+            if (group.id == id) group.copy(name = trimmed, noteIds = noteIds) else group
+        }
+        _groups.update { updated }
+        store.saveGroups(updated)
+        return true
+    }
+
+    fun deleteGroup(id: String) {
+        val updated = _groups.value.filterNot { it.id == id }
+        _groups.update { updated }
+        store.saveGroups(updated)
+    }
+
     /* ----------------------------- settings ----------------------------- */
 
     fun updateSettings(transform: (AppSettings) -> AppSettings) {
@@ -239,12 +284,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     /* ----------------------------- data ----------------------------- */
 
-    fun exportJson(): String = store.exportJson(_notes.value, _labels.value, _settings.value)
+    fun exportJson(): String = store.exportJson(_notes.value, _labels.value, _groups.value, _settings.value)
 
     fun clearAll() {
         store.clearAll()
         _notes.update { emptyList() }
         _labels.update { emptyList() }
+        _groups.update { emptyList() }
         _sessions.update { emptyList() }
         _settings.update { AppSettings() }
     }

@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.Note
+import com.tokinote.app.data.NoteGroup
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -47,6 +48,7 @@ private data class AlbumItem(val noteId: String, val path: String, val index: In
 @Composable
 fun TimelineScreen(
     notes: List<Note>,
+    groups: List<NoteGroup>,
     showTime: Boolean,
     contentPadding: PaddingValues,
     onOpenNote: (String) -> Unit,
@@ -55,20 +57,31 @@ fun TimelineScreen(
     onTodoToggle: (String) -> Unit,
     onArchiveNote: (String) -> Unit,
     onTrashNote: (String) -> Unit,
+    onCreateGroup: (String, Set<String>) -> NoteGroup?,
+    onUpdateGroup: (String, String, Set<String>) -> Boolean,
+    onDeleteGroup: (String) -> Unit,
 ) {
     var tab by rememberSaveable { mutableStateOf(JournalTab.Journal) }
     var searchActive by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var previewNote by remember { mutableStateOf<Note?>(null) }
+    var selectedGroupId by rememberSaveable { mutableStateOf<String?>(null) }
+    var groupSheetOpen by rememberSaveable { mutableStateOf(false) }
+    var editingGroupId by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val monthNotes = remember(notes) {
+    val activeNotes = remember(notes) {
         notes.filter { !it.archived && it.deletedAt == null }.sortedByDescending { it.updatedAt }
     }
-    val groups = remember(monthNotes) {
-        monthNotes.groupBy { it.journalDate }.toSortedMap(compareByDescending { it })
+    val selectedGroup = groups.firstOrNull { it.id == selectedGroupId }
+    val monthNotes = remember(activeNotes, selectedGroup) {
+        if (selectedGroup == null) {
+            activeNotes
+        } else {
+            activeNotes.filter { it.id in selectedGroup.noteIds }
+        }
     }
-    val album = remember(monthNotes) {
-        monthNotes.flatMap { note ->
+    val album = remember(activeNotes) {
+        activeNotes.flatMap { note ->
             note.media.mapIndexed { index, path -> AlbumItem(note.id, path, index, note.journalDate) }
         }
     }
@@ -110,6 +123,22 @@ fun TimelineScreen(
             )
         } else {
             JournalTabs(selected = tab, onSelect = { tab = it })
+            if (tab == JournalTab.Journal) {
+                Spacer(Modifier.height(10.dp))
+                NoteGroupBar(
+                    groups = groups,
+                    selectedId = selectedGroupId,
+                    onSelect = { selectedGroupId = it },
+                    onCreate = {
+                        editingGroupId = null
+                        groupSheetOpen = true
+                    },
+                    onEdit = { group ->
+                        editingGroupId = group.id
+                        groupSheetOpen = true
+                    },
+                )
+            }
             Spacer(Modifier.height(14.dp))
 
             Box(modifier = Modifier.weight(1f)) {
@@ -118,6 +147,11 @@ fun TimelineScreen(
                         notes = monthNotes,
                         showTime = showTime,
                         contentPadding = contentPadding,
+                        emptyText = if (selectedGroup != null) {
+                            stringResource(R.string.group_empty)
+                        } else {
+                            stringResource(R.string.no_entries)
+                        },
                         onOpenNote = onOpenNote,
                         onTodoToggle = onTodoToggle,
                         onLongPress = { previewNote = it },
@@ -147,6 +181,34 @@ fun TimelineScreen(
         onArchive = { previewNote = null; onArchiveNote(it) },
         onTrash = { previewNote = null; onTrashNote(it) },
     )
+
+    if (groupSheetOpen) {
+        NoteGroupSheet(
+            group = editingGroupId?.let { id -> groups.firstOrNull { it.id == id } },
+            notes = activeNotes,
+            groups = groups,
+            onDismiss = {
+                groupSheetOpen = false
+                editingGroupId = null
+            },
+            onSave = { name, noteIds ->
+                val editing = editingGroupId
+                if (editing == null) {
+                    onCreateGroup(name, noteIds)?.let { created ->
+                        selectedGroupId = created.id
+                    }
+                } else {
+                    onUpdateGroup(editing, name, noteIds)
+                }
+            },
+            onDelete = editingGroupId?.let { id ->
+                {
+                    onDeleteGroup(id)
+                    if (selectedGroupId == id) selectedGroupId = null
+                }
+            },
+        )
+    }
 }
 
 @Composable
@@ -251,12 +313,13 @@ private fun JournalTabContent(
     notes: List<Note>,
     showTime: Boolean,
     contentPadding: PaddingValues,
+    emptyText: String,
     onOpenNote: (String) -> Unit,
     onTodoToggle: (String) -> Unit,
     onLongPress: (Note) -> Unit = {},
 ) {
     if (notes.isEmpty()) {
-        EmptyMonthHint(stringResource(R.string.no_entries))
+        EmptyMonthHint(emptyText)
         return
     }
     val pinned = notes.filter { it.pinned }.sortedByDescending { it.updatedAt }
@@ -290,7 +353,7 @@ private fun JournalTabContent(
                 note = note,
                 showTime = showTime,
                 onClick = { onOpenNote(note.id) },
-                onLongClick = {},
+                onLongClick = { onLongPress(note) },
             )
         }
     }
