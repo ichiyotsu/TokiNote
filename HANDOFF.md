@@ -41,6 +41,7 @@
 
 ## 4. 技术栈（已全面升级）
 
+- **隐私边界（硬约束）**：除「检查更新」和后续「公告拉取」外，App 不发起任何网络请求；不接入匿名统计、账号上报、用户 ID/邮箱上传，所有笔记与个人资料只留在本机
 - Kotlin **2.4.21**、Compose **1.12.1**、Material3 **1.5.0-beta02**、AGP 9.4.1、Gradle 9.6
 - **minSdk 36（Android 16）**、compileSdk/targetSdk 37
 - 新增依赖 `com.google.android.material:material:1.13.0`（Monet）、`dev.chrisbanes.haze:haze|haze-blur:2.0.1`（背景模糊）
