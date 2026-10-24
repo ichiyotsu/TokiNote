@@ -1,7 +1,5 @@
 package com.tokinote.app.ui.notes
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -464,6 +462,7 @@ private fun DateLabelSheet(
     val context = LocalContext.current
     var newLabel by remember { mutableStateOf("") }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
     val zone = ZoneId.systemDefault()
     val current = Instant.ofEpochMilli(note.updatedAt).atZone(zone)
 
@@ -484,17 +483,7 @@ private fun DateLabelSheet(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val dateButtonInteraction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
             Surface(
-                onClick = {
-                    DatePickerDialog(
-                        context,
-                        { _, year, month, day ->
-                            updateDate(LocalDate.of(year, month + 1, day))
-                        },
-                        note.journalDate.year,
-                        note.journalDate.monthValue - 1,
-                        note.journalDate.dayOfMonth,
-                    ).show()
-                },
+                onClick = { showDatePicker = true },
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 interactionSource = dateButtonInteraction,
@@ -508,15 +497,7 @@ private fun DateLabelSheet(
             }
             if (showTime) {
                 Surface(
-                    onClick = {
-                        TimePickerDialog(
-                            context,
-                            { _, hour, minute -> updateTime(LocalTime.of(hour, minute)) },
-                            current.hour,
-                            current.minute,
-                            true,
-                        ).show()
-                    },
+                    onClick = { showTimePicker = true },
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
@@ -632,4 +613,40 @@ private fun EditorTimePicker(
         onDismiss = onDismiss,
         onConfirm = onApply,
     )
+}
+@androidx.compose.material3.ExperimentalMaterial3Api
+@Composable
+private fun EditorDatePicker(
+    initialDate: LocalDate,
+    onApply: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val state = androidx.compose.material3.rememberDatePickerState(
+        initialSelectedDateMillis = initialDate.atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli(),
+    )
+    androidx.compose.material3.DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = {
+                    state.selectedDateMillis?.let { millis ->
+                        onApply(
+                            java.time.Instant.ofEpochMilli(millis)
+                                .atZone(java.time.ZoneOffset.UTC)
+                                .toLocalDate(),
+                        )
+                    }
+                },
+            ) {
+                androidx.compose.material3.Text("确定")
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                androidx.compose.material3.Text("取消")
+            }
+        },
+    ) {
+        androidx.compose.material3.DatePicker(state = state)
+    }
 }

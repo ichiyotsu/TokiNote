@@ -105,7 +105,7 @@ fun TimelineScreen(
             )
         } else {
             JournalTabs(selected = tab, onSelect = { tab = it })
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(14.dp))
 
             Box(modifier = Modifier.weight(1f)) {
                 when (tab) {

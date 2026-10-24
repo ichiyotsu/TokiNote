@@ -118,8 +118,8 @@ fun FocusScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding),
+        verticalArrangement = Arrangement.Center,
     ) {
-        Spacer(Modifier.height(10.dp))
         Text(
             text = stringResource(R.string.focus_today, formatMinutes(todayMinutes)),
             style = MaterialTheme.typography.labelLarge,
@@ -134,8 +134,6 @@ fun FocusScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(16.dp))
-
             Box(
                 modifier = Modifier
                     .widthIn(max = 320.dp)
