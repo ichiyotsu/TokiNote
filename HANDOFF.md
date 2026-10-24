@@ -7,7 +7,7 @@
 ## 1. 仓库与发布
 
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
-- 最新发布：**0.2.7**（release keystore 签名，versionCode 5）；**0.2.8 已构建**（versionCode 6，Haze 毛玻璃 + 标签底色），用户 2026-10-24 决定**暂缓发布**，等待视觉确认
+- 最新发布：**0.2.8**（release keystore 签名，versionCode 6，2026-10-24 通过 `gh release create` 发布）；上一版 0.2.7（versionCode 5）
 - 版本规则：正式版 tag `x.y.z`（如 `0.2.8`）；beta tag `x.y.z-beta` 或 `x.y.z-beta.N`（Pre-release，标题 `TokiNote 0.2.x Beta`）；**发版前必须与用户核对版本号 + 文案**
 - 更新通道严格按 tag 区分，不需要单独分支：Release 只匹配 `0.2.7` 这类纯数字 tag，Beta 只匹配 `0.2.9-beta` 这类带 `-beta` 的 tag（`UpdateChecker.matchesChannel` 有单测）
 - 包名固定 `com.tokinote.app`
@@ -73,7 +73,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 0.2.8 视觉确认后再发布（本地 release APK 已签名，见第 3 节；本轮是 Expressive 大改，建议真机看一轮）
+2. 0.2.8 已发布，等待真机回归（本轮是 Expressive / Keep 主页 / 个人中心大改，重点看毛玻璃、抽屉、编辑页滚动与状态栏）
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
