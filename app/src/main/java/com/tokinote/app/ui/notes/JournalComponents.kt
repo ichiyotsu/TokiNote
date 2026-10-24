@@ -290,40 +290,41 @@ fun JournalTabs(selected: JournalTab, onSelect: (JournalTab) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 16.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(3.dp),
     ) {
         JournalTab.entries.forEach { tab ->
             val active = tab == selected
-            Column(
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { onSelect(tab) }
-                    .padding(vertical = 6.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .height(42.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (active) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            androidx.compose.ui.graphics.Color.Transparent
+                        },
+                    )
+                    .clickable { onSelect(tab) },
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(tab.labelRes),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.labelLarge,
                     color = if (active) {
-                        MaterialTheme.colorScheme.primary
+                        MaterialTheme.colorScheme.onPrimary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
                 )
-                Spacer(Modifier.height(6.dp))
-                Box(
-                    modifier = Modifier
-                        .height(3.dp)
-                        .width(if (active) 32.dp else 0.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                )
             }
         }
     }
-}
-@Composable
+}@Composable
 fun JournalCard(
     note: Note,
     onClick: () -> Unit,

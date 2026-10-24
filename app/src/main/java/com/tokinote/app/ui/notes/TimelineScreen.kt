@@ -261,7 +261,6 @@ private fun JournalTabContent(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         if (pinned.isNotEmpty()) {
-            item(key = "section-pinned") { SectionLabel(stringResource(R.string.notes_pinned)) }
             items(pinned, key = { it.id }) { note ->
                 JournalCard(
                     note = note,
@@ -271,7 +270,9 @@ private fun JournalTabContent(
                 )
             }
         }
-        item(key = "section-daily") { SectionLabel(stringResource(R.string.notes_daily)) }
+        if (pinned.isNotEmpty() && others.isNotEmpty()) {
+            item(key = "section-gap") { Spacer(Modifier.height(14.dp)) }
+        }
         items(others, key = { it.id }) { note ->
             JournalCard(
                 note = note,
@@ -281,16 +282,6 @@ private fun JournalTabContent(
             )
         }
     }
-}
-
-@Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
-    )
 }
 
 @Composable
