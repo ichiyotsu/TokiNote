@@ -290,177 +290,53 @@ fun JournalTabs(selected: JournalTab, onSelect: (JournalTab) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .padding(3.dp),
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         JournalTab.entries.forEach { tab ->
             val active = tab == selected
+            val radius by animateDpAsState(
+                targetValue = if (active) 24.dp else 12.dp,
+                animationSpec = androidx.compose.animation.core.spring(
+                    dampingRatio = 0.72f,
+                    stiffness = 420f,
+                ),
+                label = "tabRadius",
+            )
+            val container by animateColorAsState(
+                targetValue = if (active) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+                },
+                label = "tabContainer",
+            )
+            val content by animateColorAsState(
+                targetValue = if (active) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                label = "tabContent",
+            )
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(42.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (active) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            androidx.compose.ui.graphics.Color.Transparent
-                        },
-                    )
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(radius))
+                    .background(container)
                     .clickable { onSelect(tab) },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(tab.labelRes),
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (active) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
-        }
-    }
-}@Composable
-fun JournalCard(
-    note: Note,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    showTime: Boolean = true,
-) {
-    val shape = RoundedCornerShape(24.dp)
-    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .clickable(
-                interactionSource = interaction,
-                indication = androidx.compose.foundation.LocalIndication.current,
-                onClick = onClick,
-            )
-            .pressScale(interaction),
-        shape = shape,
-        color = if (note.pinned) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
-            val image = note.media.firstOrNull()?.let { rememberImage(it) }
-            Box(
-                modifier = Modifier
-                    .size(92.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (image != null) {
-                    Image(
-                        bitmap = image,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Outlined.Description,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(26.dp),
-                    )
-                }
-            }
-
-            Spacer(Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Text(
-                        text = note.title.ifBlank { stringResource(R.string.note_untitled) },
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    if (note.pinned) {
-                        Spacer(Modifier.width(6.dp))
-                        Icon(
-                            imageVector = Icons.Filled.PushPin,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                }
-
-                if (note.body.isNotBlank()) {
-                    Spacer(Modifier.height(3.dp))
-                    Text(
-                        text = note.body,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = (14 * note.bodySize.scale).sp,
-                            fontWeight = note.bodyWeight.toFontWeight(),
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-
-                if (note.checklist.isNotEmpty()) {
-                    Spacer(Modifier.height(6.dp))
-                    note.checklist.take(2).forEach { item ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (item.done) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
-                                contentDescription = null,
-                                tint = if (item.done) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                                modifier = Modifier.size(14.dp),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                text = item.text,
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    textDecoration = if (item.done) {
-                                        androidx.compose.ui.text.style.TextDecoration.LineThrough
-                                    } else {
-                                        null
-                                    },
-                                ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = buildString {
-                        append(note.journalDate.dayLabel())
-                        if (showTime) {
-                            append("  ")
-                            append(note.updatedAt.timeLabel())
-                        }
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = content,
                 )
             }
         }
     }
 }
-
 @Composable
 fun CompactFileRow(file: JournalFile) {
     Row(
@@ -511,5 +387,149 @@ fun DayHeader(date: LocalDate, count: Int) {
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+@Composable
+fun JournalCard(
+    note: Note,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    showTime: Boolean = true,
+) {
+    val shape = RoundedCornerShape(24.dp)
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    androidx.compose.material3.Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .clickable(
+                interactionSource = interaction,
+                indication = androidx.compose.foundation.LocalIndication.current,
+                onClick = onClick,
+            )
+            .pressScale(interaction),
+        shape = shape,
+        color = if (note.pinned) {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        },
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            val image = note.media.firstOrNull()?.let { rememberImage(it) }
+            Box(
+                modifier = Modifier
+                    .size(92.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (image != null) {
+                    Image(
+                        bitmap = image,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    )
+                } else {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Outlined.Description,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(26.dp),
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Text(
+                        text = note.title.ifBlank { stringResource(R.string.note_untitled) },
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (note.pinned) {
+                        Spacer(Modifier.width(6.dp))
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Filled.PushPin,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+
+                if (note.body.isNotBlank()) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = note.body,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = (14 * note.bodySize.scale).sp,
+                            fontWeight = note.bodyWeight.toFontWeight(),
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                if (note.checklist.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    note.checklist.take(2).forEach { item ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (item.done) {
+                                    androidx.compose.material.icons.Icons.Filled.CheckCircle
+                                } else {
+                                    androidx.compose.material.icons.Icons.Outlined.RadioButtonUnchecked
+                                },
+                                contentDescription = null,
+                                tint = if (item.done) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = item.text,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    textDecoration = if (item.done) {
+                                        androidx.compose.ui.text.style.TextDecoration.LineThrough
+                                    } else {
+                                        null
+                                    },
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = buildString {
+                        append(note.journalDate.dayLabel())
+                        if (showTime) {
+                            append("  ")
+                            append(note.updatedAt.timeLabel())
+                        }
+                    },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }

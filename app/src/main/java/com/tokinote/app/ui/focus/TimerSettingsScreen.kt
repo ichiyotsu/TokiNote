@@ -1,7 +1,5 @@
 package com.tokinote.app.ui.focus
 
-import android.app.TimePickerDialog
-import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,8 +56,8 @@ fun TimerSettingsScreen(
     onBack: () -> Unit,
     onUpdate: ((AppSettings) -> AppSettings) -> Unit,
 ) {
-    val context = LocalContext.current
     var mode by remember { mutableStateOf(FocusMode.Focus) }
+    var showPicker by remember { mutableStateOf(false) }
 
     val minutes = mode.minutes(settings)
     val presets = when (mode) {
@@ -142,13 +139,7 @@ fun TimerSettingsScreen(
                 onSelect = { value -> applyMinutes(value) },
                 customLabel = stringResource(R.string.timer_custom),
                 customSelected = minutes !in presets,
-                onCustom = {
-                    pickMinutes(
-                        context = context,
-                        initial = minutes,
-                        title = context.getString(R.string.timer_pick_time),
-                    ) { value -> applyMinutes(value) }
-                },
+                onCustom = { showPicker = true },
             )
 
             Spacer(Modifier.height(28.dp))
@@ -205,6 +196,17 @@ fun TimerSettingsScreen(
             Spacer(Modifier.height(28.dp))
         }
     }
+
+    if (showPicker) {
+        TimePickerHost(
+            minutes = minutes,
+            onApply = {
+                applyMinutes(it)
+                showPicker = false
+            },
+            onDismiss = { showPicker = false },
+        )
+    }
 }
 
 @Composable
@@ -221,20 +223,20 @@ private fun StepButton(icon: androidx.compose.ui.graphics.vector.ImageVector, on
     }
 }
 
-private fun pickMinutes(
-    context: Context,
-    initial: Int,
-    title: String,
-    onPicked: (Int) -> Unit,
+
+@androidx.compose.runtime.Composable
+private fun TimePickerHost(
+    minutes: Int,
+    onApply: (Int) -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    val safe = initial.coerceIn(1, 180)
-    TimePickerDialog(
-        context,
-        { _, hour, minute -> onPicked((hour * 60 + minute).coerceIn(1, 180)) },
-        safe / 60,
-        safe % 60,
-        true,
-    ).apply {
-        setTitle(title)
-    }.show()
+    com.tokinote.app.ui.components.M3TimePickerDialog(
+        initialHour = minutes / 60,
+        initialMinute = minutes % 60,
+        title = "选择时长",
+        confirmText = "确定",
+        cancelText = "取消",
+        onDismiss = onDismiss,
+        onConfirm = { hour, minute -> onApply((hour * 60 + minute).coerceAtLeast(1)) },
+    )
 }

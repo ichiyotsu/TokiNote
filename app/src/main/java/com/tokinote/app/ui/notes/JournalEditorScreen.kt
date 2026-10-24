@@ -34,6 +34,8 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -132,28 +134,20 @@ fun JournalEditorScreen(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            IconButton(onClick = {
-                imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            }) {
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = { showDelete = true }) {
                 Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = stringResource(R.string.action_add),
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.action_delete),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Spacer(Modifier.weight(1f))
-            Button(
-                onClick = onBack,
-                shape = CircleShape,
-                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp),
-            ) {
-                Text(stringResource(R.string.action_save))
-            }
-            IconButton(onClick = { showDelete = true }) {
+            IconButton(onClick = onBack) {
                 Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = stringResource(R.string.action_save),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -165,14 +159,26 @@ fun JournalEditorScreen(
                 .padding(horizontal = 20.dp),
         ) {
             if (note.media.isNotEmpty()) {
-                MediaStrip(
-                    paths = note.media,
-                    onOpen = { index -> onOpenMedia(note.media, index) },
-                    onRemove = { path -> onChange(note.copy(media = note.media - path)) },
-                )
+                val hero = rememberImage(note.media.first())
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(26.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        .clickable { onOpenMedia(note.media, 0) },
+                ) {
+                    if (hero != null) {
+                        Image(
+                            bitmap = hero,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                }
                 Spacer(Modifier.height(16.dp))
             }
-
             BasicTextField(
                 value = note.title,
                 onValueChange = { onChange(note.copy(title = it)) },
@@ -457,6 +463,7 @@ private fun DateLabelSheet(
 ) {
     val context = LocalContext.current
     var newLabel by remember { mutableStateOf("") }
+    var showTimePicker by remember { mutableStateOf(false) }
     val zone = ZoneId.systemDefault()
     val current = Instant.ofEpochMilli(note.updatedAt).atZone(zone)
 
@@ -607,4 +614,22 @@ fun TextWeight.toFontWeight(): FontWeight = when (this) {
     TextWeight.Normal -> FontWeight.Normal
     TextWeight.Medium -> FontWeight.Medium
     TextWeight.Bold -> FontWeight.Bold
+}
+
+@Composable
+private fun EditorTimePicker(
+    hour: Int,
+    minute: Int,
+    onApply: (Int, Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    com.tokinote.app.ui.components.M3TimePickerDialog(
+        initialHour = hour,
+        initialMinute = minute,
+        title = "选择时间",
+        confirmText = "确定",
+        cancelText = "取消",
+        onDismiss = onDismiss,
+        onConfirm = onApply,
+    )
 }
