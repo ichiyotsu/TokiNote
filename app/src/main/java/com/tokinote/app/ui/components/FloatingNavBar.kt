@@ -60,11 +60,13 @@ fun FloatingNavBar(
             HorizontalFloatingToolbar(
                 expanded = true,
                 floatingActionButton = { action() },
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                 content = { NavEntries(current, onSelect) },
             )
         } else {
             HorizontalFloatingToolbar(
                 expanded = true,
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                 content = { NavEntries(current, onSelect) },
             )
         }
@@ -122,9 +124,9 @@ fun NavActionButton(
 ) {
     Surface(
         onClick = onClick,
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         modifier = Modifier.size(64.dp),
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
