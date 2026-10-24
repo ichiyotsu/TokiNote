@@ -132,10 +132,7 @@ fun TimelineScreen(
                     JournalTab.Stats -> CalendarScreen(
                         notes = notes,
                         contentPadding = contentPadding,
-                        onBack = {},
                         onOpenNote = onOpenNote,
-                        showHeader = false,
-                        onOpenFocusStats = onOpenFocusStats,
                     )
                 }
             }

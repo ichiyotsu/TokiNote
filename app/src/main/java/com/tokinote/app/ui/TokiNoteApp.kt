@@ -255,7 +255,6 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                 Dest.Calendar -> CalendarScreen(
                     notes = notes,
                     contentPadding = padding,
-                    onBack = { goBack() },
                     onOpenNote = ::openNote,
                 )
 

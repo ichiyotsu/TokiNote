@@ -7,26 +7,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,224 +34,217 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.data.Note
-import com.tokinote.app.ui.components.ExpressiveTopBar
+import com.tokinote.app.ui.components.PillGroup
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
-private val calendarMonthFormatter = DateTimeFormatter.ofPattern("yyyy年M月", Locale.CHINA)
+private enum class StatsScope { Year, Month, Week }
 
-private enum class StatsScope { Day, Week, Month, Year }
+private val monthTitle = DateTimeFormatter.ofPattern("yyyy年M月", Locale.CHINA)
+private val dayTitle = DateTimeFormatter.ofPattern("M月d日", Locale.CHINA)
 
+/** 笔记统计：年 / 月 / 周三种粒度，整页可滚动，日历随粒度切换。 */
 @Composable
 fun CalendarScreen(
     notes: List<Note>,
     contentPadding: PaddingValues,
-    onBack: () -> Unit,
     onOpenNote: (String) -> Unit,
-    showHeader: Boolean = true,
-    onOpenFocusStats: (() -> Unit)? = null,
 ) {
+    var scopeName by rememberSaveable { mutableStateOf(StatsScope.Month.name) }
+    val scope = StatsScope.valueOf(scopeName)
     var monthString by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     val month = remember(monthString) { YearMonth.parse(monthString) }
     var selectedDayString by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
     val selectedDay = remember(selectedDayString) { LocalDate.parse(selectedDayString) }
 
-    val entriesByDay = remember(notes, month) {
-        notes.filter { YearMonth.from(it.journalDate) == month }
-            .groupBy { it.journalDate }
-    }
-    val dayEntries = entriesByDay[selectedDay].orEmpty().sortedByDescending { it.updatedAt }
-
-    var scopeName by rememberSaveable { mutableStateOf(StatsScope.Month.name) }
-    val scope = StatsScope.valueOf(scopeName)
-    val rangeStart = remember(scope, selectedDay) {
+    val visibleNotes = remember(notes) { notes.filter { !it.archived && it.deletedAt == null } }
+    val yearValue = month.year
+    val rangeNotes = remember(scope, month, selectedDay, visibleNotes) {
         when (scope) {
-            StatsScope.Day -> selectedDay
-            StatsScope.Week -> selectedDay.minusDays((selectedDay.dayOfWeek.value - 1).toLong())
-            StatsScope.Month -> selectedDay.withDayOfMonth(1)
-            StatsScope.Year -> selectedDay.withDayOfYear(1)
-        }
+            StatsScope.Year -> visibleNotes.filter { it.journalDate.year == yearValue }
+            StatsScope.Month -> visibleNotes.filter { YearMonth.from(it.journalDate) == month }
+            StatsScope.Week -> {
+                val start = selectedDay.with(DayOfWeek.MONDAY)
+                val end = start.plusDays(6)
+                visibleNotes.filter { it.journalDate in start..end }
+            }
+        }.sortedByDescending { it.updatedAt }
     }
-    val rangeEnd = remember(scope, selectedDay) {
-        when (scope) {
-            StatsScope.Day -> selectedDay
-            StatsScope.Week -> rangeStart.plusDays(6)
-            StatsScope.Month -> rangeStart.plusMonths(1).minusDays(1)
-            StatsScope.Year -> rangeStart.plusYears(1).minusDays(1)
-        }
-    }
-    val rangeNotes = notes.filter { it.journalDate in rangeStart..rangeEnd }
-    val rangeImages = rangeNotes.sumOf { it.media.size }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding),
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            top = 4.dp,
+            bottom = contentPadding.calculateBottomPadding() + 120.dp,
+        ),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (showHeader) {
-            ExpressiveTopBar(
-                title = stringResource(R.string.calendar_title),
-                alignStart = true,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back),
-                        )
-                    }
-                },
+        item(key = "scope") {
+            PillGroup(
+                options = listOf(
+                    StatsScope.Year to stringResource(R.string.stats_scope_year),
+                    StatsScope.Month to stringResource(R.string.stats_scope_month),
+                    StatsScope.Week to stringResource(R.string.stats_scope_week),
+                ),
+                selected = scope,
+                onSelect = { scopeName = it.name },
             )
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            StatsScope.entries.forEach { item ->
-                val selected = item == scope
-                Surface(
-                    onClick = { scopeName = item.name },
-                    shape = CircleShape,
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.surfaceContainerHigh
-                    },
-                    contentColor = if (selected) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(
-                        text = stringResource(
-                            when (item) {
-                                StatsScope.Day -> R.string.stats_scope_day
-                                StatsScope.Week -> R.string.stats_scope_week
-                                StatsScope.Month -> R.string.stats_scope_month
-                                StatsScope.Year -> R.string.stats_scope_year
-                            },
-                        ),
-                        style = MaterialTheme.typography.labelLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 9.dp),
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(10.dp))
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.stats_notes_count, rangeNotes.size),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                    Text(
-                        text = stringResource(R.string.stats_photos_count, rangeImages),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                    )
-                }
-                if (onOpenFocusStats != null) {
-                    Surface(
-                        onClick = onOpenFocusStats,
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
+        when (scope) {
+            StatsScope.Year -> {
+                item(key = "year-nav") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        IconButton(onClick = { monthString = month.minusYears(1).toString() }) {
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
+                        }
                         Text(
-                            text = stringResource(R.string.stats_focus_link),
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            text = "${month.year}年",
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f),
                         )
+                        IconButton(onClick = { monthString = month.plusYears(1).toString() }) {
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                        }
+                    }
+                }
+            }
+
+            StatsScope.Month -> {
+                item(key = "month-nav") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        IconButton(onClick = { monthString = month.minusMonths(1).toString() }) {
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
+                        }
+                        Text(
+                            text = month.format(monthTitle),
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(onClick = { monthString = month.plusMonths(1).toString() }) {
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                        }
+                    }
+                }
+                item(key = "month-grid") {
+                    val entriesByDay = notes
+                        .filter { YearMonth.from(it.journalDate) == month }
+                        .groupBy { it.journalDate }
+                    MonthGrid(
+                        month = month,
+                        entriesByDay = entriesByDay,
+                        selectedDay = selectedDay,
+                        onSelectDay = { selectedDayString = it.toString() },
+                    )
+                }
+            }
+
+            StatsScope.Week -> {
+                item(key = "week-nav") {
+                    val start = selectedDay.with(DayOfWeek.MONDAY)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        IconButton(onClick = { selectedDayString = selectedDay.minusWeeks(1).toString() }) {
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
+                        }
+                        Text(
+                            text = "${start.format(dayTitle)} – ${start.plusDays(6).format(dayTitle)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(onClick = { selectedDayString = selectedDay.plusWeeks(1).toString() }) {
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                        }
+                    }
+                }
+                item(key = "week-strip") {
+                    val start = selectedDay.with(DayOfWeek.MONDAY)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        repeat(7) { offset ->
+                            val day = start.plusDays(offset.toLong())
+                            val active = day == selectedDay
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(52.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        if (active) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceContainerHigh
+                                        },
+                                    )
+                                    .clickable { selectedDayString = day.toString() },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = day.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.CHINA),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (active) {
+                                            MaterialTheme.colorScheme.onPrimary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                    )
+                                    Text(
+                                        text = day.dayOfMonth.toString(),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = if (active) {
+                                            MaterialTheme.colorScheme.onPrimary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        },
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = { monthString = month.minusMonths(1).toString() }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
-            }
-            Text(
-                text = month.format(calendarMonthFormatter),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center,
-            )
-            IconButton(onClick = { monthString = month.plusMonths(1).toString() }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-            }
-        }
-
-        MonthGrid(
-            month = month,
-            entriesByDay = entriesByDay,
-            selectedDay = selectedDay,
-            onSelectDay = { selectedDayString = it.toString() },
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = selectedDay.dayLabel(),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = stringResource(R.string.calendar_entries, dayEntries.size),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        if (dayEntries.isEmpty()) {
-            Box(Modifier.fillMaxWidth().padding(top = 24.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(R.string.no_entries),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+        if (rangeNotes.isEmpty()) {
+            item(key = "empty") {
+                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = stringResource(R.string.no_entries),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 100.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(dayEntries, key = { it.id }) { note ->
-                    JournalCard(note = note, onClick = { onOpenNote(note.id) }, onLongClick = {})
-                }
+            items(rangeNotes, key = { it.id }) { note ->
+                JournalCard(
+                    note = note,
+                    showTime = true,
+                    onClick = { onOpenNote(note.id) },
+                    onLongClick = {},
+                )
             }
         }
     }
@@ -274,7 +261,7 @@ private fun MonthGrid(
     val offset = (firstDay.dayOfWeek.value - 1).coerceAtLeast(0)
     val days = month.lengthOfMonth()
 
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth()) {
             listOf("一", "二", "三", "四", "五", "六", "日").forEach { label ->
                 Text(
@@ -287,7 +274,6 @@ private fun MonthGrid(
             }
         }
 
-        var dayCounter = 1
         val totalCells = offset + days
         val weeks = (totalCells + 6) / 7
         repeat(weeks) { week ->
@@ -297,10 +283,10 @@ private fun MonthGrid(
                     val dayNumber = cellIndex - offset + 1
                     if (dayNumber in 1..days) {
                         val date = month.atDay(dayNumber)
-                        val emoji: String? = null
+                        val hasEntry = entriesByDay[date]?.isNotEmpty() == true
                         DayCell(
                             day = dayNumber,
-                            emoji = emoji,
+                            hasEntry = hasEntry,
                             selected = date == selectedDay,
                             onClick = { onSelectDay(date) },
                             modifier = Modifier.weight(1f),
@@ -317,7 +303,7 @@ private fun MonthGrid(
 @Composable
 private fun DayCell(
     day: Int,
-    emoji: String?,
+    hasEntry: Boolean,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -326,29 +312,25 @@ private fun DayCell(
         modifier = modifier
             .padding(2.dp)
             .height(46.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .clip(CircleShape)
             .background(
                 when {
                     selected -> MaterialTheme.colorScheme.primary
-                    emoji != null -> MaterialTheme.colorScheme.surfaceContainerHigh
+                    hasEntry -> MaterialTheme.colorScheme.surfaceContainerHigh
                     else -> MaterialTheme.colorScheme.surface
                 },
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        if (emoji != null) {
-            Text(text = emoji, fontSize = 18.sp)
-        } else {
-            Text(
-                text = day.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (selected) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
-            )
-        }
+        Text(
+            text = day.toString(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (selected) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+        )
     }
 }
