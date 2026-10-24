@@ -88,7 +88,7 @@ private fun RowScope.NavEntries(
                 CircleShape,
             ),
             colors = androidx.compose.material3.ToggleButtonDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                containerColor = androidx.compose.ui.graphics.Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 checkedContainerColor = MaterialTheme.colorScheme.primary,
                 checkedContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -102,11 +102,13 @@ private fun RowScope.NavEntries(
                 )
             },
             content = {
-                Text(
-                    text = stringResource(entry.label),
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1,
-                )
+                if (selected) {
+                    Text(
+                        text = stringResource(entry.label),
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                    )
+                }
             },
         )
     }

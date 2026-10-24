@@ -121,14 +121,6 @@ fun FocusScreen(
             .padding(vertical = 28.dp),
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = stringResource(R.string.focus_today, formatMinutes(todayMinutes)),
-            style = MaterialTheme.typography.labelLarge,
-            color = colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
