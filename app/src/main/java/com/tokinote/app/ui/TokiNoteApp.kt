@@ -60,6 +60,7 @@ import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.HazeColorEffect
 import dev.chrisbanes.haze.blur.hazeBlur
 
 @Composable
@@ -73,11 +74,14 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val focusViewModel: FocusViewModel = viewModel()
     val focusState by focusViewModel.state.collectAsStateWithLifecycle()
     val hazeState = rememberHazeState()
+    val navTint = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f)
     val glass = Modifier.hazeBlur(
         input = HazeInput.Sources(hazeState),
         style = HazeBlurStyle {
             blurRadius(24.dp)
             noiseFactor(0.08f)
+            colorEffects(listOf(HazeColorEffect.tint(navTint)))
+            fallbackColorEffect(HazeColorEffect.tint(navTint))
         },
     )
 

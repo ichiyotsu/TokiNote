@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -60,8 +61,9 @@ fun FloatingNavBar(
     action: (@Composable () -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(28.dp)
+    // 容器本身保持透明：背景完全交给 Haze 模糊效果，不再叠一层半透明 Surface。
     val colors = FloatingToolbarDefaults.standardFloatingToolbarColors().copy(
-        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f),
+        Color.Transparent,
         MaterialTheme.colorScheme.onSurfaceVariant,
         MaterialTheme.colorScheme.primaryContainer,
         MaterialTheme.colorScheme.onPrimaryContainer,

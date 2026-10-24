@@ -48,6 +48,7 @@ import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.HazeColorEffect
 import dev.chrisbanes.haze.blur.hazeBlur
 import java.time.LocalDate
 import java.time.YearMonth
@@ -114,11 +115,14 @@ fun TimelineScreen(
     var headerHeight by remember { mutableIntStateOf(0) }
     val headerInset = with(androidx.compose.ui.platform.LocalDensity.current) { headerHeight.toDp() }
     val hazeState = rememberHazeState()
+    val headerTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.68f)
     val glass = Modifier.hazeBlur(
         input = HazeInput.Sources(hazeState),
         style = HazeBlurStyle {
             blurRadius(28.dp)
             noiseFactor(0.06f)
+            colorEffects(listOf(HazeColorEffect.tint(headerTint)))
+            fallbackColorEffect(HazeColorEffect.tint(headerTint))
         },
     )
     val headerShape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)
@@ -183,8 +187,7 @@ fun TimelineScreen(
                 .fillMaxWidth()
                 .onSizeChanged { headerHeight = it.height }
                 .clip(headerShape)
-                .then(glass)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.68f)),
+                .then(glass),
         ) {
             JournalTopBar(
                 searchActive = searchActive,

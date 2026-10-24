@@ -73,4 +73,5 @@
 - **C 盘（系统盘）容易满**：Gradle/Android 缓存都在 C，剩 0 字节时 `mergeExtDexRelease` 会报「磁盘空间不足」。清 `%LOCALAPPDATA%\Temp` 可立刻腾出空间
 - **release 构建必须 `-x lintVitalAnalyzeRelease -x lintVitalRelease`**：离线缓存里没有 `com.android.tools.lint:lint-gradle:32.4.1`，否则任务失败
 - **Haze 顶栏**：`onSizeChanged` 给的是 px，必须 `toDp()` 后再做 LazyColumn 的 top padding；直接 `.dp` 会把内容推下几百 dp。顶栏必须脱离布局流叠在列表上，否则没有内容可从背后滚过
+- **毛玻璃不要叠层**：底栏/顶栏容器保持透明，tint 放进 `HazeBlurStyle` 的 `colorEffects` / `fallbackColorEffect`，让模糊本身就是背景；不要再额外加 `surface.copy(alpha=…)` 的 Surface 或 `.background()`，否则会变成两层
 - 提交信息里的 7 位短哈希（如 `7b0e0c3`）是 git commit SHA，提交时自动生成，不需要手写备注
