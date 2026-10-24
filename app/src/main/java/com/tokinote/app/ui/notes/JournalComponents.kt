@@ -4,8 +4,10 @@ import android.graphics.BitmapFactory
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -393,6 +395,7 @@ fun DayHeader(date: LocalDate, count: Int) {
         )
     }
 }
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun JournalCard(
     note: Note,
@@ -406,10 +409,11 @@ fun JournalCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .clickable(
+            .combinedClickable(
                 interactionSource = interaction,
                 indication = androidx.compose.foundation.LocalIndication.current,
                 onClick = onClick,
+                onLongClick = onLongClick,
             )
             .pressScale(interaction),
         shape = shape,

@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.LaunchedEffect
@@ -100,6 +101,7 @@ fun FocusScreen(
         animationSpec = tween(420),
         label = "timeBlur",
     )
+    val displaySeconds = if (state.indefinite) state.elapsedSeconds else state.remainingSeconds
     LaunchedEffect(animatingOut) {
         if (animatingOut) {
             kotlinx.coroutines.delay(440)
@@ -131,7 +133,15 @@ fun FocusScreen(
                 modifier = Modifier
                     .widthIn(max = 320.dp)
                     .fillMaxWidth()
-                    .aspectRatio(1f),
+                    .aspectRatio(1f)
+                    .pointerInput(state.mode, state.running, state.indefinite) {
+                        if (!state.running && !state.indefinite && state.mode == FocusMode.Focus) {
+                            detectTapGestures(
+                                onDoubleTap = { if (!animatingOut) animatingOut = true },
+                                onLongPress = { if (!animatingOut) animatingOut = true },
+                            )
+                        }
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 WavyRing(
@@ -140,9 +150,18 @@ fun FocusScreen(
                     track = track,
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .graphicsLayer {
+                                scaleX = timeScale
+                                scaleY = timeScale
+                                alpha = timeAlpha
+                            }
+                            .blur(timeBlur.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded),
+                    ) {
                         Text(
-                            text = formatClock(state.remainingSeconds),
+                            text = formatClock(displaySeconds),
                             style = MaterialTheme.typography.displayLarge.copy(
                                 fontSize = 60.sp,
                                 lineHeight = 64.sp,
