@@ -1,7 +1,7 @@
 package com.tokinote.app.ui.notes
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -47,6 +47,7 @@ fun TopActionButton(
     shape: RoundedCornerShape = RoundedCornerShape(15.dp),
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.62f),
+    showSurface: Boolean = true,
 ) {
     var tooltipVisible by remember { mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }
@@ -59,9 +60,9 @@ fun TopActionButton(
     Box {
         Surface(
             shape = shape,
-            color = containerColor,
+            color = if (showSurface) containerColor else Color.Transparent,
             contentColor = tint,
-            shadowElevation = 2.dp,
+            shadowElevation = if (showSurface) 2.dp else 0.dp,
             modifier = modifier.size(size).pressScale(interaction, pressedScale = 0.9f),
         ) {
             Box(
@@ -113,7 +114,11 @@ fun TopAvatarButton(
             modifier = Modifier
                 .size(38.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f),
+                    shape = CircleShape,
+                )
                 .pressScale(interaction, pressedScale = 0.9f)
                 .combinedClickable(
                     interactionSource = interaction,
@@ -131,7 +136,11 @@ fun TopAvatarButton(
                     contentScale = ContentScale.Crop,
                 )
             } else {
-                Text(text = emoji.ifBlank { "🌿" }, fontSize = 18.sp)
+                Text(
+                    text = emoji.ifBlank { "🌿" },
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
             }
         }
         TooltipMenu(

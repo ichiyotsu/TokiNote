@@ -70,7 +70,7 @@ fun TopSearchBar(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 14.dp, vertical = 8.dp)
+                .padding(horizontal = 8.dp, vertical = 8.dp)
                 .graphicsLayer {
                     alpha = backdropProgress.coerceIn(0f, 1f) * 0.72f
                     scaleY = 0.92f + 0.08f * backdropProgress.coerceIn(0f, 1f)
@@ -98,6 +98,7 @@ fun TopSearchBar(
             contentDescription = stringResource(R.string.drawer_open),
             tooltip = stringResource(R.string.tooltip_navigation),
             onClick = onMenu,
+            showSurface = false,
         )
         Spacer(Modifier.width(6.dp))
         Row(
@@ -155,6 +156,7 @@ fun TopSearchBar(
                 size = 40.dp,
                 iconSize = 19.dp,
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                showSurface = false,
             )
             Spacer(Modifier.width(4.dp))
             TopActionButton(
@@ -167,6 +169,7 @@ fun TopSearchBar(
                 size = 40.dp,
                 iconSize = 19.dp,
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                showSurface = false,
             )
             Spacer(Modifier.width(4.dp))
         }

@@ -178,8 +178,8 @@ fun TimelineScreen(
     val glass = Modifier.hazeBlur(
         input = HazeInput.Sources(hazeState),
         style = HazeBlurStyle {
-            blurRadius(24.dp)
-            noiseFactor(0.05f)
+            blurRadius(52.dp)
+            noiseFactor(0.02f)
             colorEffects(listOf(HazeColorEffect.tint(headerTint)))
             fallbackColorEffect(HazeColorEffect.tint(headerFallback))
         },
