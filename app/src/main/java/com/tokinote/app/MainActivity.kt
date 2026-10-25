@@ -3,6 +3,7 @@ package com.tokinote.app
 import android.app.Activity
 import android.graphics.Color as AndroidColor
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -55,6 +56,7 @@ class MainActivity : ComponentActivity() {
 
             SideEffect {
                 val window = (view.context as? Activity)?.window ?: return@SideEffect
+                WindowCompat.setDecorFitsSystemWindows(window, false)
                 WindowCompat.getInsetsController(window, view).apply {
                     isAppearanceLightStatusBars = !darkTheme
                     isAppearanceLightNavigationBars = !darkTheme
@@ -63,6 +65,14 @@ class MainActivity : ComponentActivity() {
                 window.statusBarColor = AndroidColor.TRANSPARENT
                 @Suppress("DEPRECATION")
                 window.navigationBarColor = AndroidColor.TRANSPARENT
+                @Suppress("DEPRECATION")
+                window.navigationBarDividerColor = AndroidColor.TRANSPARENT
+                window.isStatusBarContrastEnforced = false
+                window.isNavigationBarContrastEnforced = false
+                window.attributes = window.attributes.apply {
+                    layoutInDisplayCutoutMode =
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                }
             }
 
             TokiNoteTheme(
@@ -93,7 +103,7 @@ private fun StatusBarScrim(darkTheme: Boolean) {
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color.Black.copy(alpha = if (darkTheme) 0.42f else 0.08f),
+                        Color.Black.copy(alpha = if (darkTheme) 0.18f else 0.03f),
                         Color.Transparent,
                     ),
                 ),
