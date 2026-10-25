@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Icon
@@ -162,45 +160,45 @@ fun NoteCard(
                     )
                 }
 
-                if (noteLabels.isNotEmpty()) {
-                    Spacer(Modifier.height(9.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        noteLabels.take(3).forEach { label ->
-                            val ink = labelInk(label.colorIndex)
-                            Text(
-                                text = label.name,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 10.sp,
-                                    letterSpacing = 0.2.sp,
-                                ),
-                                color = ink,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier
-                                    .widthIn(max = if (compact) 62.dp else 76.dp)
-                                    .clip(CircleShape)
-                                    .border(1.dp, ink.copy(alpha = 0.72f), CircleShape)
-                                    .padding(horizontal = 8.dp, vertical = 2.dp),
-                            )
-                        }
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = buildString {
+                            append(note.journalDate.dayLabel())
+                            if (showTime) {
+                                append("  ")
+                                append(note.updatedAt.timeLabel())
+                            }
+                        },
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontSize = 11.sp,
+                            letterSpacing = 0.25.sp,
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                        maxLines = 1,
+                    )
+                    noteLabels.take(if (compact) 2 else 3).forEach { label ->
+                        Text(
+                            text = "·",
+                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                        )
+                        Text(
+                            text = label.name,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontSize = 11.sp,
+                                letterSpacing = 0.2.sp,
+                            ),
+                            color = labelInk(label.colorIndex),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = if (compact) 54.dp else 70.dp),
+                        )
                     }
                 }
-
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    text = buildString {
-                        append(note.journalDate.dayLabel())
-                        if (showTime) {
-                            append("  ")
-                            append(note.updatedAt.timeLabel())
-                        }
-                    },
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontSize = 11.sp,
-                        letterSpacing = 0.25.sp,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-                )
             }
         }
     }
