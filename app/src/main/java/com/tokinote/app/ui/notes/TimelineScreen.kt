@@ -257,6 +257,7 @@ fun TimelineScreen(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
+                .blur(drawerBlur)
                 .onSizeChanged { headerHeight = it.height },
         ) {
             TopSearchBar(

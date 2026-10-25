@@ -157,7 +157,7 @@ fun GroupDrawer(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.90f)),
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.55f)),
                 )
                 Column(
                     modifier = Modifier
