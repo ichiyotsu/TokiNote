@@ -1,13 +1,13 @@
 # TokiNote — 交接文档（HANDOFF）
 
-> 最后更新：2026-10-25（0.3.2-beta 发布）
+> 最后更新：2026-10-25（0.3.3-beta 发布）
 > 工作区：`D:\DSH\TokiNote\project`（git 仓库）；工具：`..\tools`；密钥：`..\keys`
 > 新会话先读本文件，再读 `docs/design-refs/`。
 
 ## 1. 仓库与发布
 
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
-- 最新 Beta：**0.3.2-beta**（Pre-release，release keystore 签名，versionCode 10，2026-10-25 发布）；最新正式版 0.3.1（versionCode 9）
+- 最新 Beta：**0.3.3-beta**（Pre-release，release keystore 签名，versionCode 11，2026-10-25 发布）；最新正式版 0.3.1（versionCode 9）
 - 版本规则：正式版 tag `x.y.z`（如 `0.2.8`）；beta tag `x.y.z-beta` 或 `x.y.z-beta.N`（Pre-release，标题 `TokiNote 0.2.x Beta`）；**发版前必须与用户核对版本号 + 文案**
 - 更新通道严格按 tag 区分，不需要单独分支：Release 只匹配 `0.2.7` 这类纯数字 tag，Beta 只匹配 `0.2.9-beta` 这类带 `-beta` 的 tag（`UpdateChecker.matchesChannel` 有单测）
 - 包名固定 `com.tokinote.app`
@@ -26,13 +26,13 @@
 - 无系统 git/gh：`tools\mingit\cmd\git.exe`、`tools\gh\bin\gh.exe`
 - gh：`GH_CONFIG_DIR=tools\gh-config`、`LOCALAPPDATA=tools\gh-la`（current dir 是 project，路径写成 `..\tools\...`）
 - 构建：`$env:JAVA_HOME="D:\Application\Android Studio\jbr"; $env:ANDROID_HOME="C:\Users\tokisaki\AppData\Local\Android\Sdk"; .\gradlew.bat --offline assembleDebug`
-- 发版构建（0.3.2-beta 验证）：
+- 发版构建（0.3.3-beta 验证）：
   ```powershell
-  $env:VERSION_NAME='0.3.2-beta'; $env:VERSION_CODE='10'
+  $env:VERSION_NAME='0.3.3-beta'; $env:VERSION_CODE='11'
   $env:KEYSTORE_FILE='D:\DSH\TokiNote\keys\release.jks'
   $env:KEYSTORE_PASSWORD='…'; $env:KEY_ALIAS='tokinote'; $env:KEY_PASSWORD='…'
   .\gradlew.bat --offline assembleRelease -x lintVitalAnalyzeRelease -x lintVitalRelease
-  gh release create 0.3.2-beta app\build\outputs\apk\release\app-release.apk --title "TokiNote 0.3.2 Beta" --notes-file .github\release-notes\0.3.2-beta.md --target main --prerelease
+  gh release create 0.3.3-beta app\build\outputs\apk\release\app-release.apk --title "TokiNote 0.3.3 Beta" --notes-file .github\release-notes\0.3.3-beta.md --target main --prerelease
   ```
 - 模拟器 AVD `Pixel_10_Pro`（API 37）；**adb 手势注入对 Compose 不稳定**，长按/点击常无效，交互验证优先真机
 - github.com:443 时不时机翻；`git push` 失败可改用 GitHub Git Data API
@@ -77,7 +77,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 0.3.2-beta 已发布，等待 Android 12–15 真机回归（API 31/37 模拟器已通过：启动、编辑页 IME、抽屉玻璃、R8 release；重点看 3-button 导航、Haze 性能、状态栏/顶栏同色）
+2. 0.3.3-beta 已发布，等待 Pad 横屏真机回归（设置两列/3:7 快捷栏、专注 6:4、笔记 4 列、抽屉 260dp）；手机竖屏与 Android 12–15 基础兼容保持
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
