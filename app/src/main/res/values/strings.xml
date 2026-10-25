@@ -302,6 +302,10 @@
 
     <!-- 主页顶栏 / 列表 / 个人中心 / 相册文件夹 -->
     <string name="search_tokinote">搜索 TokiNote</string>
+    <string name="tooltip_navigation">导航栏</string>
+    <string name="tooltip_view_mode">查看形式</string>
+    <string name="tooltip_sort">按时间顺序</string>
+    <string name="tooltip_profile">我的</string>
     <string name="view_grid">切换为网格</string>
     <string name="view_list">切换为列表</string>
     <string name="sort_ascending">切换为升序</string>

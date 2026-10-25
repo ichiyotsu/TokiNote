@@ -76,6 +76,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
@@ -479,33 +480,73 @@ fun JournalEditorScreen(
                     )
                 }
             }
-            GlassIconButton(
-                icon = Icons.Filled.MoreVert,
-                contentDescription = stringResource(R.string.note_info),
-                onClick = { showInfo = true },
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-            )
-            Spacer(Modifier.width(6.dp))
-            val saveInteraction = remember {
-                androidx.compose.foundation.interaction.MutableInteractionSource()
-            }
-            Surface(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onBack()
-                },
-                shape = CircleShape,
-                color = accent,
-                contentColor = onAccent,
-                interactionSource = saveInteraction,
+            Row(
                 modifier = Modifier
-                    .size(52.dp)
-                    .pressScale(saveInteraction, pressedScale = 0.9f),
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .shadow(4.dp, RoundedCornerShape(22.dp), clip = false),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                val moreInteraction = remember {
+                    androidx.compose.foundation.interaction.MutableInteractionSource()
+                }
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 22.dp,
+                                topEnd = 6.dp,
+                                bottomEnd = 6.dp,
+                                bottomStart = 22.dp,
+                            ),
+                        )
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f))
+                        .clickable(
+                            interactionSource = moreInteraction,
+                            indication = androidx.compose.foundation.LocalIndication.current,
+                            onClick = { showInfo = true },
+                        )
+                        .pressScale(moreInteraction, pressedScale = 0.92f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = stringResource(R.string.note_info),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+                val saveInteraction = remember {
+                    androidx.compose.foundation.interaction.MutableInteractionSource()
+                }
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 6.dp,
+                                topEnd = 26.dp,
+                                bottomEnd = 26.dp,
+                                bottomStart = 6.dp,
+                            ),
+                        )
+                        .background(accent)
+                        .clickable(
+                            interactionSource = saveInteraction,
+                            indication = androidx.compose.foundation.LocalIndication.current,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onBack()
+                            },
+                        )
+                        .pressScale(saveInteraction, pressedScale = 0.9f),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
                         contentDescription = stringResource(R.string.action_save),
+                        tint = onAccent,
                         modifier = Modifier.size(26.dp),
                     )
                 }

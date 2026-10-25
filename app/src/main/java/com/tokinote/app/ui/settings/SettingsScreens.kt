@@ -58,6 +58,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +69,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -88,6 +90,7 @@ import com.tokinote.app.ui.components.SegmentedColumn
 import com.tokinote.app.ui.components.SegmentedListItem
 import com.tokinote.app.ui.components.segmentedShape
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -537,6 +540,21 @@ private fun UpdateChannelDropdown(
         label = "updateChannelArrow",
     )
     val selectedLabel = if (settings.updateChannel == "beta") "Beta" else "Release"
+    var menuAppeared by remember { mutableStateOf(false) }
+    LaunchedEffect(expanded) {
+        if (expanded) {
+            menuAppeared = false
+            delay(16)
+            menuAppeared = true
+        } else {
+            menuAppeared = false
+        }
+    }
+    val menuScale by animateFloatAsState(
+        targetValue = if (menuAppeared) 1f else 0.86f,
+        animationSpec = spring(dampingRatio = 0.58f, stiffness = 520f),
+        label = "updateMenuScale",
+    )
 
     Box {
         Row(
@@ -564,6 +582,11 @@ private fun UpdateChannelDropdown(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
+            modifier = Modifier.graphicsLayer {
+                scaleX = menuScale
+                scaleY = menuScale
+                transformOrigin = TransformOrigin(1f, 0f)
+            },
             shape = RoundedCornerShape(22.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.97f),
             tonalElevation = 4.dp,

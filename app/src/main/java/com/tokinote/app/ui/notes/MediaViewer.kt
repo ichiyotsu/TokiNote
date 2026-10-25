@@ -123,7 +123,6 @@ fun MediaViewerScreen(
                 onClick = onBack,
                 tint = Color.White,
                 containerColor = Color.Black.copy(alpha = 0.38f),
-                borderColor = Color.White.copy(alpha = 0.16f),
             )
             Text(
                 text = "${pagerState.currentPage + 1} / ${paths.size}",

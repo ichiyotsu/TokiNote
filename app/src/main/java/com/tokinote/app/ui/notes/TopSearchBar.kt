@@ -1,8 +1,5 @@
 package com.tokinote.app.ui.notes
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,8 +36,8 @@ enum class HomeTab { Notes, Album, Stats }
 enum class HomeViewMode { List, Grid }
 
 /**
- * 主页顶部悬浮胶囊：菜单、搜索、视图切换、排序、头像都收在这一条里。
- * 背景由外部传入的 Haze 涂成半透明磨砂，这里只负责内容和 1dp 边缘高光。
+ * 主页控制区：导航、搜索、查看方式、排序、头像各自独立。
+ * 只有搜索框有半透明底（无描边），其余都是独立悬浮按钮。
  */
 @Composable
 fun TopSearchBar(
@@ -58,98 +55,90 @@ fun TopSearchBar(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .clip(CircleShape)
-            .then(glass)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
-                shape = CircleShape,
-            )
-            .padding(start = 4.dp, end = 6.dp),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onMenu, modifier = Modifier.size(44.dp)) {
-            Icon(
-                imageVector = Icons.Filled.Menu,
-                contentDescription = stringResource(R.string.drawer_open),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        TopActionButton(
+            icon = Icons.Filled.Menu,
+            contentDescription = stringResource(R.string.drawer_open),
+            tooltip = stringResource(R.string.tooltip_navigation),
+            onClick = onMenu,
+        )
+        Spacer(Modifier.width(6.dp))
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp)
+                .clip(CircleShape)
+                .then(glass)
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 16.sp,
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                modifier = Modifier.weight(1f),
+                decorationBox = { inner ->
+                    if (query.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.search_tokinote),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    inner()
+                },
             )
-        }
-        BasicTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 16.sp,
-            ),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            modifier = Modifier.weight(1f),
-            decorationBox = { inner ->
-                if (query.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.search_tokinote),
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }, modifier = Modifier.size(30.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.close_search),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(17.dp),
                     )
                 }
-                inner()
-            },
-        )
-        if (query.isNotEmpty()) {
-            IconButton(onClick = { onQueryChange("") }, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(R.string.close_search),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp),
-                )
             }
         }
         if (showViewSort) {
-            IconButton(onClick = onToggleView, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    imageVector = if (viewMode == HomeViewMode.Grid) {
-                        Icons.Filled.ViewAgenda
-                    } else {
-                        Icons.Filled.GridView
-                    },
-                    contentDescription = stringResource(
-                        if (viewMode == HomeViewMode.Grid) R.string.view_list else R.string.view_grid,
-                    ),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            IconButton(onClick = onToggleSort, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    imageVector = Icons.Filled.SwapVert,
-                    contentDescription = stringResource(
-                        if (sortAscending) R.string.sort_descending else R.string.sort_ascending,
-                    ),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-        }
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .clickable(onClick = onAvatar),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = avatarEmoji.ifBlank { "🌿" },
-                fontSize = 18.sp,
+            Spacer(Modifier.width(4.dp))
+            TopActionButton(
+                icon = if (viewMode == HomeViewMode.Grid) Icons.Filled.ViewAgenda else Icons.Filled.GridView,
+                contentDescription = stringResource(
+                    if (viewMode == HomeViewMode.Grid) R.string.view_list else R.string.view_grid,
+                ),
+                tooltip = stringResource(R.string.tooltip_view_mode),
+                onClick = onToggleView,
+                size = 40.dp,
+                iconSize = 19.dp,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
             )
+            Spacer(Modifier.width(4.dp))
+            TopActionButton(
+                icon = Icons.Filled.SwapVert,
+                contentDescription = stringResource(
+                    if (sortAscending) R.string.sort_descending else R.string.sort_ascending,
+                ),
+                tooltip = stringResource(R.string.tooltip_sort),
+                onClick = onToggleSort,
+                size = 40.dp,
+                iconSize = 19.dp,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+            )
+            Spacer(Modifier.width(4.dp))
         }
-        Spacer(Modifier.width(2.dp))
+        TopAvatarButton(
+            emoji = avatarEmoji,
+            tooltip = stringResource(R.string.tooltip_profile),
+            onClick = onAvatar,
+        )
     }
 }

@@ -1,6 +1,5 @@
 package com.tokinote.app.ui.components
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,7 +33,6 @@ fun GlassIconButton(
     shape: RoundedCornerShape = RoundedCornerShape(16.dp),
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.62f),
-    borderColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
 ) {
     val interaction = remember { MutableInteractionSource() }
     Surface(
@@ -46,8 +44,7 @@ fun GlassIconButton(
         interactionSource = interaction,
         modifier = modifier
             .size(size)
-            .pressScale(interaction, pressedScale = 0.9f)
-            .border(1.dp, borderColor, shape),
+            .pressScale(interaction, pressedScale = 0.9f),
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(
