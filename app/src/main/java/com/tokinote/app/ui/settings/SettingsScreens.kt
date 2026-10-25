@@ -797,25 +797,24 @@ fun AboutScreen(
 
             val currentRelease = release
             if (currentRelease != null || downloading || downloaded) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.End,
                 ) {
-                    IconButton(
-                        onClick = { showUpdateHelp = !showUpdateHelp },
+                    Box(
                         modifier = Modifier
-                            .size(24.dp)
-                            .background(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f),
-                                CircleShape,
-                            ),
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f))
+                            .clickable { showUpdateHelp = !showUpdateHelp },
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Filled.PriorityHigh,
                             contentDescription = stringResource(R.string.update_help_title),
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp),
+                            modifier = Modifier.size(12.dp),
                         )
                     }
                     AnimatedVisibility(
@@ -830,11 +829,11 @@ fun AboutScreen(
                             textAlign = TextAlign.End,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 2.dp, end = 4.dp),
+                                .padding(top = 6.dp),
                         )
                     }
                 }
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(8.dp))
                 if (currentRelease != null) {
                     UpdateStatusCard(
                         info = currentRelease,
