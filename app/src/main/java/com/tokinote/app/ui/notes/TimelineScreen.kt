@@ -54,7 +54,8 @@ import com.tokinote.app.data.AppSettings
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
-import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Color
+import com.tokinote.app.ui.theme.LocalDarkTheme
 import com.tokinote.app.ui.theme.tokiGlass
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -174,10 +175,15 @@ fun TimelineScreen(
         tints = listOf(headerTint),
         fallback = headerFallback,
     )
-    val drawerBlur by androidx.compose.animation.core.animateDpAsState(
-        targetValue = if (drawerOpen) 24.dp else 0.dp,
-        animationSpec = tween(200),
-        label = "drawerBlur",
+    val darkTheme = LocalDarkTheme.current
+    val drawerGlass = Modifier.tokiGlass(
+        hazeState = hazeState,
+        blurRadius = 30.dp,
+        tints = listOf(
+            Color.Black.copy(alpha = if (darkTheme) 0.16f else 0.03f),
+            Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f),
+        ),
+        fallback = Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f),
     )
 
     LaunchedEffect(previewNote) {
@@ -204,7 +210,6 @@ fun TimelineScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .blur(drawerBlur)
                 .hazeSource(hazeState),
         ) {
             when (tab) {
@@ -257,7 +262,6 @@ fun TimelineScreen(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .blur(drawerBlur)
                 .onSizeChanged { headerHeight = it.height },
         ) {
             TopSearchBar(
@@ -294,6 +298,7 @@ fun TimelineScreen(
         activeNotes = activeNotes,
         photos = allPhotos,
         topInset = contentPadding.calculateTopPadding(),
+        glass = drawerGlass,
         onDismiss = { drawerOpen = false },
         onSelectTab = {
             tab = it

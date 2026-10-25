@@ -91,6 +91,7 @@ fun GroupDrawer(
     activeNotes: List<Note>,
     photos: List<AlbumPhoto>,
     topInset: androidx.compose.ui.unit.Dp = 0.dp,
+    glass: Modifier = Modifier,
     onDismiss: () -> Unit,
     onSelectTab: (HomeTab) -> Unit,
     onSelectGroup: (String?) -> Unit,
@@ -157,6 +158,7 @@ fun GroupDrawer(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
+                        .then(glass)
                         .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.55f)),
                 )
                 Column(
