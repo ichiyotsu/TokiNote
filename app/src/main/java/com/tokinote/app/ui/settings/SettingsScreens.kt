@@ -904,8 +904,10 @@ private fun UpdateStatusCard(
                     text = cleanReleaseNotes(info.notes),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 4,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 150.dp)
+                        .verticalScroll(rememberScrollState()),
                 )
             }
 

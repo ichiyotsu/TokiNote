@@ -113,6 +113,7 @@
     <string name="update_restart">重启</string>
     <string name="update_later">下次一定</string>
     <string name="update_pending_saved">已保留安装包，下次启动时更新</string>
+    <string name="update_later_started">已开始后台下载，完成后下次启动更新</string>
     <string name="update_help_title">重启与下次一定</string>
     <string name="update_help_body">重启：立即打开系统安装器更新 TokiNote，完成后运行新版本。\n\n下次一定：保留已下载的安装包，不立即安装；下次启动 TokiNote 时再打开系统安装器。</string>
     <string name="album_empty">这个月还没有照片</string>
