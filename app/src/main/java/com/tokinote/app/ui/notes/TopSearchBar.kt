@@ -27,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -35,7 +34,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.tokinote.app.R
 
 enum class HomeTab { Notes, Album, Stats }
@@ -81,24 +79,6 @@ fun TopSearchBar(
                 .clip(RoundedCornerShape(30.dp))
                 .then(glass),
         )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp, vertical = 8.dp)
-                .zIndex(1f)
-                .graphicsLayer {
-                    alpha = backdropProgress.coerceIn(0f, 1f) * 0.96f
-                }
-                .clip(RoundedCornerShape(30.dp))
-                .background(
-                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.58f),
-                            Color.Black.copy(alpha = 0.40f),
-                        ),
-                    ),
-                ),
-        )
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -118,7 +98,11 @@ fun TopSearchBar(
                 .weight(1f)
                 .height(48.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.58f))
+                .background(
+                    MaterialTheme.colorScheme.surfaceContainer.copy(
+                        alpha = 0.58f * (1f - backdropProgress.coerceIn(0f, 1f)),
+                    ),
+                )
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

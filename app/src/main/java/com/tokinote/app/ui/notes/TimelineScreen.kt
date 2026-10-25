@@ -168,7 +168,7 @@ fun TimelineScreen(
     val headerInset = with(LocalDensity.current) { headerHeight.toDp() }
 
     val hazeState = rememberHazeState()
-    val headerTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.52f)
+    val headerTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.84f)
     val headerFallback = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
     val glass = Modifier.hazeBlur(
         input = HazeInput.Sources(hazeState),
