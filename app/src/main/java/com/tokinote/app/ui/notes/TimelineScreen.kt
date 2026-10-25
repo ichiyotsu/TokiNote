@@ -16,12 +16,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -101,6 +105,12 @@ fun TimelineScreen(
     var editingFolderId by rememberSaveable { mutableStateOf<String?>(null) }
     var previewNote by remember { mutableStateOf<Note?>(null) }
     var previewBounds by remember { mutableStateOf<Rect?>(null) }
+    var topBarElevated by remember { mutableStateOf(false) }
+    val backdropProgress by animateFloatAsState(
+        targetValue = if (topBarElevated) 1f else 0f,
+        animationSpec = tween(300),
+        label = "topBarBackdrop",
+    )
 
     val comparator = remember(sortAscending) {
         if (sortAscending) {
@@ -181,6 +191,9 @@ fun TimelineScreen(
     LaunchedEffect(drawerOpen) {
         onDrawerVisibilityChange(drawerOpen)
     }
+    LaunchedEffect(tab) {
+        if (tab != HomeTab.Notes) topBarElevated = false
+    }
     androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose {
             onPreviewVisibilityChange(false)
@@ -216,6 +229,7 @@ fun TimelineScreen(
                         previewNote = note
                         previewBounds = bounds
                     },
+                    onScrollChanged = { topBarElevated = it },
                 )
 
                 HomeTab.Album -> AlbumContent(
@@ -245,8 +259,7 @@ fun TimelineScreen(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .onSizeChanged { headerHeight = it.height }
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .onSizeChanged { headerHeight = it.height },
         ) {
             TopSearchBar(
                 query = query,
@@ -262,6 +275,8 @@ fun TimelineScreen(
                 sortAscending = sortAscending,
                 onToggleSort = { sortAscending = !sortAscending },
                 avatarEmoji = settings.avatarEmoji,
+                avatarPath = settings.avatarPath,
+                backdropProgress = backdropProgress,
                 showViewSort = tab != HomeTab.Stats,
                 onMenu = { drawerOpen = true },
                 onAvatar = { profileOpen = true },
@@ -423,7 +438,19 @@ private fun NoteFeed(
     listTitle: String,
     onOpenNote: (String) -> Unit,
     onLongPress: (Note, Rect) -> Unit,
+    onScrollChanged: (Boolean) -> Unit,
 ) {
+    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
+    val scrolled = if (viewMode == HomeViewMode.Grid) {
+        gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 4
+    } else {
+        listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 4
+    }
+    LaunchedEffect(scrolled) { onScrollChanged(scrolled) }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose { onScrollChanged(false) }
+    }
     if (notes.isEmpty()) {
         EmptyHint(stringResource(R.string.no_entries))
         return
@@ -441,6 +468,7 @@ private fun NoteFeed(
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier.fillMaxSize(),
+            state = gridState,
             contentPadding = padding,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -477,6 +505,7 @@ private fun NoteFeed(
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = padding,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {

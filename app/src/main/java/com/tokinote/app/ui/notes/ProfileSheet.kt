@@ -17,6 +17,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -306,28 +307,35 @@ private fun UserCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(58.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .size(66.dp)
                         .clickable(onClick = onPickAvatar),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (avatarImage != null) {
-                        Image(
-                            bitmap = avatarImage,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        Text(text = settings.avatarEmoji.ifBlank { "🌿" }, fontSize = 26.sp)
+                    Box(
+                        modifier = Modifier
+                            .size(58.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (avatarImage != null) {
+                            Image(
+                                bitmap = avatarImage,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        } else {
+                            Text(text = settings.avatarEmoji.ifBlank { "🌿" }, fontSize = 26.sp)
+                        }
                     }
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .size(20.dp)
+                            .size(22.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
+                            .background(MaterialTheme.colorScheme.primary)
+                            .border(2.dp, MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(

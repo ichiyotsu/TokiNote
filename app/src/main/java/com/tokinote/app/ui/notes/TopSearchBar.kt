@@ -1,14 +1,17 @@
 package com.tokinote.app.ui.notes
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -25,6 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,16 +53,37 @@ fun TopSearchBar(
     sortAscending: Boolean,
     onToggleSort: () -> Unit,
     avatarEmoji: String,
+    avatarPath: String = "",
+    backdropProgress: Float = 0f,
     showViewSort: Boolean,
     onMenu: () -> Unit,
     onAvatar: () -> Unit,
     glass: Modifier = Modifier,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(72.dp),
+        contentAlignment = Alignment.Center,
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    alpha = backdropProgress.coerceIn(0f, 1f)
+                    scaleY = 0.9f + 0.1f * backdropProgress.coerceIn(0f, 1f)
+                    transformOrigin = TransformOrigin(0.5f, 0f)
+                }
+                .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
+                .then(glass),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
         TopActionButton(
             icon = Icons.Filled.Menu,
             contentDescription = stringResource(R.string.drawer_open),
@@ -70,7 +96,7 @@ fun TopSearchBar(
                 .weight(1f)
                 .height(48.dp)
                 .clip(CircleShape)
-                .then(glass)
+                .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.58f))
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -137,8 +163,10 @@ fun TopSearchBar(
         }
         TopAvatarButton(
             emoji = avatarEmoji,
+            avatarPath = avatarPath,
             tooltip = stringResource(R.string.tooltip_profile),
             onClick = onAvatar,
         )
+        }
     }
 }

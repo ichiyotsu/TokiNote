@@ -1,5 +1,6 @@
 package com.tokinote.app.ui.notes
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,8 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -91,12 +94,14 @@ fun TopActionButton(
 @Composable
 fun TopAvatarButton(
     emoji: String,
+    avatarPath: String,
     tooltip: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var tooltipVisible by remember { mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }
+    val image = avatarPath.takeIf { it.isNotBlank() }?.let { rememberImage(it) }
     LaunchedEffect(tooltipVisible) {
         if (tooltipVisible) {
             delay(1800)
@@ -107,7 +112,8 @@ fun TopAvatarButton(
         Box(
             modifier = Modifier
                 .size(38.dp)
-                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer)
                 .pressScale(interaction, pressedScale = 0.9f)
                 .combinedClickable(
                     interactionSource = interaction,
@@ -117,7 +123,16 @@ fun TopAvatarButton(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = emoji.ifBlank { "🌿" }, fontSize = 18.sp)
+            if (image != null) {
+                Image(
+                    bitmap = image,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Text(text = emoji.ifBlank { "🌿" }, fontSize = 18.sp)
+            }
         }
         TooltipMenu(
             expanded = tooltipVisible,
