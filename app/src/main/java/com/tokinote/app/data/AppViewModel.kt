@@ -2,9 +2,7 @@ package com.tokinote.app.data
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -102,80 +100,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleDone(id: String) {
         updateNotes { notes ->
             notes.map { if (it.id == id) it.copy(done = !it.done) else it }
-        }
-    }
-
-    fun togglePin(id: String) {
-        updateNotes { notes ->
-            notes.map { if (it.id == id) it.copy(pinned = !it.pinned, updatedAt = System.currentTimeMillis()) else it }
-        }
-    }
-
-    fun setEmoji(noteId: String, emoji: String) {
-        updateNotes { notes ->
-            notes.map { if (it.id == noteId) it.copy(emoji = emoji, updatedAt = System.currentTimeMillis()) else it }
-        }
-    }
-
-    fun addMedia(noteId: String, paths: List<String>) {
-        if (paths.isEmpty()) return
-        updateNotes { notes ->
-            notes.map {
-                if (it.id == noteId) {
-                    it.copy(media = it.media + paths, updatedAt = System.currentTimeMillis())
-                } else {
-                    it
-                }
-            }
-        }
-    }
-
-    fun removeMedia(noteId: String, path: String) {
-        updateNotes { notes ->
-            notes.map {
-                if (it.id == noteId) {
-                    it.copy(media = it.media - path, updatedAt = System.currentTimeMillis())
-                } else {
-                    it
-                }
-            }
-        }
-    }
-
-    fun addFiles(noteId: String, files: List<JournalFile>) {
-        if (files.isEmpty()) return
-        updateNotes { notes ->
-            notes.map {
-                if (it.id == noteId) {
-                    it.copy(files = it.files + files, updatedAt = System.currentTimeMillis())
-                } else {
-                    it
-                }
-            }
-        }
-    }
-
-    fun removeFile(noteId: String, path: String) {
-        updateNotes { notes ->
-            notes.map {
-                if (it.id == noteId) {
-                    it.copy(files = it.files.filterNot { file -> file.path == path }, updatedAt = System.currentTimeMillis())
-                } else {
-                    it
-                }
-            }
-        }
-    }
-
-    fun setLocation(noteId: String, location: JournalLocation?) {
-        updateNotes { notes ->
-            notes.map {
-                if (it.id == noteId) {
-                    it.copy(location = location, updatedAt = System.currentTimeMillis())
-                } else {
-                    it
-                }
-            }
         }
     }
 
@@ -309,15 +233,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val updated = _sessions.value + FocusSession(System.currentTimeMillis(), 0, minutes)
         _sessions.update { updated }
         store.saveSessions(updated)
-    }
-
-    /** 今天的专注分钟数。 */
-    fun todayFocusMinutes(): Int {
-        val today = LocalDate.now()
-        return _sessions.value.sumOf { session ->
-            val date = Instant.ofEpochMilli(session.endedAt).atZone(ZoneId.systemDefault()).toLocalDate()
-            if (date == today) session.minutes else 0
-        }
     }
 
     /* ----------------------------- data ----------------------------- */

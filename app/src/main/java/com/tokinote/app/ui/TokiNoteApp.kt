@@ -60,12 +60,9 @@ import com.tokinote.app.ui.settings.DataSettings
 import com.tokinote.app.ui.settings.ArchiveListScreen
 import com.tokinote.app.ui.settings.SettingsScreen
 import com.tokinote.app.ui.theme.LocalDarkTheme
-import dev.chrisbanes.haze.HazeInput
+import com.tokinote.app.ui.theme.tokiGlass
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.blur.HazeColorEffect
-import dev.chrisbanes.haze.blur.hazeBlur
 
 @Composable
 fun TokiNoteApp(viewModel: AppViewModel) {
@@ -83,19 +80,11 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val smoke = if (darkTheme) Color.Black.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.03f)
     val frost = if (darkTheme) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.10f)
     val glassFallback = Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f)
-    val glass = Modifier.hazeBlur(
-        input = HazeInput.Sources(hazeState),
-        style = HazeBlurStyle {
-            blurRadius(30.dp)
-            noiseFactor(0.02f)
-            colorEffects(
-                listOf(
-                    HazeColorEffect.tint(smoke),
-                    HazeColorEffect.tint(frost),
-                ),
-            )
-            fallbackColorEffect(HazeColorEffect.tint(glassFallback))
-        },
+    val glass = Modifier.tokiGlass(
+        hazeState = hazeState,
+        blurRadius = 30.dp,
+        tints = listOf(smoke, frost),
+        fallback = glassFallback,
     )
 
     LaunchedEffect(settings) { focusViewModel.configure(settings) }
@@ -104,10 +93,6 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     }
     LaunchedEffect(focusViewModel) {
         focusViewModel.breakCompleted.collect { minutes -> viewModel.recordBreakSession(minutes) }
-    }
-
-    val todayMinutes = remember(sessions) {
-        sessions.filter { isToday(it.endedAt) }.sumOf { it.minutes }
     }
 
     val backStack = rememberSaveable(
@@ -257,7 +242,6 @@ fun TokiNoteApp(viewModel: AppViewModel) {
 
                 Dest.Focus -> FocusScreen(
                     state = focusState,
-                    todayMinutes = todayMinutes,
                     contentPadding = padding,
                     onToggle = focusViewModel::toggle,
                     onReset = focusViewModel::reset,

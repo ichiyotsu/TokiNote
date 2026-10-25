@@ -2,7 +2,6 @@ package com.tokinote.app.ui.focus
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -63,7 +62,6 @@ import com.tokinote.app.ui.pressScale
 @Composable
 fun FocusScreen(
     state: FocusState,
-    todayMinutes: Int,
     contentPadding: PaddingValues,
     onToggle: () -> Unit,
     onReset: () -> Unit,

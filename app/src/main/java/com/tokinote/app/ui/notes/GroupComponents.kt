@@ -1,34 +1,21 @@
 package com.tokinote.app.ui.notes
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -48,106 +35,10 @@ import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
-import com.tokinote.app.ui.theme.ExpressiveChipShape
-import com.tokinote.app.ui.theme.ExpressiveFabShape
 
 /**
  * 首页顶部的分组筛选条：全部、各个分组，以及最右侧的新建按钮。
  * 长按分组可以编辑或删除。
- */
-@Composable
-fun NoteGroupBar(
-    groups: List<NoteGroup>,
-    selectedId: String?,
-    onSelect: (String?) -> Unit,
-    onCreate: () -> Unit,
-    onEdit: (NoteGroup) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        GroupChip(
-            label = stringResource(R.string.label_all),
-            selected = selectedId == null,
-            onClick = { onSelect(null) },
-        )
-        groups.forEach { group ->
-            GroupChip(
-                label = group.name,
-                selected = selectedId == group.id,
-                onClick = { onSelect(group.id) },
-                onLongClick = { onEdit(group) },
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(ExpressiveFabShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .clickable(onClick = onCreate),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = stringResource(R.string.group_add),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun GroupChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
-) {
-    val container by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        },
-        label = "groupChipContainer",
-    )
-    val content = if (selected) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val shape = if (selected) CircleShape else ExpressiveChipShape
-    Box(
-        modifier = Modifier
-            .height(36.dp)
-            .clip(shape)
-            .background(container)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 18.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = content,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.widthIn(max = 180.dp),
-        )
-    }
-}
-
-/**
- * 新建 / 编辑分组：填名称并多选笔记。编辑模式下还可以删除分组。
- * 分组只保存笔记 id，删除分组不会删除笔记。
  */
 @Composable
 fun NoteGroupSheet(

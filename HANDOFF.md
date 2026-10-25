@@ -46,6 +46,9 @@
 - **minSdk 36（Android 16）**、compileSdk/targetSdk 37
 - 新增依赖 `com.google.android.material:material:1.13.0`（Monet）、`dev.chrisbanes.haze:haze|haze-blur:2.0.1`（背景模糊）
 - Compose 动态色：`dynamicLight/DarkColorScheme`（SDK 31+）；传统 View：`TokiNoteApplication` + `DynamicColors.applyToActivitiesIfAvailable`；`themes.xml` 继承 `Theme.Material3.DynamicColors.DayNight.NoActionBar`
+- **Release 已开启 R8**：`isMinifyEnabled = true`、`isShrinkResources = true`；Compose/Haze 使用 consumer rules，`proguard-rules.pro` 只保留注解与可选注解的 warning 规则
+- **玻璃统一入口**：`ui/theme/Glass.kt` 的 `Modifier.tokiGlass()` 统一 Haze 输入、模糊半径、tint 和 fallback；底栏 30dp、顶栏 52dp 都走同一条链路
+- **代码瘦身**：删除 `WavyRing`、旧 `JournalTopBar` / `JournalTabs` / `SearchResultRow` / `NoteGroupBar`、未使用的 ViewModel 方法，以及 107 条废弃字符串；当前 release APK 约 6.5 MB
 
 ## 5. 已完成的功能
 

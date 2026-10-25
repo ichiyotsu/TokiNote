@@ -54,12 +54,9 @@ import com.tokinote.app.data.AppSettings
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
-import dev.chrisbanes.haze.HazeInput
+import com.tokinote.app.ui.theme.tokiGlass
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.blur.HazeColorEffect
-import dev.chrisbanes.haze.blur.hazeBlur
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -170,14 +167,11 @@ fun TimelineScreen(
     val hazeState = rememberHazeState()
     val headerTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.84f)
     val headerFallback = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
-    val glass = Modifier.hazeBlur(
-        input = HazeInput.Sources(hazeState),
-        style = HazeBlurStyle {
-            blurRadius(52.dp)
-            noiseFactor(0.02f)
-            colorEffects(listOf(HazeColorEffect.tint(headerTint)))
-            fallbackColorEffect(HazeColorEffect.tint(headerFallback))
-        },
+    val glass = Modifier.tokiGlass(
+        hazeState = hazeState,
+        blurRadius = 52.dp,
+        tints = listOf(headerTint),
+        fallback = headerFallback,
     )
 
     LaunchedEffect(previewNote) {

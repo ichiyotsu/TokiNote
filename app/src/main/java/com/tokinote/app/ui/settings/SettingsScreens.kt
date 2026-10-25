@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.SdStorage
