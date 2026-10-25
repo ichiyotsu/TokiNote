@@ -57,7 +57,7 @@
 - Keep 风格主页（0.2.8）：顶部独立搜索控制区（导航 / 搜索 / 网格列表切换 / 排序 / 头像，滚动时整条玻璃底出现）；「已置顶 / 全部笔记」小标题；两列网格与单列列表；卡片有图时图片顶部铺满、无图时不渲染图片容器
 - 抽屉导航（0.2.8）：笔记 / 相册 / 统计从主页迁入抽屉；分组与相册文件夹做成可折叠小节；相册文件夹支持命名、多选照片、创建时间、编辑/删除；头像打开「我的」设置 emoji 与用户 ID
 - 我的（0.2.8）：Google 账户风格，用户卡片可展开编辑用户名/邮箱（实时写入设置），头像可从相册选择并同步到顶栏；功能卡与存储卡合并成一张贴紧的分段卡片（分割线，无间隙），存储卡显示 APK+files/cache 占用并提供系统应用详情跳转
-- 沉浸式状态栏（0.2.8）：`enableEdgeToEdge` + 透明 status/nav bar；MainActivity 里根据深浅色切 status bar icon 外观，最顶层加 `StatusBarScrim` 渐变
+- 沉浸式状态栏（0.2.8）：`enableEdgeToEdge` + 透明 status/nav bar；MainActivity 里根据深浅色切 status bar icon 外观；0.3.1 起编辑页顶栏把状态栏区域一起绘制，保证同色
 - 更新通道（0.2.8）：关于页检查更新右侧 Release/Beta 下拉，22dp 圆角菜单、Spring 箭头、选中胶囊 + 对勾
 - 多 Tab 联动：三条杠只在笔记 Tab 显示；切到相册 / 统计时用 Spring 收起，`Note` 标题向左补位，切回时弹回
 - 沉浸式编辑页（0.2.8）：正文和头部作为底层滚动内容，顶栏与工具岛 Overlay；滚动超过阈值时大标题缩小、日期标签 Spring 收起，顶栏显示折叠标题，回到顶部弹回；顶栏使用随 `collapseProgress` 加深的 tonal scrim（编辑页没有用 Haze，避免嵌套滚动下捕获不稳定）
@@ -78,10 +78,11 @@
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
 2. 0.3.0 已发布，等待真机回归（R8 release、玻璃、顶部控制区、标签内联、专注页、底栏、检查更新、头像同步）
-3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
-4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
-5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
-6. 可选：编辑页顶栏当前是 tonal scrim，不是真模糊；若 Haze 能在嵌套滚动里稳定捕获，可再换回
+3. 0.3.1 修复待发：编辑页 IME/状态栏、日期时间与标签菜单、关于页内联更新、重启/下次一定、更新说明感叹号
+4. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
+5. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
+6. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
+7. 可选：编辑页顶栏当前是 tonal scrim，不是真模糊；若 Haze 能在嵌套滚动里稳定捕获，可再换回
 
 ## 7. 已知坑
 
@@ -101,6 +102,6 @@
 - **Keep 主页**：顶部胶囊的 Haze source 在整个内容 Box 上，不要把 source 放到 `verticalScroll` 内部；无图卡片不要保留 Image 容器，`NoteCard` 只在 `note.media.firstOrNull() != null` 时渲染图片
 - **相册文件夹**：`AlbumFolder` 保存图片路径（不是 noteId），删除文件夹不删照片；`AlbumFolderSheet` 用 3 列多选，抽屉行显示创建日期
 - **账号面板**：`ProfileSheet` 的 `avatarPath` 存的是 `Attachments.copyImage` 复制到 app files 的路径；存储占用要把 `applicationInfo.sourceDir`（APK）算进去，否则只有几百 KB
-- **状态栏**：`enableEdgeToEdge` 用透明 SystemBarStyle；icon 明暗在 MainActivity 的 `SideEffect` 里用 `WindowCompat.getInsetsController` 设置，`StatusBarScrim` 叠在 TokiNoteApp 外层 Box 上
+- **状态栏**：`enableEdgeToEdge` 用透明 SystemBarStyle；icon 明暗在 MainActivity 的 `SideEffect` 里用 `WindowCompat.getInsetsController` 设置；编辑页把状态栏区域并入顶栏背景，避免透明状态栏与顶栏出现色差
 - **更新通道**：`DropdownMenu` 的 `shape/containerColor/tonalElevation/shadowElevation` 参数在 M3 1.5 可用；菜单项用 `clip(CircleShape)` + 选中背景，不要在 `DropdownMenu` 外再包一层背景
 - 提交信息里的 7 位短哈希（如 `7b0e0c3`）是 git commit SHA，提交时自动生成，不需要手写备注

@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,24 +36,24 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.SdStorage
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.CleaningServices
-import androidx.compose.material.icons.filled.SdStorage
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -655,12 +656,18 @@ fun AboutScreen(
     var downloading by remember { mutableStateOf(false) }
     var progress by remember { mutableIntStateOf(0) }
     var failureRes by remember { mutableStateOf<Int?>(null) }
+    var downloadedPath by remember { mutableStateOf<String?>(null) }
+    var downloaded by remember { mutableStateOf(false) }
+    var showUpdateHelp by remember { mutableStateOf(false) }
 
     fun checkForUpdate() {
-        if (checking) return
+        if (checking || downloading) return
         checking = true
         statusRes = null
         failureRes = null
+        release = null
+        downloaded = false
+        downloadedPath = null
         scope.launch {
             val result = withContext(Dispatchers.IO) {
                 runCatching { UpdateChecker.latest(settings.updateChannel) }
@@ -680,7 +687,8 @@ fun AboutScreen(
         }
     }
 
-    fun startDownload(info: ReleaseInfo) {
+    fun startDownload() {
+        val info = release ?: return
         val url = info.apkUrl
         if (url == null) {
             failureRes = R.string.update_no_apk
@@ -689,6 +697,7 @@ fun AboutScreen(
         downloading = true
         progress = 0
         failureRes = null
+        downloaded = false
         scope.launch {
             val destination = File(context.cacheDir, "tokinote-${info.tag}.apk")
             val ok = withContext(Dispatchers.IO) {
@@ -697,19 +706,39 @@ fun AboutScreen(
                 }.getOrDefault(false)
             }
             downloading = false
-            when {
-                !ok -> failureRes = R.string.update_failed
-                !ApkInstaller.canInstall(context) -> {
-                    ApkInstaller.openPermissionSettings(context)
-                    Toast.makeText(context, R.string.update_permission, Toast.LENGTH_LONG).show()
-                }
-
-                else -> {
-                    ApkInstaller.install(context, destination)
-                    release = null
-                }
+            if (ok) {
+                downloadedPath = destination.absolutePath
+                downloaded = true
+            } else {
+                failureRes = R.string.update_failed
             }
         }
+    }
+
+    fun restartNow() {
+        val path = downloadedPath ?: return
+        val file = File(path)
+        if (!file.exists()) {
+            failureRes = R.string.update_failed
+            return
+        }
+        if (!ApkInstaller.canInstall(context)) {
+            ApkInstaller.openPermissionSettings(context)
+            Toast.makeText(context, R.string.update_permission, Toast.LENGTH_LONG).show()
+            return
+        }
+        if (!ApkInstaller.install(context, file)) {
+            failureRes = R.string.update_failed
+        }
+    }
+
+    fun installLater() {
+        val path = downloadedPath ?: return
+        PendingUpdate.schedule(context, path)
+        Toast.makeText(context, R.string.update_pending_saved, Toast.LENGTH_LONG).show()
+        downloaded = false
+        downloadedPath = null
+        release = null
     }
 
     Column(
@@ -759,125 +788,174 @@ fun AboutScreen(
                     trailing = { Chevron() },
                 )
             }
+
+            val currentRelease = release
+            if (currentRelease != null || downloading || downloaded) {
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(
+                        onClick = { showUpdateHelp = true },
+                        modifier = Modifier.size(30.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.PriorityHigh,
+                            contentDescription = stringResource(R.string.update_help_title),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                            modifier = Modifier.size(17.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                if (currentRelease != null) {
+                    UpdateStatusCard(
+                        info = currentRelease,
+                        currentVersion = version,
+                        downloading = downloading,
+                        progress = progress,
+                        downloaded = downloaded,
+                        failureRes = failureRes,
+                        onDownload = { startDownload() },
+                        onRestart = { restartNow() },
+                        onLater = { installLater() },
+                    )
+                }
+            }
             Spacer(Modifier.height(28.dp))
         }
     }
 
-    if (downloading) {
-        androidx.compose.ui.window.Dialog(
-            onDismissRequest = {},
-            properties = androidx.compose.ui.window.DialogProperties(
-                usePlatformDefaultWidth = false,
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false,
-            ),
-        ) {
-            androidx.compose.material3.Surface(
-                color = androidx.compose.ui.graphics.Color(0xFF0B0B0B),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 32.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.update_in_progress_short),
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = androidx.compose.ui.graphics.Color.White,
-                        )
-                        Spacer(Modifier.height(20.dp))
-                        WavyProgress(progress = progress / 100f)
-                        Spacer(Modifier.height(10.dp))
-                        Text(
-                            text = "$progress%",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = androidx.compose.ui.graphics.Color(0xB3FFFFFF),
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    val currentRelease = release
-    if (currentRelease != null && !downloading) {
+    if (showUpdateHelp) {
         AlertDialog(
-            onDismissRequest = { if (!downloading) release = null },
-            icon = { Icon(Icons.Filled.SystemUpdate, contentDescription = null) },
-            title = {
-                Text(
-                    if (currentRelease.isPrerelease) {
-                        "TokiNote ${currentRelease.version} Beta"
-                    } else {
-                        stringResource(R.string.update_title, currentRelease.version)
-                    },
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = stringResource(R.string.update_current, version),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (currentRelease.notes.isNotBlank()) {
-                        Spacer(Modifier.height(10.dp))
-                        Box(
-                            modifier = Modifier
-                                .heightIn(max = 220.dp)
-                                .verticalScroll(rememberScrollState()),
-                        ) {
-                            Text(
-                                text = cleanReleaseNotes(currentRelease.notes),
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                        }
-                    }
-                    if (downloading) {
-                        Spacer(Modifier.height(14.dp))
-                        LinearProgressIndicator(
-                            progress = { progress / 100f },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            text = stringResource(R.string.update_downloading, progress),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    failureRes?.let { res ->
-                        Spacer(Modifier.height(10.dp))
-                        Text(
-                            text = stringResource(res),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
-            },
+            onDismissRequest = { showUpdateHelp = false },
+            title = { Text(stringResource(R.string.update_help_title)) },
+            text = { Text(stringResource(R.string.update_help_body)) },
             confirmButton = {
-                TextButton(
-                    enabled = !downloading,
-                    onClick = { startDownload(currentRelease) },
-                ) {
-                    Text(stringResource(R.string.update_download))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    enabled = !downloading,
-                    onClick = { release = null },
-                ) {
-                    Text(stringResource(R.string.action_cancel))
+                TextButton(onClick = { showUpdateHelp = false }) {
+                    Text(stringResource(R.string.action_done))
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun UpdateStatusCard(
+    info: ReleaseInfo,
+    currentVersion: String,
+    downloading: Boolean,
+    progress: Int,
+    downloaded: Boolean,
+    failureRes: Int?,
+    onDownload: () -> Unit,
+    onRestart: () -> Unit,
+    onLater: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(26.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.SystemUpdate,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = if (info.isPrerelease) {
+                            "TokiNote ${info.version} Beta"
+                        } else {
+                            stringResource(R.string.update_title, info.version)
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = stringResource(R.string.update_current, currentVersion),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            if (info.notes.isNotBlank()) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = cleanReleaseNotes(info.notes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 4,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+            }
+
+            if (downloading) {
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    text = stringResource(R.string.update_in_progress_short),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(Modifier.height(8.dp))
+                LinearProgressIndicator(
+                    progress = { progress / 100f },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.update_downloading, progress),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else if (downloaded) {
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    text = stringResource(R.string.update_ready),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextButton(onClick = onLater) {
+                        Text(stringResource(R.string.update_later))
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    FilledTonalButton(onClick = onRestart) {
+                        Text(stringResource(R.string.update_restart))
+                    }
+                }
+            } else {
+                failureRes?.let { res ->
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(res),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = onDownload,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(Icons.Filled.SystemUpdate, contentDescription = null, modifier = Modifier.size(17.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.update_download))
+                }
+            }
+        }
     }
 }
 
@@ -922,41 +1000,3 @@ private fun SettingSwitch(
 private fun appVersionName(context: Context): String = runCatching {
     context.packageManager.getPackageInfo(context.packageName, 0).versionName
 }.getOrNull() ?: "0.1.0"
-
-@Composable
-private fun WavyProgress(progress: Float) {
-    androidx.compose.foundation.Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(18.dp),
-    ) {
-        val stroke = 6.dp.toPx()
-        val amplitude = 4.dp.toPx()
-        val y = size.height / 2f
-        drawRoundRect(
-            color = androidx.compose.ui.graphics.Color(0x33FFFFFF),
-            topLeft = androidx.compose.ui.geometry.Offset(0f, y - stroke / 2f),
-            size = androidx.compose.ui.geometry.Size(size.width, stroke),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(stroke / 2f),
-        )
-        val end = size.width * progress.coerceIn(0f, 1f)
-        if (end > 0f) {
-            val path = androidx.compose.ui.graphics.Path()
-            var x = 0f
-            path.moveTo(0f, y)
-            while (x <= end) {
-                val phase = (x / (18.dp.toPx())) * 2f * Math.PI
-                path.lineTo(x, y + (kotlin.math.sin(phase).toFloat() * amplitude))
-                x += 2.dp.toPx()
-            }
-            drawPath(
-                path = path,
-                color = androidx.compose.ui.graphics.Color(0xFFB1D18A),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                    width = stroke,
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                ),
-            )
-        }
-    }
-}
