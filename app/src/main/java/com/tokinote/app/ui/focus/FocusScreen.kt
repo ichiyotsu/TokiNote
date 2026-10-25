@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -132,25 +133,32 @@ fun FocusScreen(
         val configuration = LocalConfiguration.current
         val wide = configuration.smallestScreenWidthDp >= 600 && maxWidth > maxHeight
         if (wide) {
+            val ringSize = minOf(480.dp, maxHeight * 0.82f)
             Row(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 32.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                FocusTimer(
-                    state = state,
-                    progress = progress,
-                    accent = accent,
-                    track = track,
-                    timeScale = timeScale,
-                    timeAlpha = timeAlpha,
-                    animatingOut = animatingOut,
-                    onRequestIndefinite = { if (!animatingOut) animatingOut = true },
-                    maxSize = 440.dp,
-                    timeSize = 88.sp,
-                    modifier = Modifier.weight(6f),
-                )
+                Box(
+                    modifier = Modifier
+                        .weight(6f)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    FocusTimer(
+                        state = state,
+                        progress = progress,
+                        accent = accent,
+                        track = track,
+                        timeScale = timeScale,
+                        timeAlpha = timeAlpha,
+                        animatingOut = animatingOut,
+                        onRequestIndefinite = { if (!animatingOut) animatingOut = true },
+                        maxSize = ringSize,
+                        timeSize = 96.sp,
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .weight(4f)
@@ -229,8 +237,8 @@ private fun FocusTimer(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth(0.94f)
             .widthIn(max = maxSize)
+            .fillMaxWidth(0.94f)
             .aspectRatio(1f)
             .pointerInput(state.mode, state.running, state.indefinite) {
                 if (!state.running && !state.indefinite && state.mode == FocusMode.Focus) {
