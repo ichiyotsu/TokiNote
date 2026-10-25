@@ -75,7 +75,7 @@ fun FloatingNavBar(
     glass: Modifier = Modifier,
     action: (@Composable () -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(28.dp)
+    val shape = RoundedCornerShape(36.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()

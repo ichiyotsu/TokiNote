@@ -542,8 +542,9 @@ private fun UpdateChannelDropdown(
         Row(
             modifier = Modifier
                 .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.82f))
                 .clickable { expanded = true }
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(horizontal = 12.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
