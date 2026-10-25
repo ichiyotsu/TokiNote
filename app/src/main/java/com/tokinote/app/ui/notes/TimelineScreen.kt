@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -202,10 +205,15 @@ fun TimelineScreen(
         }
     }
 
+    val layoutDirection = androidx.compose.ui.platform.LocalLayoutDirection.current
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = contentPadding.calculateTopPadding()),
+            .padding(
+                start = contentPadding.calculateStartPadding(layoutDirection),
+                top = contentPadding.calculateTopPadding(),
+                end = contentPadding.calculateEndPadding(layoutDirection),
+            ),
     ) {
         Box(
             modifier = Modifier
@@ -469,14 +477,16 @@ private fun NoteFeed(
     )
 
     if (viewMode == HomeViewMode.Grid) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.fillMaxSize(),
-            state = gridState,
-            contentPadding = padding,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val columns = (maxWidth / 190.dp).toInt().coerceIn(2, 4)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columns),
+                modifier = Modifier.fillMaxSize(),
+                state = gridState,
+                contentPadding = padding,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
             if (pinned.isNotEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     SectionHeader(stringResource(R.string.section_pinned))
@@ -504,6 +514,7 @@ private fun NoteFeed(
                     onClick = { onOpenNote(note.id) },
                     onLongPress = { rect -> onLongPress(note, rect) },
                 )
+            }
             }
         }
     } else {

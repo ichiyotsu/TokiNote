@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -76,9 +77,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
@@ -110,6 +113,9 @@ fun SettingsScreen(
     onCloseSearch: () -> Unit = {},
 ) {
     var query by remember { mutableStateOf("") }
+    val config = LocalConfiguration.current
+    val wide = config.smallestScreenWidthDp >= 600 &&
+        config.screenWidthDp > config.screenHeightDp
     val items = listOf(
         Triple(SettingsPage.Appearance, stringResource(R.string.settings_appearance), stringResource(R.string.settings_appearance_sub)),
         Triple(SettingsPage.Data, stringResource(R.string.settings_data), stringResource(R.string.settings_data_sub)),
@@ -152,28 +158,142 @@ fun SettingsScreen(
                 )
                 Spacer(Modifier.height(16.dp))
             }
-            SegmentedColumn {
-                items.forEachIndexed { index, item ->
-                    val icon = when (item.first) {
-                        SettingsPage.Appearance -> Icons.Filled.Palette
-                        SettingsPage.Data -> Icons.Filled.Storage
-                        SettingsPage.About -> Icons.Filled.Info
+            if (wide) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    val leftItems = items.filterIndexed { index, _ -> index % 2 == 0 }
+                    val rightItems = items.filterIndexed { index, _ -> index % 2 == 1 }
+                    Column(modifier = Modifier.weight(1f)) {
+                        SegmentedColumn {
+                            leftItems.forEachIndexed { index, item ->
+                                SettingsEntry(
+                                    item = item,
+                                    index = index,
+                                    count = leftItems.size,
+                                    onClick = {
+                                        onCloseSearch()
+                                        onOpen(item.first)
+                                    },
+                                )
+                            }
+                        }
                     }
-                    SegmentedListItem(
-                        title = item.second,
-                        subtitle = item.third,
-                        icon = icon,
-                        index = index,
-                        count = items.size.coerceAtLeast(1),
-                        onClick = {
-                            onCloseSearch()
-                            onOpen(item.first)
-                        },
-                        trailing = { Chevron() },
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        SegmentedColumn {
+                            rightItems.forEachIndexed { index, item ->
+                                SettingsEntry(
+                                    item = item,
+                                    index = index,
+                                    count = rightItems.size,
+                                    onClick = {
+                                        onCloseSearch()
+                                        onOpen(item.first)
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                SegmentedColumn {
+                    items.forEachIndexed { index, item ->
+                        SettingsEntry(
+                            item = item,
+                            index = index,
+                            count = items.size,
+                            onClick = {
+                                onCloseSearch()
+                                onOpen(item.first)
+                            },
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun SettingsEntry(
+    item: Triple<SettingsPage, String, String>,
+    index: Int,
+    count: Int,
+    onClick: () -> Unit,
+) {
+    val icon = when (item.first) {
+        SettingsPage.Appearance -> Icons.Filled.Palette
+        SettingsPage.Data -> Icons.Filled.Storage
+        SettingsPage.About -> Icons.Filled.Info
+    }
+    SegmentedListItem(
+        title = item.second,
+        subtitle = item.third,
+        icon = icon,
+        index = index,
+        count = count.coerceAtLeast(1),
+        onClick = onClick,
+        trailing = { Chevron() },
+    )
+}
+
+@Composable
+fun SettingsSidebar(
+    selected: SettingsPage,
+    onSelect: (SettingsPage) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val entries = listOf(
+        Triple(SettingsPage.Appearance, stringResource(R.string.settings_appearance), Icons.Filled.Palette),
+        Triple(SettingsPage.Data, stringResource(R.string.settings_data), Icons.Filled.Storage),
+        Triple(SettingsPage.About, stringResource(R.string.settings_about), Icons.Filled.Info),
+    )
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.nav_settings),
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
+        )
+        entries.forEach { (page, label, icon) ->
+            val active = page == selected
+            Surface(
+                onClick = { onSelect(page) },
+                shape = RoundedCornerShape(20.dp),
+                color = if (active) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f)
+                },
+                contentColor = if (active) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                    )
+                }
+            }
         }
     }
 }
@@ -210,6 +330,7 @@ fun AppearanceSettings(
     contentPadding: PaddingValues,
     onBack: () -> Unit,
     onUpdate: ((AppSettings) -> AppSettings) -> Unit,
+    showHeader: Boolean = true,
 ) {
     val context = LocalContext.current
     Column(
@@ -217,7 +338,9 @@ fun AppearanceSettings(
             .fillMaxSize()
             .padding(contentPadding),
     ) {
-        SettingsDetailHeader(stringResource(R.string.settings_appearance), onBack)
+        if (showHeader) {
+            SettingsDetailHeader(stringResource(R.string.settings_appearance), onBack)
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -305,6 +428,7 @@ fun DataSettings(
     onOpenTrash: () -> Unit,
     exportJson: () -> String,
     onClearAll: () -> Unit,
+    showHeader: Boolean = true,
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
@@ -316,7 +440,9 @@ fun DataSettings(
             .fillMaxSize()
             .padding(contentPadding),
     ) {
-        SettingsDetailHeader(stringResource(R.string.settings_data), onBack)
+        if (showHeader) {
+            SettingsDetailHeader(stringResource(R.string.settings_data), onBack)
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -651,6 +777,7 @@ fun AboutScreen(
     onUpdate: ((AppSettings) -> AppSettings) -> Unit,
     contentPadding: PaddingValues,
     onBack: () -> Unit,
+    showHeader: Boolean = true,
 ) {
     val context = LocalContext.current
     val version = remember(context) { appVersionName(context) }
@@ -725,9 +852,10 @@ fun AboutScreen(
             .fillMaxSize()
             .padding(contentPadding),
     ) {
-        SettingsDetailHeader(stringResource(R.string.settings_about), onBack)
-        Column(
-            modifier = Modifier
+        if (showHeader) {
+            SettingsDetailHeader(stringResource(R.string.settings_about), onBack)
+        }
+        Column(            modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),

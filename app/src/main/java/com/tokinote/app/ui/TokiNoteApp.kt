@@ -16,6 +16,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
@@ -67,6 +70,7 @@ import com.tokinote.app.ui.settings.AppearanceSettings
 import com.tokinote.app.ui.settings.DataSettings
 import com.tokinote.app.ui.settings.ArchiveListScreen
 import com.tokinote.app.ui.settings.SettingsScreen
+import com.tokinote.app.ui.settings.SettingsSidebar
 import com.tokinote.app.ui.settings.UpdateAnnouncementHost
 import com.tokinote.app.ui.theme.LocalDarkTheme
 import com.tokinote.app.ui.theme.tokiGlass
@@ -81,6 +85,9 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val folders by viewModel.folders.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
+    val configuration = LocalConfiguration.current
+    val wideSettings = configuration.smallestScreenWidthDp >= 600 &&
+        configuration.screenWidthDp > configuration.screenHeightDp
 
     val focusViewModel: FocusViewModel = viewModel()
     val focusState by focusViewModel.state.collectAsStateWithLifecycle()
@@ -355,36 +362,91 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                     }
                 }
 
-                is Dest.SettingsDetail -> when (dest.page) {
-                    SettingsPage.Appearance -> AppearanceSettings(
-                        settings = settings,
-                        contentPadding = padding,
-                        onBack = { goBack() },
-                        onUpdate = viewModel::updateSettings,
-                    )
+                is Dest.SettingsDetail -> {
+                    val page = dest.page
+                    if (wideSettings) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding),
+                        ) {
+                            SettingsSidebar(
+                                selected = page,
+                                onSelect = { selected ->
+                                    backStack[backStack.lastIndex] = Dest.SettingsDetail(selected)
+                                },
+                                modifier = Modifier.weight(3f),
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .weight(7f)
+                                    .fillMaxSize(),
+                            ) {
+                                when (page) {
+                                    SettingsPage.Appearance -> AppearanceSettings(
+                                        settings = settings,
+                                        contentPadding = PaddingValues(0.dp),
+                                        onBack = { goBack() },
+                                        onUpdate = viewModel::updateSettings,
+                                        showHeader = false,
+                                    )
 
-                    SettingsPage.Data -> DataSettings(
-                        noteCount = notes.count { !it.archived && it.deletedAt == null },
-                        archiveCount = notes.count { it.archived },
-                        trashCount = notes.count { it.deletedAt != null },
-                        onOpenArchive = { backStack.add(Dest.Archive) },
-                        onOpenTrash = { backStack.add(Dest.Trash) },
-                        contentPadding = padding,
-                        onBack = { goBack() },
-                        exportJson = viewModel::exportJson,
-                        onClearAll = viewModel::clearAll,
-                    )
+                                    SettingsPage.Data -> DataSettings(
+                                        noteCount = notes.count { !it.archived && it.deletedAt == null },
+                                        archiveCount = notes.count { it.archived },
+                                        trashCount = notes.count { it.deletedAt != null },
+                                        onOpenArchive = { backStack.add(Dest.Archive) },
+                                        onOpenTrash = { backStack.add(Dest.Trash) },
+                                        contentPadding = PaddingValues(0.dp),
+                                        onBack = { goBack() },
+                                        exportJson = viewModel::exportJson,
+                                        onClearAll = viewModel::clearAll,
+                                        showHeader = false,
+                                    )
 
-                    SettingsPage.About -> AboutScreen(
-                        settings = settings,
-                        onUpdate = viewModel::updateSettings,
-                        contentPadding = padding,
-                        onBack = { goBack() },
-                    )
+                                    SettingsPage.About -> AboutScreen(
+                                        settings = settings,
+                                        onUpdate = viewModel::updateSettings,
+                                        contentPadding = PaddingValues(0.dp),
+                                        onBack = { goBack() },
+                                        showHeader = false,
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        when (page) {
+                            SettingsPage.Appearance -> AppearanceSettings(
+                                settings = settings,
+                                contentPadding = padding,
+                                onBack = { goBack() },
+                                onUpdate = viewModel::updateSettings,
+                            )
+
+                            SettingsPage.Data -> DataSettings(
+                                noteCount = notes.count { !it.archived && it.deletedAt == null },
+                                archiveCount = notes.count { it.archived },
+                                trashCount = notes.count { it.deletedAt != null },
+                                onOpenArchive = { backStack.add(Dest.Archive) },
+                                onOpenTrash = { backStack.add(Dest.Trash) },
+                                contentPadding = padding,
+                                onBack = { goBack() },
+                                exportJson = viewModel::exportJson,
+                                onClearAll = viewModel::clearAll,
+                            )
+
+                            SettingsPage.About -> AboutScreen(
+                                settings = settings,
+                                onUpdate = viewModel::updateSettings,
+                                contentPadding = padding,
+                                onBack = { goBack() },
+                            )
+                        }
+                    }
+                }
                 }
             }
         }
-    }
         AnimatedVisibility(
             visible = drawerOpen,
             enter = fadeIn(tween(180)),

@@ -51,6 +51,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
@@ -120,154 +124,81 @@ fun FocusScreen(
     )
     val displaySeconds = if (state.indefinite) state.elapsedSeconds else state.remainingSeconds
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.94f)
-                    .widthIn(max = 390.dp)
-                    .aspectRatio(1f)
-                    .pointerInput(state.mode, state.running, state.indefinite) {
-                        if (!state.running && !state.indefinite && state.mode == FocusMode.Focus) {
-                            detectTapGestures(
-                                onDoubleTap = { if (!animatingOut) animatingOut = true },
-                                onLongPress = { if (!animatingOut) animatingOut = true },
-                            )
-                        }
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                TimerRing(
-                    progress = if (state.indefinite) 0f else progress,
-                    accent = accent,
-                    track = track,
-                    strokeWidth = 18.dp,
-                    modifier = Modifier.fillMaxSize(),
-                )
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = timeScale
-                        scaleY = timeScale
-                        alpha = timeAlpha
-                    },
-                ) {
-                    Text(
-                        text = if (state.indefinite) {
-                            stringResource(R.string.focus_indefinite)
-                        } else {
-                            stringResource(state.mode.labelRes)
-                        },
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            letterSpacing = 1.2.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                        color = accent,
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        text = formatClock(displaySeconds),
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 78.sp,
-                            lineHeight = 82.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFeatureSettings = "tnum",
-                            letterSpacing = (-2).sp,
-                        ),
-                        color = colors.onSurface,
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = if (state.indefinite) {
-                            stringResource(R.string.focus_indefinite_hint)
-                        } else {
-                            stringResource(
-                                R.string.focus_session,
-                                state.sessionIndex,
-                                state.settings.sessionsBeforeLongBreak,
-                            )
-                        },
-                        style = MaterialTheme.typography.labelMedium,
-                        color = colors.onSurfaceVariant,
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(26.dp))
-
+        val configuration = LocalConfiguration.current
+        val wide = configuration.smallestScreenWidthDp >= 600 && maxWidth > maxHeight
+        if (wide) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                PrimaryFocusButton(
-                    running = state.running,
+                FocusTimer(
+                    state = state,
+                    progress = progress,
                     accent = accent,
-                    onAccent = onAccent,
-                    onClick = onToggle,
+                    track = track,
+                    timeScale = timeScale,
+                    timeAlpha = timeAlpha,
+                    animatingOut = animatingOut,
+                    onRequestIndefinite = { if (!animatingOut) animatingOut = true },
+                    maxSize = 440.dp,
+                    timeSize = 88.sp,
+                    modifier = Modifier.weight(6f),
                 )
-                SecondaryFocusButton(
-                    icon = Icons.Filled.Refresh,
-                    label = stringResource(R.string.focus_reset),
-                    container = secondaryContainer,
-                    onClick = onReset,
-                )
-                SecondaryFocusButton(
-                    icon = Icons.Filled.SkipNext,
-                    label = stringResource(R.string.focus_skip),
-                    container = secondaryContainer,
-                    onClick = onSkip,
-                )
-            }
-
-            Spacer(Modifier.height(22.dp))
-
-            Text(
-                text = stringResource(R.string.focus_up_next),
-                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
-                color = colors.onSurfaceVariant.copy(alpha = 0.55f),
-            )
-            Spacer(Modifier.height(3.dp))
-            Text(
-                text = stringResource(
-                    R.string.focus_next_hint,
-                    formatClock(state.nextMode.minutes(state.settings) * 60),
-                    stringResource(state.nextMode.labelRes),
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-
-            Spacer(Modifier.height(18.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                val total = state.settings.sessionsBeforeLongBreak
-                val filled = if (state.completedInCycle > 0 && state.completedInCycle % total == 0) {
-                    total
-                } else {
-                    state.completedInCycle % total
-                }
-                repeat(total) { index ->
-                    Box(
-                        modifier = Modifier
-                            .size(if (index == filled) 8.dp else 6.dp)
-                            .background(
-                                color = if (index < filled) accent else colors.outlineVariant.copy(alpha = 0.6f),
-                                shape = CircleShape,
-                            ),
+                Column(
+                    modifier = Modifier
+                        .weight(4f)
+                        .padding(start = 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    FocusActions(
+                        state = state,
+                        accent = accent,
+                        onAccent = onAccent,
+                        secondaryContainer = secondaryContainer,
+                        onToggle = onToggle,
+                        onReset = onReset,
+                        onSkip = onSkip,
                     )
                 }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                FocusTimer(
+                    state = state,
+                    progress = progress,
+                    accent = accent,
+                    track = track,
+                    timeScale = timeScale,
+                    timeAlpha = timeAlpha,
+                    animatingOut = animatingOut,
+                    onRequestIndefinite = { if (!animatingOut) animatingOut = true },
+                    maxSize = 390.dp,
+                    timeSize = 78.sp,
+                )
+                Spacer(Modifier.height(26.dp))
+                FocusActions(
+                    state = state,
+                    accent = accent,
+                    onAccent = onAccent,
+                    secondaryContainer = secondaryContainer,
+                    onToggle = onToggle,
+                    onReset = onReset,
+                    onSkip = onSkip,
+                )
             }
         }
 
@@ -279,6 +210,168 @@ fun FocusScreen(
                 .align(Alignment.TopEnd)
                 .padding(top = 8.dp, end = 12.dp),
         )
+    }
+}
+
+@Composable
+private fun FocusTimer(
+    state: FocusState,
+    progress: Float,
+    accent: Color,
+    track: Color,
+    timeScale: Float,
+    timeAlpha: Float,
+    animatingOut: Boolean,
+    onRequestIndefinite: () -> Unit,
+    maxSize: Dp,
+    timeSize: TextUnit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth(0.94f)
+            .widthIn(max = maxSize)
+            .aspectRatio(1f)
+            .pointerInput(state.mode, state.running, state.indefinite) {
+                if (!state.running && !state.indefinite && state.mode == FocusMode.Focus) {
+                    detectTapGestures(
+                        onDoubleTap = { if (!animatingOut) onRequestIndefinite() },
+                        onLongPress = { if (!animatingOut) onRequestIndefinite() },
+                    )
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        TimerRing(
+            progress = if (state.indefinite) 0f else progress,
+            accent = accent,
+            track = track,
+            strokeWidth = 18.dp,
+            modifier = Modifier.fillMaxSize(),
+        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.graphicsLayer {
+                scaleX = timeScale
+                scaleY = timeScale
+                alpha = timeAlpha
+            },
+        ) {
+            Text(
+                text = if (state.indefinite) {
+                    stringResource(R.string.focus_indefinite)
+                } else {
+                    stringResource(state.mode.labelRes)
+                },
+                style = MaterialTheme.typography.labelLarge.copy(
+                    letterSpacing = 1.2.sp,
+                    fontWeight = FontWeight.Medium,
+                ),
+                color = accent,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = formatClock(if (state.indefinite) state.elapsedSeconds else state.remainingSeconds),
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontSize = timeSize,
+                    lineHeight = timeSize * 1.05f,
+                    fontWeight = FontWeight.Bold,
+                    fontFeatureSettings = "tnum",
+                    letterSpacing = (-2).sp,
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = if (state.indefinite) {
+                    stringResource(R.string.focus_indefinite_hint)
+                } else {
+                    stringResource(
+                        R.string.focus_session,
+                        state.sessionIndex,
+                        state.settings.sessionsBeforeLongBreak,
+                    )
+                },
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FocusActions(
+    state: FocusState,
+    accent: Color,
+    onAccent: Color,
+    secondaryContainer: Color,
+    onToggle: () -> Unit,
+    onReset: () -> Unit,
+    onSkip: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PrimaryFocusButton(
+                running = state.running,
+                accent = accent,
+                onAccent = onAccent,
+                onClick = onToggle,
+            )
+            SecondaryFocusButton(
+                icon = Icons.Filled.Refresh,
+                label = stringResource(R.string.focus_reset),
+                container = secondaryContainer,
+                onClick = onReset,
+            )
+            SecondaryFocusButton(
+                icon = Icons.Filled.SkipNext,
+                label = stringResource(R.string.focus_skip),
+                container = secondaryContainer,
+                onClick = onSkip,
+            )
+        }
+
+        Spacer(Modifier.height(22.dp))
+        Text(
+            text = stringResource(R.string.focus_up_next),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+        )
+        Spacer(Modifier.height(3.dp))
+        Text(
+            text = stringResource(
+                R.string.focus_next_hint,
+                formatClock(state.nextMode.minutes(state.settings) * 60),
+                stringResource(state.nextMode.labelRes),
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(18.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            val total = state.settings.sessionsBeforeLongBreak
+            val filled = if (state.completedInCycle > 0 && state.completedInCycle % total == 0) {
+                total
+            } else {
+                state.completedInCycle % total
+            }
+            repeat(total) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(if (index == filled) 8.dp else 6.dp)
+                        .background(
+                            color = if (index < filled) accent else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                            shape = CircleShape,
+                        ),
+                )
+            }
+        }
     }
 }
 

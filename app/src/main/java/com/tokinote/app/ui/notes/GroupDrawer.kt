@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -105,6 +106,9 @@ fun GroupDrawer(
     var notesExpanded by rememberSaveable { mutableStateOf(true) }
     var albumExpanded by rememberSaveable { mutableStateOf(true) }
     val scrimInteraction = remember { MutableInteractionSource() }
+    val configuration = LocalConfiguration.current
+    val wideLandscape = configuration.smallestScreenWidthDp >= 600 &&
+        configuration.screenWidthDp > configuration.screenHeightDp
 
     Box(
         Modifier
@@ -146,8 +150,8 @@ fun GroupDrawer(
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.68f)
-                    .widthIn(max = 320.dp)
+                    .fillMaxWidth(if (wideLandscape) 0.30f else 0.68f)
+                    .widthIn(max = if (wideLandscape) 260.dp else 320.dp)
                     .padding(start = 16.dp, top = 12.dp, bottom = 16.dp)
                     .clip(RoundedCornerShape(34.dp))
                     .border(
