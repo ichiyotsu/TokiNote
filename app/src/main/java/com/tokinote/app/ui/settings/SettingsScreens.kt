@@ -805,7 +805,7 @@ fun AboutScreen(
                     IconButton(
                         onClick = { showUpdateHelp = !showUpdateHelp },
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(24.dp)
                             .background(
                                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f),
                                 CircleShape,
@@ -815,7 +815,7 @@ fun AboutScreen(
                             imageVector = Icons.Filled.PriorityHigh,
                             contentDescription = stringResource(R.string.update_help_title),
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(17.dp),
+                            modifier = Modifier.size(14.dp),
                         )
                     }
                     AnimatedVisibility(
@@ -830,7 +830,7 @@ fun AboutScreen(
                             textAlign = TextAlign.End,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 4.dp, end = 4.dp),
+                                .padding(top = 2.dp, end = 4.dp),
                         )
                     }
                 }
