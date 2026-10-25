@@ -102,6 +102,7 @@
     <string name="about_github">GitHub 主页</string>
     <string name="about_github_desc">github.com/ichiyotsu/TokiNote</string>
     <string name="update_title">发现新版本 %1$s</string>
+    <string name="update_announcement">更新公告</string>
     <string name="update_current">当前版本 %1$s</string>
     <string name="update_download">下载更新</string>
     <string name="update_downloading">正在下载… %1$d%%</string>
@@ -124,7 +125,6 @@
     <string name="album_info_path">位置</string>
     <string name="editor_more">更多</string>
     <string name="editor_custom_datetime">自定义日期时间</string>
-    <string name="editor_view_labels">查看/编辑标签</string>
     <string name="setting_show_time">显示时间</string>
     <string name="setting_show_time_desc">在日记卡片上显示具体时间</string>
     <string name="focus_settings">计时器设置</string>

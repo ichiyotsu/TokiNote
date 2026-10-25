@@ -33,6 +33,7 @@ fun GlassIconButton(
     shape: RoundedCornerShape = RoundedCornerShape(16.dp),
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.62f),
+    shadowElevation: Dp = 2.dp,
 ) {
     val interaction = remember { MutableInteractionSource() }
     Surface(
@@ -40,7 +41,7 @@ fun GlassIconButton(
         shape = shape,
         color = containerColor,
         contentColor = tint,
-        shadowElevation = 2.dp,
+        shadowElevation = shadowElevation,
         interactionSource = interaction,
         modifier = modifier
             .size(size)

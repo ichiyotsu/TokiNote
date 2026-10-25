@@ -959,7 +959,7 @@ private fun UpdateStatusCard(
     }
 }
 
-private fun cleanReleaseNotes(raw: String): String = raw
+internal fun cleanReleaseNotes(raw: String): String = raw
     .replace(Regex("(?m)^#{1,6}\\s*"), "")
     .replace(Regex("\\*\\*(.+?)\\*\\*"), "$1")
     .replace(Regex("(?m)^[-*]\\s+"), "· ")

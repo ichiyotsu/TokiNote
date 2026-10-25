@@ -59,6 +59,7 @@ import com.tokinote.app.ui.settings.AppearanceSettings
 import com.tokinote.app.ui.settings.DataSettings
 import com.tokinote.app.ui.settings.ArchiveListScreen
 import com.tokinote.app.ui.settings.SettingsScreen
+import com.tokinote.app.ui.settings.UpdateAnnouncementHost
 import com.tokinote.app.ui.theme.LocalDarkTheme
 import com.tokinote.app.ui.theme.tokiGlass
 import dev.chrisbanes.haze.hazeSource
@@ -375,6 +376,8 @@ fun TokiNoteApp(viewModel: AppViewModel) {
             }
         }
     }
+
+    UpdateAnnouncementHost(channel = settings.updateChannel)
 }
 
 @Composable

@@ -51,13 +51,10 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FormatSize
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -80,7 +77,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
@@ -138,10 +134,7 @@ fun JournalEditorScreen(
     val haptic = LocalHapticFeedback.current
 
     var showFormat by remember { mutableStateOf(false) }
-    var showDateTime by remember { mutableStateOf(false) }
-    var showLabels by remember { mutableStateOf(false) }
     var showInfo by remember { mutableStateOf(false) }
-    var showEditorMenu by remember { mutableStateOf(false) }
     var toolsExpanded by remember { mutableStateOf(false) }
     val layoutDirection = LocalLayoutDirection.current
     val editorPadding = PaddingValues(
@@ -337,7 +330,6 @@ fun JournalEditorScreen(
                             InfoChip(
                                 icon = Icons.Filled.CalendarMonth,
                                 text = chipText,
-                                onClick = { showDateTime = true },
                             )
                         }
                     }
@@ -459,6 +451,7 @@ fun JournalEditorScreen(
                 contentDescription = stringResource(R.string.action_close),
                 onClick = onBack,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                shadowElevation = 0.dp,
             )
             Box(
                 modifier = Modifier
@@ -495,70 +488,38 @@ fun JournalEditorScreen(
             Row(
                 modifier = Modifier
                     .height(52.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .shadow(4.dp, RoundedCornerShape(22.dp), clip = false),
+                    .clip(RoundedCornerShape(22.dp)),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val moreInteraction = remember {
                     androidx.compose.foundation.interaction.MutableInteractionSource()
                 }
-                Box {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(
-                                RoundedCornerShape(
-                                    topStart = 22.dp,
-                                    topEnd = 6.dp,
-                                    bottomEnd = 6.dp,
-                                    bottomStart = 22.dp,
-                                ),
-                            )
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f))
-                            .clickable(
-                                interactionSource = moreInteraction,
-                                indication = androidx.compose.foundation.LocalIndication.current,
-                                onClick = { showEditorMenu = true },
-                            )
-                            .pressScale(moreInteraction, pressedScale = 0.92f),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.editor_more),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
-                            modifier = Modifier.size(22.dp),
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 22.dp,
+                                topEnd = 6.dp,
+                                bottomEnd = 6.dp,
+                                bottomStart = 22.dp,
+                            ),
                         )
-                    }
-                    DropdownMenu(
-                        expanded = showEditorMenu,
-                        onDismissRequest = { showEditorMenu = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.editor_custom_datetime)) },
-                            leadingIcon = { Icon(Icons.Filled.CalendarMonth, contentDescription = null) },
-                            onClick = {
-                                showEditorMenu = false
-                                showDateTime = true
-                            },
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f))
+                        .clickable(
+                            interactionSource = moreInteraction,
+                            indication = androidx.compose.foundation.LocalIndication.current,
+                            onClick = { showInfo = true },
                         )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.editor_view_labels)) },
-                            leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
-                            onClick = {
-                                showEditorMenu = false
-                                showLabels = true
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.note_info)) },
-                            leadingIcon = { Icon(Icons.Filled.Info, contentDescription = null) },
-                            onClick = {
-                                showEditorMenu = false
-                                showInfo = true
-                            },
-                        )
-                    }
+                        .pressScale(moreInteraction, pressedScale = 0.92f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = stringResource(R.string.editor_more),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                        modifier = Modifier.size(22.dp),
+                    )
                 }
                 val saveInteraction = remember {
                     androidx.compose.foundation.interaction.MutableInteractionSource()
@@ -719,30 +680,14 @@ fun JournalEditorScreen(
         )
     }
 
-    if (showDateTime) {
-        DateTimeSheet(
-            note = note,
-            showTime = showTime,
-            onChange = onChange,
-            onDismiss = { showDateTime = false },
-        )
-    }
-
-    if (showLabels) {
-        LabelsSheet(
-            note = note,
-            labels = labels,
-            onChange = onChange,
-            onCreate = onCreateLabel,
-            onDeleteLabel = onDeleteLabel,
-            onDismiss = { showLabels = false },
-        )
-    }
-
     if (showInfo) {
         NoteInfoSheet(
             note = note,
             labels = labels,
+            showTime = showTime,
+            onChange = onChange,
+            onCreateLabel = onCreateLabel,
+            onDeleteLabel = onDeleteLabel,
             onDismiss = { showInfo = false },
             onArchive = onArchive,
             onDelete = onDelete,
@@ -834,44 +779,85 @@ private fun InfoChip(
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-private fun DateTimeSheet(
+private fun NoteInfoSheet(
     note: Note,
+    labels: List<Label>,
     showTime: Boolean,
     onChange: (Note) -> Unit,
+    onCreateLabel: (String) -> Label?,
+    onDeleteLabel: (String) -> Unit,
     onDismiss: () -> Unit,
+    onArchive: () -> Unit,
+    onDelete: () -> Unit,
 ) {
-    var showTimePicker by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var newLabel by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
     val zone = ZoneId.systemDefault()
+    val formatter = remember {
+        DateTimeFormatter.ofPattern("yyyy年M月d日 HH:mm", Locale.CHINA)
+    }
     val current = Instant.ofEpochMilli(note.updatedAt).atZone(zone)
 
     fun updateDate(date: LocalDate) {
-        val time = current.toLocalTime()
-        val updated = LocalDateTime.of(date, time).atZone(zone).toInstant().toEpochMilli()
+        val updated = LocalDateTime.of(date, current.toLocalTime())
+            .atZone(zone)
+            .toInstant()
+            .toEpochMilli()
         onChange(note.copy(day = date.toEpochDay(), updatedAt = updated))
     }
 
     fun updateTime(time: LocalTime) {
-        val date = note.journalDate
-        val updated = LocalDateTime.of(date, time).atZone(zone).toInstant().toEpochMilli()
+        val updated = LocalDateTime.of(note.journalDate, time)
+            .atZone(zone)
+            .toInstant()
+            .toEpochMilli()
         onChange(note.copy(updatedAt = updated))
     }
 
     SheetContainer(onDismiss = onDismiss) {
-        SheetTitle(stringResource(R.string.editor_custom_datetime))
+        SheetTitle(stringResource(R.string.note_info))
+        Text(
+            text = note.title.ifBlank { stringResource(R.string.note_untitled) },
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.4).sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(14.dp))
+        InfoRow(
+            icon = Icons.Filled.CalendarMonth,
+            label = stringResource(R.string.note_created),
+            value = Instant.ofEpochMilli(note.createdAt).atZone(zone).format(formatter),
+        )
+        InfoRow(
+            icon = Icons.Filled.Edit,
+            label = stringResource(R.string.note_last_edited),
+            value = Instant.ofEpochMilli(note.updatedAt).atZone(zone).format(formatter),
+        )
+
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.editor_custom_datetime),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            modifier = Modifier.padding(start = 2.dp, bottom = 8.dp),
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val dateButtonInteraction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
             Surface(
                 onClick = { showDatePicker = true },
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                interactionSource = dateButtonInteraction,
-                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = note.journalDate.format(chipDateFormatter),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                 )
             }
             if (showTime) {
@@ -882,51 +868,20 @@ private fun DateTimeSheet(
                 ) {
                     Text(
                         text = current.toLocalTime().format(chipTimeFormatter),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                     )
                 }
             }
         }
-    }
 
-    if (showDatePicker) {
-        EditorDatePicker(
-            initialDate = note.journalDate,
-            onApply = {
-                updateDate(it)
-                showDatePicker = false
-            },
-            onDismiss = { showDatePicker = false },
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.labels_title),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            modifier = Modifier.padding(start = 2.dp, bottom = 8.dp),
         )
-    }
-    if (showTimePicker) {
-        EditorTimePicker(
-            hour = current.hour,
-            minute = current.minute,
-            onApply = { hour, minute ->
-                updateTime(LocalTime.of(hour, minute))
-                showTimePicker = false
-            },
-            onDismiss = { showTimePicker = false },
-        )
-    }
-}
-
-@Composable
-private fun LabelsSheet(
-    note: Note,
-    labels: List<Label>,
-    onChange: (Note) -> Unit,
-    onCreate: (String) -> Label?,
-    onDeleteLabel: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var showAddDialog by remember { mutableStateOf(false) }
-    var newLabel by remember { mutableStateOf("") }
-
-    SheetContainer(onDismiss = onDismiss) {
-        SheetTitle(stringResource(R.string.labels_title))
         if (labels.isEmpty()) {
             Text(
                 text = stringResource(R.string.labels_empty),
@@ -982,116 +937,6 @@ private fun LabelsSheet(
                 }
             }
         }
-    }
-
-    if (showAddDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showAddDialog = false
-                newLabel = ""
-            },
-            title = { Text(stringResource(R.string.labels_title)) },
-            text = {
-                OutlinedTextField(
-                    value = newLabel,
-                    onValueChange = { newLabel = it },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.label_new_hint)) },
-                    shape = RoundedCornerShape(20.dp),
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = newLabel.isNotBlank(),
-                    onClick = {
-                        if (onCreate(newLabel) != null) {
-                            newLabel = ""
-                            showAddDialog = false
-                        }
-                    },
-                ) {
-                    Text(stringResource(R.string.action_done))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showAddDialog = false
-                        newLabel = ""
-                    },
-                ) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            },
-        )
-    }
-}
-
-@Composable
-private fun NoteInfoSheet(
-    note: Note,
-    labels: List<Label>,
-    onDismiss: () -> Unit,
-    onArchive: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    var confirmDelete by remember { mutableStateOf(false) }
-    val zone = ZoneId.systemDefault()
-    val formatter = remember {
-        DateTimeFormatter.ofPattern("yyyy年M月d日 HH:mm", Locale.CHINA)
-    }
-    val noteLabels = labels.filter { it.id in note.labelIds }
-
-    SheetContainer(onDismiss = onDismiss) {
-        SheetTitle(stringResource(R.string.note_info))
-        Text(
-            text = note.title.ifBlank { stringResource(R.string.note_untitled) },
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.4).sp,
-            ),
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.height(14.dp))
-        InfoRow(
-            icon = Icons.Filled.CalendarMonth,
-            label = stringResource(R.string.note_created),
-            value = Instant.ofEpochMilli(note.createdAt).atZone(zone).format(formatter),
-        )
-        InfoRow(
-            icon = Icons.Filled.Edit,
-            label = stringResource(R.string.note_last_edited),
-            value = Instant.ofEpochMilli(note.updatedAt).atZone(zone).format(formatter),
-        )
-
-        if (noteLabels.isNotEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.labels_title),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.padding(start = 2.dp, bottom = 8.dp),
-            )
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                noteLabels.forEach { label ->
-                    val ink = labelInk(label.colorIndex)
-                    Text(
-                        text = label.name,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = ink,
-                        modifier = Modifier
-                            .clip(ExpressiveChipShape)
-                            .border(1.dp, ink.copy(alpha = 0.72f), ExpressiveChipShape)
-                            .padding(horizontal = 10.dp, vertical = 5.dp),
-                    )
-                }
-            }
-        }
 
         Spacer(Modifier.height(22.dp))
         Row(
@@ -1135,6 +980,70 @@ private fun NoteInfoSheet(
                 Text(stringResource(R.string.action_delete))
             }
         }
+    }
+
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showAddDialog = false
+                newLabel = ""
+            },
+            title = { Text(stringResource(R.string.labels_title)) },
+            text = {
+                OutlinedTextField(
+                    value = newLabel,
+                    onValueChange = { newLabel = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.label_new_hint)) },
+                    shape = RoundedCornerShape(20.dp),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = newLabel.isNotBlank(),
+                    onClick = {
+                        if (onCreateLabel(newLabel) != null) {
+                            newLabel = ""
+                            showAddDialog = false
+                        }
+                    },
+                ) {
+                    Text(stringResource(R.string.action_done))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAddDialog = false
+                        newLabel = ""
+                    },
+                ) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
+    }
+
+    if (showDatePicker) {
+        EditorDatePicker(
+            initialDate = note.journalDate,
+            onApply = {
+                updateDate(it)
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false },
+        )
+    }
+    if (showTimePicker) {
+        EditorTimePicker(
+            hour = current.hour,
+            minute = current.minute,
+            onApply = { hour, minute ->
+                updateTime(LocalTime.of(hour, minute))
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false },
+        )
     }
 
     if (confirmDelete) {
