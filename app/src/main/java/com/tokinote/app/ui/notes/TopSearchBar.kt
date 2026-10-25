@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -34,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.tokinote.app.R
 
 enum class HomeTab { Notes, Album, Stats }
@@ -72,17 +74,27 @@ fun TopSearchBar(
                 .fillMaxSize()
                 .padding(horizontal = 8.dp, vertical = 8.dp)
                 .graphicsLayer {
-                    alpha = backdropProgress.coerceIn(0f, 1f) * 0.72f
+                    alpha = backdropProgress.coerceIn(0f, 1f) * 0.98f
                     scaleY = 0.92f + 0.08f * backdropProgress.coerceIn(0f, 1f)
                     transformOrigin = TransformOrigin(0.5f, 0f)
                 }
                 .clip(RoundedCornerShape(30.dp))
-                .then(glass)
+                .then(glass),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp, vertical = 8.dp)
+                .zIndex(1f)
+                .graphicsLayer {
+                    alpha = backdropProgress.coerceIn(0f, 1f) * 0.96f
+                }
+                .clip(RoundedCornerShape(30.dp))
                 .background(
                     androidx.compose.ui.graphics.Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.34f),
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.10f),
+                            Color.Black.copy(alpha = 0.58f),
+                            Color.Black.copy(alpha = 0.40f),
                         ),
                     ),
                 ),

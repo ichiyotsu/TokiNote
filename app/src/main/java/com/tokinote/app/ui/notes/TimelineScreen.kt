@@ -168,12 +168,7 @@ fun TimelineScreen(
     val headerInset = with(LocalDensity.current) { headerHeight.toDp() }
 
     val hazeState = rememberHazeState()
-    val darkTheme = com.tokinote.app.ui.theme.LocalDarkTheme.current
-    val headerTint = if (darkTheme) {
-        androidx.compose.ui.graphics.Color.White.copy(alpha = 0.10f)
-    } else {
-        androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.05f)
-    }
+    val headerTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.52f)
     val headerFallback = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
     val glass = Modifier.hazeBlur(
         input = HazeInput.Sources(hazeState),
@@ -229,7 +224,9 @@ fun TimelineScreen(
                         previewNote = note
                         previewBounds = bounds
                     },
-                    onScrollChanged = { topBarElevated = it },
+                    onScrollChanged = {
+                        topBarElevated = it
+                    },
                 )
 
                 HomeTab.Album -> AlbumContent(
