@@ -70,13 +70,22 @@ fun TopSearchBar(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(horizontal = 14.dp, vertical = 8.dp)
                 .graphicsLayer {
-                    alpha = backdropProgress.coerceIn(0f, 1f)
-                    scaleY = 0.9f + 0.1f * backdropProgress.coerceIn(0f, 1f)
+                    alpha = backdropProgress.coerceIn(0f, 1f) * 0.72f
+                    scaleY = 0.92f + 0.08f * backdropProgress.coerceIn(0f, 1f)
                     transformOrigin = TransformOrigin(0.5f, 0f)
                 }
-                .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
-                .then(glass),
+                .clip(RoundedCornerShape(30.dp))
+                .then(glass)
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.34f),
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.10f),
+                        ),
+                    ),
+                ),
         )
         Row(
             modifier = Modifier

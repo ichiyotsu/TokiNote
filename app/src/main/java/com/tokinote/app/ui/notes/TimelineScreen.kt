@@ -108,7 +108,7 @@ fun TimelineScreen(
     var topBarElevated by remember { mutableStateOf(false) }
     val backdropProgress by animateFloatAsState(
         targetValue = if (topBarElevated) 1f else 0f,
-        animationSpec = tween(300),
+        animationSpec = tween(180, easing = androidx.compose.animation.core.FastOutSlowInEasing),
         label = "topBarBackdrop",
     )
 
