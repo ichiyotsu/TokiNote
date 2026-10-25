@@ -465,7 +465,7 @@ private fun NoteFeed(
         start = 16.dp,
         end = 16.dp,
         top = topInset + 4.dp,
-        bottom = contentPadding.calculateBottomPadding() + 160.dp,
+        bottom = contentPadding.calculateBottomPadding() + 80.dp,
     )
 
     if (viewMode == HomeViewMode.Grid) {
@@ -576,7 +576,7 @@ private fun AlbumContent(
         start = 16.dp,
         end = 16.dp,
         top = topInset + 4.dp,
-        bottom = contentPadding.calculateBottomPadding() + 160.dp,
+        bottom = contentPadding.calculateBottomPadding() + 80.dp,
     )
     if (viewMode == HomeViewMode.Grid) {
         LazyVerticalGrid(
