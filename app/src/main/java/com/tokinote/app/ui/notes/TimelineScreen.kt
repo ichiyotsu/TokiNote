@@ -170,14 +170,6 @@ fun TimelineScreen(
     val headerInset = with(LocalDensity.current) { headerHeight.toDp() }
 
     val hazeState = rememberHazeState()
-    val headerTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.84f)
-    val headerFallback = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
-    val glass = Modifier.tokiGlass(
-        hazeState = hazeState,
-        blurRadius = 52.dp,
-        tints = listOf(headerTint),
-        fallback = headerFallback,
-    )
     val darkTheme = LocalDarkTheme.current
     val drawerGlass = Modifier.tokiGlass(
         hazeState = hazeState,
@@ -291,7 +283,7 @@ fun TimelineScreen(
                 showViewSort = tab != HomeTab.Stats,
                 onMenu = { drawerOpen = true },
                 onAvatar = { profileOpen = true },
-                glass = glass,
+                glass = drawerGlass,
             )
         }
     }
@@ -473,7 +465,7 @@ private fun NoteFeed(
         start = 16.dp,
         end = 16.dp,
         top = topInset + 4.dp,
-        bottom = contentPadding.calculateBottomPadding() + 120.dp,
+        bottom = contentPadding.calculateBottomPadding() + 160.dp,
     )
 
     if (viewMode == HomeViewMode.Grid) {
@@ -584,7 +576,7 @@ private fun AlbumContent(
         start = 16.dp,
         end = 16.dp,
         top = topInset + 4.dp,
-        bottom = contentPadding.calculateBottomPadding() + 120.dp,
+        bottom = contentPadding.calculateBottomPadding() + 160.dp,
     )
     if (viewMode == HomeViewMode.Grid) {
         LazyVerticalGrid(
