@@ -948,7 +948,7 @@ private fun NoteInfoSheet(
                     onDismiss()
                     onArchive()
                 },
-                shape = ExpressiveChipShape,
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.weight(1f),
             ) {
                 Icon(
@@ -961,7 +961,7 @@ private fun NoteInfoSheet(
             }
             OutlinedButton(
                 onClick = { confirmDelete = true },
-                shape = ExpressiveChipShape,
+                shape = RoundedCornerShape(16.dp),
                 border = BorderStroke(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.error.copy(alpha = 0.55f),
