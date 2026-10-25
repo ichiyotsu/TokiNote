@@ -193,6 +193,7 @@ fun SettingsDetailHeader(title: String, onBack: () -> Unit) {
     ExpressiveTopBar(
         title = title,
         alignStart = true,
+        titleStartPadding = 8.dp,
         navigationIcon = {
             GlassIconButton(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,

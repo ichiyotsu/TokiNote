@@ -1,6 +1,7 @@
 package com.tokinote.app.ui.components
 
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -12,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -26,6 +29,7 @@ fun ExpressiveTopBar(
     subtitle: String? = null,
     titleColor: Color = MaterialTheme.colorScheme.onSurface,
     alignStart: Boolean = false,
+    titleStartPadding: Dp = 0.dp,
     navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
@@ -39,6 +43,7 @@ fun ExpressiveTopBar(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = if (alignStart) TextAlign.Start else TextAlign.Center,
+                modifier = Modifier.padding(start = titleStartPadding),
             )
         },
         subtitle = {

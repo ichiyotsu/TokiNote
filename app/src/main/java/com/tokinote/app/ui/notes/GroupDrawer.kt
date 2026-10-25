@@ -51,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -89,6 +90,7 @@ fun GroupDrawer(
     activeNotes: List<Note>,
     photos: List<AlbumPhoto>,
     topInset: androidx.compose.ui.unit.Dp = 0.dp,
+    glass: Modifier = Modifier,
     onDismiss: () -> Unit,
     onSelectTab: (HomeTab) -> Unit,
     onSelectGroup: (String?) -> Unit,
@@ -138,15 +140,16 @@ fun GroupDrawer(
                 animationSpec = spring(dampingRatio = 0.86f, stiffness = 420f),
             ) + fadeOut(tween(160)),
         ) {
-            Surface(
+            Box(
                 modifier = Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(0.68f)
                     .widthIn(max = 320.dp)
-                    .padding(start = 16.dp, top = 12.dp, bottom = 16.dp),
-                shape = RoundedCornerShape(34.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                shadowElevation = 24.dp,
+                    .padding(start = 16.dp, top = 12.dp, bottom = 16.dp)
+                    .shadow(24.dp, RoundedCornerShape(34.dp), clip = false)
+                    .clip(RoundedCornerShape(34.dp))
+                    .then(glass)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.62f)),
             ) {
                 Column(
                     modifier = Modifier
