@@ -90,6 +90,8 @@ fun MediaViewerScreen(
         paths.size
     }
     val currentPath = paths[pagerState.currentPage.coerceIn(0, paths.lastIndex)]
+    val downloadedMessage = stringResource(R.string.album_downloaded)
+    val failedMessage = stringResource(R.string.update_failed)
     var showInfo by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(message) {
@@ -147,9 +149,7 @@ fun MediaViewerScreen(
             ) {
                 ViewerAction(Icons.Filled.Download, stringResource(R.string.album_download_short)) {
                     val saved = saveToGallery(context, currentPath)
-                    message = context.getString(
-                        if (saved) R.string.album_downloaded else R.string.update_failed,
-                    )
+                    message = if (saved) downloadedMessage else failedMessage
                 }
                 ViewerAction(Icons.Filled.OpenInNew, stringResource(R.string.album_locate_short)) {
                     onOpenNote(note.id)

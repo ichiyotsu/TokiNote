@@ -43,7 +43,8 @@
 
 - **隐私边界（硬约束）**：除「检查更新」和后续「公告拉取」外，App 不发起任何网络请求；不接入匿名统计、账号上报、用户 ID/邮箱上传，所有笔记与个人资料只留在本机
 - Kotlin **2.4.21**、Compose **1.12.1**、Material3 **1.5.0-beta02**、AGP 9.4.1、Gradle 9.6
-- **minSdk 36（Android 16）**、compileSdk/targetSdk 37
+- **minSdk 31（Android 12）**，compileSdk/targetSdk 37；向下覆盖 Android 12–15；Haze 在 API 31+ 使用 RenderEffect，低版本保留 fallback
+- Android 12–15 兼容：显式 `enableEdgeToEdge` + `setDecorFitsSystemWindows(false)`，状态栏透明、导航栏对比度关闭；3-button 导航使用主题 surface 兜底，手势导航保持透明；已在 Android 12（API 31）与 API 37 模拟器验证启动、编辑页 IME、抽屉玻璃和 R8 release
 - 新增依赖 `com.google.android.material:material:1.13.0`（Monet）、`dev.chrisbanes.haze:haze|haze-blur:2.0.1`（背景模糊）
 - Compose 动态色：`dynamicLight/DarkColorScheme`（SDK 31+）；传统 View：`TokiNoteApplication` + `DynamicColors.applyToActivitiesIfAvailable`；`themes.xml` 继承 `Theme.Material3.DynamicColors.DayNight.NoActionBar`
 - **Release 已开启 R8**：`isMinifyEnabled = true`、`isShrinkResources = true`；Compose/Haze 使用 consumer rules，`proguard-rules.pro` 只保留注解与可选注解的 warning 规则

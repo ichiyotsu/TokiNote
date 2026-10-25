@@ -17,7 +17,7 @@ android {
 
     defaultConfig {
         applicationId = "com.tokinote.app"
-        minSdk = 36
+        minSdk = 31
         targetSdk = targetSdkVersion
         versionCode = releaseVersionCode
         versionName = releaseVersionName

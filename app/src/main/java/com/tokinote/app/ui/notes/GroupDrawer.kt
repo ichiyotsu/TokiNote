@@ -104,6 +104,7 @@ fun GroupDrawer(
     BackHandler(enabled = open, onBack = onDismiss)
     var notesExpanded by rememberSaveable { mutableStateOf(true) }
     var albumExpanded by rememberSaveable { mutableStateOf(true) }
+    val scrimInteraction = remember { MutableInteractionSource() }
 
     Box(
         Modifier
@@ -122,7 +123,7 @@ fun GroupDrawer(
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.42f))
                     .combinedClickable(
-                        interactionSource = MutableInteractionSource(),
+                        interactionSource = scrimInteraction,
                         indication = null,
                         onClick = onDismiss,
                         onLongClick = onDismiss,
