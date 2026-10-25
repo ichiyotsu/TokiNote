@@ -4,8 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -75,6 +80,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.AppSettings
@@ -792,20 +798,39 @@ fun AboutScreen(
             val currentRelease = release
             if (currentRelease != null || downloading || downloaded) {
                 Spacer(Modifier.height(6.dp))
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalAlignment = Alignment.End,
                 ) {
                     IconButton(
-                        onClick = { showUpdateHelp = true },
-                        modifier = Modifier.size(30.dp),
+                        onClick = { showUpdateHelp = !showUpdateHelp },
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f),
+                                CircleShape,
+                            ),
                     ) {
                         Icon(
                             imageVector = Icons.Filled.PriorityHigh,
                             contentDescription = stringResource(R.string.update_help_title),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(17.dp),
+                        )
+                    }
+                    AnimatedVisibility(
+                        visible = showUpdateHelp,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut(),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.update_help_body),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                            textAlign = TextAlign.End,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp, end = 4.dp),
                         )
                     }
                 }
@@ -828,18 +853,6 @@ fun AboutScreen(
         }
     }
 
-    if (showUpdateHelp) {
-        AlertDialog(
-            onDismissRequest = { showUpdateHelp = false },
-            title = { Text(stringResource(R.string.update_help_title)) },
-            text = { Text(stringResource(R.string.update_help_body)) },
-            confirmButton = {
-                TextButton(onClick = { showUpdateHelp = false }) {
-                    Text(stringResource(R.string.action_done))
-                }
-            },
-        )
-    }
 }
 
 @Composable
