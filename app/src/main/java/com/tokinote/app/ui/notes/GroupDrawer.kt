@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -51,7 +52,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -146,10 +146,14 @@ fun GroupDrawer(
                     .fillMaxWidth(0.68f)
                     .widthIn(max = 320.dp)
                     .padding(start = 16.dp, top = 12.dp, bottom = 16.dp)
-                    .shadow(24.dp, RoundedCornerShape(34.dp), clip = false)
                     .clip(RoundedCornerShape(34.dp))
                     .then(glass)
-                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.62f)),
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.62f))
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
+                        shape = RoundedCornerShape(34.dp),
+                    ),
             ) {
                 Column(
                     modifier = Modifier
