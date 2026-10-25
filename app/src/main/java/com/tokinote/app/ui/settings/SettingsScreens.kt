@@ -884,7 +884,7 @@ private fun UpdateStatusCard(
                 Column {
                     Text(
                         text = if (info.isPrerelease) {
-                            "TokiNote ${info.version} Beta"
+                            "TokiNote ${info.version}"
                         } else {
                             stringResource(R.string.update_title, info.version)
                         },
