@@ -59,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.tokinote.app.R
 import com.tokinote.app.data.AlbumFolder
 import com.tokinote.app.data.Note
@@ -90,7 +91,6 @@ fun GroupDrawer(
     activeNotes: List<Note>,
     photos: List<AlbumPhoto>,
     topInset: androidx.compose.ui.unit.Dp = 0.dp,
-    glass: Modifier = Modifier,
     onDismiss: () -> Unit,
     onSelectTab: (HomeTab) -> Unit,
     onSelectGroup: (String?) -> Unit,
@@ -107,6 +107,7 @@ fun GroupDrawer(
     Box(
         Modifier
             .fillMaxSize()
+            .zIndex(3f)
             .padding(top = topInset)
             .navigationBarsPadding(),
     ) {
@@ -147,14 +148,17 @@ fun GroupDrawer(
                     .widthIn(max = 320.dp)
                     .padding(start = 16.dp, top = 12.dp, bottom = 16.dp)
                     .clip(RoundedCornerShape(34.dp))
-                    .then(glass)
-                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.62f))
                     .border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
                         shape = RoundedCornerShape(34.dp),
                     ),
             ) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.90f)),
+                )
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
