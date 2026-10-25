@@ -53,7 +53,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -663,8 +662,6 @@ fun AboutScreen(
     var downloading by remember { mutableStateOf(false) }
     var progress by remember { mutableIntStateOf(0) }
     var failureRes by remember { mutableStateOf<Int?>(null) }
-    var downloadedPath by remember { mutableStateOf<String?>(null) }
-    var downloaded by remember { mutableStateOf(false) }
     var showUpdateHelp by remember { mutableStateOf(false) }
 
     fun checkForUpdate() {
@@ -673,8 +670,6 @@ fun AboutScreen(
         statusRes = null
         failureRes = null
         release = null
-        downloaded = false
-        downloadedPath = null
         scope.launch {
             val result = withContext(Dispatchers.IO) {
                 runCatching { UpdateChecker.latest(settings.updateChannel) }
@@ -704,7 +699,6 @@ fun AboutScreen(
         downloading = true
         progress = 0
         failureRes = null
-        downloaded = false
         scope.launch {
             val destination = File(context.cacheDir, "tokinote-${info.tag}.apk")
             val ok = withContext(Dispatchers.IO) {
@@ -713,39 +707,17 @@ fun AboutScreen(
                 }.getOrDefault(false)
             }
             downloading = false
-            if (ok) {
-                downloadedPath = destination.absolutePath
-                downloaded = true
-            } else {
-                failureRes = R.string.update_failed
+            when {
+                !ok -> failureRes = R.string.update_failed
+                !ApkInstaller.canInstall(context) -> {
+                    ApkInstaller.openPermissionSettings(context)
+                    Toast.makeText(context, R.string.update_permission, Toast.LENGTH_LONG).show()
+                }
+
+                ApkInstaller.install(context, destination) -> release = null
+                else -> failureRes = R.string.update_failed
             }
         }
-    }
-
-    fun restartNow() {
-        val path = downloadedPath ?: return
-        val file = File(path)
-        if (!file.exists()) {
-            failureRes = R.string.update_failed
-            return
-        }
-        if (!ApkInstaller.canInstall(context)) {
-            ApkInstaller.openPermissionSettings(context)
-            Toast.makeText(context, R.string.update_permission, Toast.LENGTH_LONG).show()
-            return
-        }
-        if (!ApkInstaller.install(context, file)) {
-            failureRes = R.string.update_failed
-        }
-    }
-
-    fun installLater() {
-        val path = downloadedPath ?: return
-        PendingUpdate.schedule(context, path)
-        Toast.makeText(context, R.string.update_pending_saved, Toast.LENGTH_LONG).show()
-        downloaded = false
-        downloadedPath = null
-        release = null
     }
 
     Column(
@@ -797,7 +769,7 @@ fun AboutScreen(
             }
 
             val currentRelease = release
-            if (currentRelease != null || downloading || downloaded) {
+            if (currentRelease != null || downloading) {
                 Spacer(Modifier.height(8.dp))
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -841,11 +813,8 @@ fun AboutScreen(
                         currentVersion = version,
                         downloading = downloading,
                         progress = progress,
-                        downloaded = downloaded,
                         failureRes = failureRes,
                         onDownload = { startDownload() },
-                        onRestart = { restartNow() },
-                        onLater = { installLater() },
                     )
                 }
             }
@@ -861,11 +830,8 @@ private fun UpdateStatusCard(
     currentVersion: String,
     downloading: Boolean,
     progress: Int,
-    downloaded: Boolean,
     failureRes: Int?,
     onDownload: () -> Unit,
-    onRestart: () -> Unit,
-    onLater: () -> Unit,
 ) {
     Surface(
         shape = RoundedCornerShape(26.dp),
@@ -930,27 +896,6 @@ private fun UpdateStatusCard(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            } else if (downloaded) {
-                Spacer(Modifier.height(14.dp))
-                Text(
-                    text = stringResource(R.string.update_ready),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextButton(onClick = onLater) {
-                        Text(stringResource(R.string.update_later))
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    FilledTonalButton(onClick = onRestart) {
-                        Text(stringResource(R.string.update_restart))
-                    }
-                }
             } else {
                 failureRes?.let { res ->
                     Spacer(Modifier.height(8.dp))

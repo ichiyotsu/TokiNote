@@ -28,7 +28,6 @@ import com.tokinote.app.data.AppViewModel
 import com.tokinote.app.data.ThemeMode
 import com.tokinote.app.ui.TokiNoteApp
 import com.tokinote.app.ui.LocalMotionEnabled
-import com.tokinote.app.ui.settings.PendingUpdate
 import com.tokinote.app.ui.theme.TokiNoteTheme
 
 class MainActivity : ComponentActivity() {
@@ -39,7 +38,6 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
-        PendingUpdate.installIfPending(this)
 
         setContent {
             val viewModel: AppViewModel = viewModel()

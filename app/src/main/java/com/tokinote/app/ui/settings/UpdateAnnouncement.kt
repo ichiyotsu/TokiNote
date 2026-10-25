@@ -25,7 +25,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -78,7 +77,7 @@ fun UpdateAnnouncementHost(channel: String) {
     val currentInfo = info ?: return
     val current = currentVersion(context)
 
-    fun download(installNow: Boolean) {
+    fun download() {
         val url = currentInfo.apkUrl ?: run {
             errorRes = R.string.update_no_apk
             return
@@ -95,17 +94,7 @@ fun UpdateAnnouncementHost(channel: String) {
             }
             downloading = false
             when {
-                !ok -> {
-                    errorRes = R.string.update_failed
-                    if (!installNow) Toast.makeText(context, R.string.update_failed, Toast.LENGTH_LONG).show()
-                }
-
-                !installNow -> {
-                    PendingUpdate.schedule(context, destination.absolutePath)
-                    Toast.makeText(context, R.string.update_pending_saved, Toast.LENGTH_LONG).show()
-                    info = null
-                }
-
+                !ok -> errorRes = R.string.update_failed
                 !ApkInstaller.canInstall(context) -> {
                     ApkInstaller.openPermissionSettings(context)
                     Toast.makeText(context, R.string.update_permission, Toast.LENGTH_LONG).show()
@@ -209,20 +198,9 @@ fun UpdateAnnouncementHost(channel: String) {
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        TextButton(
-                            enabled = !downloading,
-                            onClick = {
-                                download(installNow = false)
-                                Toast.makeText(context, R.string.update_later_started, Toast.LENGTH_SHORT).show()
-                                info = null
-                            },
-                        ) {
-                            Text(stringResource(R.string.update_later))
-                        }
-                        Spacer(Modifier.width(8.dp))
                         Button(
                             enabled = !downloading && currentInfo.apkUrl != null,
-                            onClick = { download(installNow = true) },
+                            onClick = { download() },
                         ) {
                             Text(stringResource(R.string.update_download))
                         }

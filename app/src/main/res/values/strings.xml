@@ -109,11 +109,6 @@
     <string name="update_failed">下载失败，请稍后再试</string>
     <string name="update_no_apk">这个版本没有可用的 APK</string>
     <string name="update_permission">请先允许 TokiNote 安装未知应用</string>
-    <string name="update_ready">更新已下载</string>
-    <string name="update_restart">重启</string>
-    <string name="update_later">下次一定</string>
-    <string name="update_pending_saved">已保留安装包，下次启动时更新</string>
-    <string name="update_later_started">已开始后台下载，完成后下次启动更新</string>
     <string name="update_help_title">正式版与测试版</string>
     <string name="update_help_body">Release 为稳定版；Beta 会提前收到测试版，可能不稳定。</string>
     <string name="album_empty">这个月还没有照片</string>
