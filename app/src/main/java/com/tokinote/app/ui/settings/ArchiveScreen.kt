@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.Note
 import com.tokinote.app.ui.components.ExpressiveTopBar
+import com.tokinote.app.ui.components.GlassIconButton
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 /** 归档 / 回收站共用列表；归档不可编辑，回收站保留 14 天。 */
@@ -50,12 +51,12 @@ fun ArchiveListScreen(
             subtitle = subtitle,
             alignStart = true,
             navigationIcon = {
-                androidx.compose.material3.IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.action_back),
-                    )
-                }
+                GlassIconButton(
+                    icon = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.action_back),
+                    onClick = onBack,
+                    modifier = Modifier.padding(start = 16.dp),
+                )
             },
         )
 

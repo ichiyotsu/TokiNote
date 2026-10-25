@@ -1,9 +1,13 @@
 package com.tokinote.app.ui.focus
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,13 +20,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -34,28 +36,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import com.tokinote.app.ui.formatElapsed
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.ui.LocalMotionEnabled
+import com.tokinote.app.ui.components.GlassIconButton
 import com.tokinote.app.ui.formatClock
-import com.tokinote.app.ui.formatMinutes
 import com.tokinote.app.ui.pressScale
 
 @Composable
@@ -69,25 +71,34 @@ fun FocusScreen(
     onOpenTimerSettings: () -> Unit,
     onStartIndefinite: () -> Unit,
 ) {
-    val colorScheme = MaterialTheme.colorScheme
+    val colors = MaterialTheme.colorScheme
     val motion = LocalMotionEnabled.current
-    val accent = if (state.mode == FocusMode.Focus) colorScheme.primary else colorScheme.tertiary
-    val track = if (state.mode == FocusMode.Focus) colorScheme.secondaryContainer else colorScheme.tertiaryContainer
-    val accentContainer = if (state.mode == FocusMode.Focus) {
-        colorScheme.primaryContainer
-    } else {
-        colorScheme.tertiaryContainer
-    }
-    val onAccent = if (state.mode == FocusMode.Focus) colorScheme.onPrimary else colorScheme.onTertiary
-    val onAccentContainer = if (state.mode == FocusMode.Focus) {
-        colorScheme.onPrimaryContainer
-    } else {
-        colorScheme.onTertiaryContainer
-    }
+    val focusMode = state.mode == FocusMode.Focus
+
+    val accent by animateColorAsState(
+        targetValue = if (focusMode) colors.primary else colors.tertiary,
+        animationSpec = tween(520),
+        label = "focusAccent",
+    )
+    val track by animateColorAsState(
+        targetValue = colors.surfaceContainerHighest.copy(alpha = 0.55f),
+        animationSpec = tween(520),
+        label = "focusTrack",
+    )
+    val onAccent by animateColorAsState(
+        targetValue = if (focusMode) colors.onPrimary else colors.onTertiary,
+        animationSpec = tween(520),
+        label = "focusOnAccent",
+    )
+    val secondaryContainer by animateColorAsState(
+        targetValue = colors.surfaceContainerHigh.copy(alpha = 0.72f),
+        animationSpec = tween(520),
+        label = "focusSecondary",
+    )
 
     var animatingOut by remember { mutableStateOf(false) }
     val timeScale by animateFloatAsState(
-        targetValue = if (animatingOut) 2.6f else 1f,
+        targetValue = if (animatingOut) 2.4f else 1f,
         animationSpec = tween(420),
         label = "timeScale",
     )
@@ -96,43 +107,37 @@ fun FocusScreen(
         animationSpec = tween(420),
         label = "timeAlpha",
     )
-    val timeBlur by animateFloatAsState(
-        targetValue = if (animatingOut) 26f else 0f,
-        animationSpec = tween(420),
-        label = "timeBlur",
-    )
-    val displaySeconds = if (state.indefinite) state.elapsedSeconds else state.remainingSeconds
     LaunchedEffect(animatingOut) {
         if (animatingOut) {
-            kotlinx.coroutines.delay(440)
+            kotlinx.coroutines.delay(430)
             onStartIndefinite()
             animatingOut = false
         }
     }
 
-    val animatedProgress by animateFloatAsState(
+    val progress by animateFloatAsState(
         targetValue = state.progress,
-        animationSpec = tween(durationMillis = if (motion) 950 else 0, easing = LinearEasing),
+        animationSpec = tween(if (motion) 900 else 0),
         label = "ringProgress",
     )
+    val displaySeconds = if (state.indefinite) state.elapsedSeconds else state.remainingSeconds
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(contentPadding)
-            .padding(vertical = 28.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(contentPadding),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
             Box(
                 modifier = Modifier
-                    .widthIn(max = 320.dp)
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.94f)
+                    .widthIn(max = 390.dp)
                     .aspectRatio(1f)
                     .pointerInput(state.mode, state.running, state.indefinite) {
                         if (!state.running && !state.indefinite && state.mode == FocusMode.Focus) {
@@ -144,127 +149,111 @@ fun FocusScreen(
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                WavyRing(
-                    progress = animatedProgress,
+                TimerRing(
+                    progress = if (state.indefinite) 0f else progress,
                     accent = accent,
                     track = track,
+                    strokeWidth = 18.dp,
                     modifier = Modifier.fillMaxSize(),
+                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = timeScale
+                        scaleY = timeScale
+                        alpha = timeAlpha
+                    },
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .graphicsLayer {
-                                scaleX = timeScale
-                                scaleY = timeScale
-                                alpha = timeAlpha
-                            }
-                            .blur(timeBlur.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded),
-                    ) {
-                        Text(
-                            text = formatClock(displaySeconds),
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontSize = 60.sp,
-                                lineHeight = 64.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFeatureSettings = "tnum",
-                            ),
-                            color = colorScheme.onSurface,
-                        )
-                        if (state.indefinite) {
-                            Text(
-                                text = stringResource(R.string.focus_indefinite),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = colorScheme.onSurfaceVariant,
+                    Text(
+                        text = if (state.indefinite) {
+                            stringResource(R.string.focus_indefinite)
+                        } else {
+                            stringResource(state.mode.labelRes)
+                        },
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            letterSpacing = 1.2.sp,
+                            fontWeight = FontWeight.Medium,
+                        ),
+                        color = accent,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = formatClock(displaySeconds),
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = 78.sp,
+                            lineHeight = 82.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFeatureSettings = "tnum",
+                            letterSpacing = (-2).sp,
+                        ),
+                        color = colors.onSurface,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = if (state.indefinite) {
+                            stringResource(R.string.focus_indefinite_hint)
+                        } else {
+                            stringResource(
+                                R.string.focus_session,
+                                state.sessionIndex,
+                                state.settings.sessionsBeforeLongBreak,
                             )
-                        } else if (state.mode == FocusMode.Focus) {
-                            Text(
-                                text = stringResource(
-                                    R.string.focus_session,
-                                    state.sessionIndex,
-                                    state.settings.sessionsBeforeLongBreak,
-                                ),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
+                        },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colors.onSurfaceVariant,
+                    )
                 }
             }
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(26.dp))
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                FocusAction(
-                    icon = if (state.running) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    width = 132.dp,
-                    height = 72.dp,
-                    shape = RoundedCornerShape(36.dp),
-                    iconSize = 28.dp,
-                    label = stringResource(if (state.running) R.string.focus_pause else R.string.focus_play),
-                    container = accent,
-                    content = onAccent,
+                PrimaryFocusButton(
+                    running = state.running,
+                    accent = accent,
+                    onAccent = onAccent,
                     onClick = onToggle,
                 )
-                FocusAction(
+                SecondaryFocusButton(
                     icon = Icons.Filled.Refresh,
-                    width = 64.dp,
-                    height = 64.dp,
-                    shape = RoundedCornerShape(20.dp),
                     label = stringResource(R.string.focus_reset),
-                    container = accentContainer,
-                    content = onAccentContainer,
+                    container = secondaryContainer,
                     onClick = onReset,
                 )
-                FocusAction(
+                SecondaryFocusButton(
                     icon = Icons.Filled.SkipNext,
-                    width = 54.dp,
-                    height = 64.dp,
-                    shape = RoundedCornerShape(20.dp),
                     label = stringResource(R.string.focus_skip),
-                    container = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    content = colorScheme.onSurfaceVariant,
+                    container = secondaryContainer,
                     onClick = onSkip,
-                )
-                FocusAction(
-                    icon = Icons.Filled.Settings,
-                    width = 54.dp,
-                    height = 64.dp,
-                    shape = RoundedCornerShape(20.dp),
-                    label = stringResource(R.string.focus_settings),
-                    container = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    content = colorScheme.onSurfaceVariant,
-                    onClick = onOpenTimerSettings,
                 )
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(22.dp))
 
             Text(
                 text = stringResource(R.string.focus_up_next),
-                style = MaterialTheme.typography.labelLarge,
-                color = colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
+                color = colors.onSurfaceVariant.copy(alpha = 0.55f),
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(3.dp))
             Text(
-                text = formatClock(state.nextMode.minutes(state.settings) * 60),
-                style = MaterialTheme.typography.titleLarge,
-                color = if (state.nextMode == FocusMode.Focus) colorScheme.primary else colorScheme.tertiary,
-            )
-            Text(
-                text = stringResource(state.nextMode.labelRes),
-                style = MaterialTheme.typography.titleMedium,
-                color = colorScheme.onSurface,
+                text = stringResource(
+                    R.string.focus_next_hint,
+                    formatClock(state.nextMode.minutes(state.settings) * 60),
+                    stringResource(state.nextMode.labelRes),
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
 
             Spacer(Modifier.height(18.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
-                modifier = Modifier.padding(bottom = 28.dp),
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 val total = state.settings.sessionsBeforeLongBreak
                 val filled = if (state.completedInCycle > 0 && state.completedInCycle % total == 0) {
                     total
@@ -274,46 +263,131 @@ fun FocusScreen(
                 repeat(total) { index ->
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
+                            .size(if (index == filled) 8.dp else 6.dp)
                             .background(
-                                color = if (index < filled) accent else colorScheme.outlineVariant,
+                                color = if (index < filled) accent else colors.outlineVariant.copy(alpha = 0.6f),
                                 shape = CircleShape,
                             ),
                     )
                 }
             }
         }
+
+        GlassIconButton(
+            icon = Icons.Filled.Settings,
+            contentDescription = stringResource(R.string.focus_settings),
+            onClick = onOpenTimerSettings,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 12.dp),
+        )
+    }
+}
+
+/** Minimal M3E progress ring: translucent track + round-capped accent arc. */
+@Composable
+private fun TimerRing(
+    progress: Float,
+    accent: Color,
+    track: Color,
+    strokeWidth: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier) {
+        val stroke = strokeWidth.toPx()
+        val diameter = size.minDimension - stroke
+        val topLeft = Offset((size.width - diameter) / 2f, (size.height - diameter) / 2f)
+        drawArc(
+            color = track,
+            startAngle = -90f,
+            sweepAngle = 360f,
+            useCenter = false,
+            topLeft = topLeft,
+            size = androidx.compose.ui.geometry.Size(diameter, diameter),
+            style = Stroke(width = stroke, cap = StrokeCap.Round),
+        )
+        if (progress > 0.002f) {
+            drawArc(
+                color = accent,
+                startAngle = -90f,
+                sweepAngle = 360f * progress.coerceIn(0f, 1f),
+                useCenter = false,
+                topLeft = topLeft,
+                size = androidx.compose.ui.geometry.Size(diameter, diameter),
+                style = Stroke(width = stroke, cap = StrokeCap.Round),
+            )
+        }
     }
 }
 
 @Composable
-private fun FocusAction(
-    icon: ImageVector,
-    label: String,
-    container: androidx.compose.ui.graphics.Color,
-    content: androidx.compose.ui.graphics.Color,
+private fun PrimaryFocusButton(
+    running: Boolean,
+    accent: Color,
+    onAccent: Color,
     onClick: () -> Unit,
-    width: androidx.compose.ui.unit.Dp = 64.dp,
-    height: androidx.compose.ui.unit.Dp = 64.dp,
-    shape: androidx.compose.ui.graphics.Shape = CircleShape,
-    iconSize: androidx.compose.ui.unit.Dp = 22.dp,
 ) {
     val interaction = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
-        shape = shape,
-        color = container,
-        contentColor = content,
+        shape = RoundedCornerShape(42.dp),
+        color = accent,
+        contentColor = onAccent,
+        shadowElevation = 4.dp,
         interactionSource = interaction,
-        modifier = Modifier.pressScale(interaction, pressedScale = 0.95f),
+        modifier = Modifier
+            .width(186.dp)
+            .height(84.dp)
+            .pressScale(interaction, pressedScale = 0.88f),
     ) {
-        Box(
-            modifier = Modifier
-                .height(height)
-                .width(width),
-            contentAlignment = Alignment.Center,
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(iconSize))
+            Icon(
+                imageVector = if (running) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                contentDescription = null,
+                modifier = Modifier.size(30.dp),
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = stringResource(if (running) R.string.focus_pause else R.string.focus_play),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SecondaryFocusButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    container: Color,
+    onClick: () -> Unit,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(22.dp),
+        color = container,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        interactionSource = interaction,
+        modifier = Modifier
+            .size(width = 64.dp, height = 74.dp)
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                RoundedCornerShape(22.dp),
+            )
+            .pressScale(interaction, pressedScale = 0.88f),
+    ) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(24.dp),
+            )
         }
     }
 }

@@ -43,6 +43,7 @@ import com.tokinote.app.R
 import com.tokinote.app.data.FocusSession
 import com.tokinote.app.ui.LocalMotionEnabled
 import com.tokinote.app.ui.components.ExpressiveTopBar
+import com.tokinote.app.ui.components.GlassIconButton
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -87,12 +88,12 @@ fun FocusSummaryScreen(
             title = stringResource(R.string.focus_summary),
             alignStart = true,
             navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.action_back),
-                    )
-                }
+                GlassIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.action_back),
+                    onClick = onBack,
+                    modifier = Modifier.padding(start = 20.dp),
+                )
             },
         )
 

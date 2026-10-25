@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.formatFileSize
+import com.tokinote.app.ui.components.GlassIconButton
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -116,13 +117,14 @@ fun MediaViewerScreen(
                 .align(Alignment.TopCenter),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(R.string.action_close),
-                    tint = Color.White,
-                )
-            }
+            GlassIconButton(
+                icon = Icons.Filled.Close,
+                contentDescription = stringResource(R.string.action_close),
+                onClick = onBack,
+                tint = Color.White,
+                containerColor = Color.Black.copy(alpha = 0.38f),
+                borderColor = Color.White.copy(alpha = 0.16f),
+            )
             Text(
                 text = "${pagerState.currentPage + 1} / ${paths.size}",
                 style = MaterialTheme.typography.labelLarge,

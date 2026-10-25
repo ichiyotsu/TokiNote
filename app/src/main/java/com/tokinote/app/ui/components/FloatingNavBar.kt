@@ -76,7 +76,25 @@ fun FloatingNavBar(
     action: (@Composable () -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(28.dp)
-    Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(150.dp),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        // A single gradient scrim under the glass capsule lets the bar dissolve
+        // into the page instead of ending on a hard border.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.55f to MaterialTheme.colorScheme.surface.copy(alpha = 0.42f),
+                        1f to MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                    ),
+                ),
+        )
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -90,7 +108,7 @@ fun FloatingNavBar(
                     .then(glass)
                     .border(
                         width = 1.dp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
                         shape = shape,
                     )
                     .padding(horizontal = 8.dp, vertical = 8.dp),

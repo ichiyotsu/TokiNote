@@ -56,6 +56,8 @@
     <string name="focus_short_break">短休息</string>
     <string name="focus_long_break">长休息</string>
     <string name="focus_up_next">接下来</string>
+    <string name="focus_next_hint">%1$s · %2$s</string>
+    <string name="focus_indefinite_hint">正向计时中</string>
     <string name="focus_today">今日专注 %1$s</string>
     <string name="focus_session">第 %1$d / %2$d 段</string>
     <string name="focus_play">开始</string>

@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.data.AppSettings
+import com.tokinote.app.ui.components.GlassIconButton
 import com.tokinote.app.ui.components.PillGroup
 import com.tokinote.app.ui.formatClock
 
@@ -82,15 +83,14 @@ fun TimerSettingsScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 20.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.action_back),
-                )
-            }
+            GlassIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.action_back),
+                onClick = onBack,
+            )
             Text(
                 text = stringResource(R.string.settings_timer),
                 style = MaterialTheme.typography.titleLarge,

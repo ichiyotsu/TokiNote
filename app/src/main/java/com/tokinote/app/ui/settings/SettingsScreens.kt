@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -81,9 +82,11 @@ import com.tokinote.app.data.ThemeMode
 import com.tokinote.app.data.UpdateChecker
 import com.tokinote.app.ui.SettingsPage
 import com.tokinote.app.ui.components.ExpressiveTopBar
+import com.tokinote.app.ui.components.GlassIconButton
 import com.tokinote.app.ui.components.PillGroup
 import com.tokinote.app.ui.components.SegmentedColumn
 import com.tokinote.app.ui.components.SegmentedListItem
+import com.tokinote.app.ui.components.segmentedShape
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -182,12 +185,12 @@ fun SettingsDetailHeader(title: String, onBack: () -> Unit) {
         title = title,
         alignStart = true,
         navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.action_back),
-                )
-            }
+            GlassIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.action_back),
+                onClick = onBack,
+                modifier = Modifier.padding(start = 20.dp),
+            )
         },
     )
 }
@@ -454,6 +457,73 @@ private fun formatSize(bytes: Long): String = when {
     bytes >= 1L shl 10 -> String.format(java.util.Locale.US, "%.0f KB", bytes / (1L shl 10).toDouble())
     else -> "$bytes B"
 }
+@Composable
+private fun UpdateCheckRow(
+    status: String?,
+    checking: Boolean,
+    settings: AppSettings,
+    onUpdate: ((AppSettings) -> AppSettings) -> Unit,
+    onCheck: () -> Unit,
+    shape: androidx.compose.ui.graphics.Shape,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .heightIn(min = 74.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onCheck)
+                .padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Filled.SystemUpdate,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(21.dp),
+                )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.about_check_update),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (status != null) {
+                    Text(
+                        text = status,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+        Box(
+            modifier = Modifier
+                .width(1.dp)
+                .height(34.dp)
+                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)),
+        )
+        Box(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (checking) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            } else {
+                UpdateChannelDropdown(settings = settings, onUpdate = onUpdate)
+            }
+        }
+    }
+}
+
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun UpdateChannelDropdown(
@@ -648,23 +718,13 @@ fun AboutScreen(
                     count = 3,
                     onClick = {},
                 )
-                SegmentedListItem(
-                    title = stringResource(R.string.about_check_update),
-                    subtitle = statusRes?.let { stringResource(it) },
-                    icon = Icons.Filled.SystemUpdate,
-                    index = 1,
-                    count = 3,
-                    onClick = { checkForUpdate() },
-                    trailing = {
-                        if (checking) {
-                            androidx.compose.material3.LoadingIndicator(modifier = Modifier.size(20.dp))
-                        } else {
-                            UpdateChannelDropdown(
-                                settings = settings,
-                                onUpdate = onUpdate,
-                            )
-                        }
-                    },
+                UpdateCheckRow(
+                    status = statusRes?.let { stringResource(it) },
+                    checking = checking,
+                    settings = settings,
+                    onUpdate = onUpdate,
+                    onCheck = { checkForUpdate() },
+                    shape = segmentedShape(1, 3),
                 )
                 SegmentedListItem(
                     title = stringResource(R.string.about_github),

@@ -93,6 +93,7 @@ import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.TextWeight
 import com.tokinote.app.ui.TokiMotion
+import com.tokinote.app.ui.components.GlassIconButton
 import com.tokinote.app.ui.pressScale
 import com.tokinote.app.ui.theme.ExpressiveChipShape
 import com.tokinote.app.ui.theme.ExpressiveIslandShape
@@ -440,13 +441,12 @@ fun JournalEditorScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(R.string.action_close),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-                )
-            }
+            GlassIconButton(
+                icon = Icons.Filled.Close,
+                contentDescription = stringResource(R.string.action_close),
+                onClick = onBack,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            )
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -479,13 +479,12 @@ fun JournalEditorScreen(
                     )
                 }
             }
-            IconButton(onClick = { showInfo = true }) {
-                Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = stringResource(R.string.note_info),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-                )
-            }
+            GlassIconButton(
+                icon = Icons.Filled.MoreVert,
+                contentDescription = stringResource(R.string.note_info),
+                onClick = { showInfo = true },
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            )
             Spacer(Modifier.width(6.dp))
             val saveInteraction = remember {
                 androidx.compose.foundation.interaction.MutableInteractionSource()
