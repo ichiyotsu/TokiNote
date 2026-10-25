@@ -1,13 +1,13 @@
 # TokiNote — 交接文档（HANDOFF）
 
-> 最后更新：2026-10-25（0.2.9 发布）
+> 最后更新：2026-10-25（0.3.0 发布）
 > 工作区：`D:\DSH\TokiNote\project`（git 仓库）；工具：`..\tools`；密钥：`..\keys`
 > 新会话先读本文件，再读 `docs/design-refs/`。
 
 ## 1. 仓库与发布
 
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
-- 最新发布：**0.2.9**（release keystore 签名，versionCode 7，2026-10-25 通过 `gh release create` 发布）；上一版 0.2.8（versionCode 6）
+- 最新发布：**0.3.0**（release keystore 签名，versionCode 8，2026-10-25 通过 `gh release create` 发布）；上一版 0.2.9（versionCode 7）
 - 版本规则：正式版 tag `x.y.z`（如 `0.2.8`）；beta tag `x.y.z-beta` 或 `x.y.z-beta.N`（Pre-release，标题 `TokiNote 0.2.x Beta`）；**发版前必须与用户核对版本号 + 文案**
 - 更新通道严格按 tag 区分，不需要单独分支：Release 只匹配 `0.2.7` 这类纯数字 tag，Beta 只匹配 `0.2.9-beta` 这类带 `-beta` 的 tag（`UpdateChecker.matchesChannel` 有单测）
 - 包名固定 `com.tokinote.app`
@@ -26,13 +26,13 @@
 - 无系统 git/gh：`tools\mingit\cmd\git.exe`、`tools\gh\bin\gh.exe`
 - gh：`GH_CONFIG_DIR=tools\gh-config`、`LOCALAPPDATA=tools\gh-la`（current dir 是 project，路径写成 `..\tools\...`）
 - 构建：`$env:JAVA_HOME="D:\Application\Android Studio\jbr"; $env:ANDROID_HOME="C:\Users\tokisaki\AppData\Local\Android\Sdk"; .\gradlew.bat --offline assembleDebug`
-- 发版构建（0.2.9 验证）：
+- 发版构建（0.3.0 验证）：
   ```powershell
-  $env:VERSION_NAME='0.2.9'; $env:VERSION_CODE='7'
+  $env:VERSION_NAME='0.3.0'; $env:VERSION_CODE='8'
   $env:KEYSTORE_FILE='D:\DSH\TokiNote\keys\release.jks'
   $env:KEYSTORE_PASSWORD='…'; $env:KEY_ALIAS='tokinote'; $env:KEY_PASSWORD='…'
   .\gradlew.bat --offline assembleRelease -x lintVitalAnalyzeRelease -x lintVitalRelease
-  gh release create 0.2.9 app\build\outputs\apk\release\app-release.apk --title "TokiNote 0.2.9" --notes-file .github\release-notes\0.2.9.md --target main
+  gh release create 0.3.0 app\build\outputs\apk\release\app-release.apk --title "TokiNote 0.3.0" --notes-file .github\release-notes\0.3.0.md --target main
   # Beta 通道示例（必须带 --prerelease，tag 必须含 -beta）
   gh release create 0.2.9-beta app\build\outputs\apk\release\app-release.apk --title "TokiNote 0.2.9 Beta" --notes-file .github\release-notes\0.2.9-beta.md --target main --prerelease
   ```
@@ -77,7 +77,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 0.2.9 已发布，等待真机回归（顶部控制区、标签内联、专注页新环、底栏玻璃、检查更新复合胶囊、我的头像同步、Edge-to-Edge）
+2. 0.3.0 已发布，等待真机回归（R8 release、玻璃、顶部控制区、标签内联、专注页、底栏、检查更新、头像同步）
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
