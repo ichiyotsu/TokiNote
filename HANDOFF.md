@@ -1,6 +1,6 @@
 # TokiNote — 交接文档（HANDOFF）
 
-> 最后更新：2026-10-28（发布策略简化）
+> 最后更新：2026-10-28（0.3.7-beta.1 发布）
 > 工作区：`D:\DSH\TokiNote\project`（git 仓库）；工具：`..\tools`；密钥：`..\keys`
 > 新会话先读本文件，再读 `docs/design-refs/`。
 
@@ -9,11 +9,11 @@
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
 - 当前只保留 3 个 Release：
   - 正式版 **0.3.4**（Latest，versionCode 12）
-  - Beta **0.3.7-beta**（versionCode 17）
+  - Beta **0.3.7-beta.1**（versionCode 20）
   - 首个版本 **0.1.0**
 - 版本规则：
   - 正式版 `x.y.z`：完整、稳定
-  - Beta `x.y.z-beta`：可领先正式版多个版本，也可能包含不同功能
+  - Beta `x.y.z-beta` / `x.y.z-beta.N`：可领先正式版多个版本，也可能包含不同功能
   - Beta 通道 = beta + 正式版中版本更高者；同版本正式版优先
   - Release 通道只读正式版
 - 不再使用 Alpha 通道
@@ -34,13 +34,13 @@
 - 无系统 git/gh：`tools\mingit\cmd\git.exe`、`tools\gh\bin\gh.exe`
 - gh：`GH_CONFIG_DIR=tools\gh-config`、`LOCALAPPDATA=tools\gh-la`（current dir 是 project，路径写成 `..\tools\...`）
 - 构建：`$env:JAVA_HOME="D:\Application\Android Studio\jbr"; $env:ANDROID_HOME="C:\Users\tokisaki\AppData\Local\Android\Sdk"; .\gradlew.bat --offline assembleDebug`
-- 发版构建（0.3.7-beta 示例）：
+- 发版构建（0.3.7-beta.1 示例）：
   ```powershell
-  $env:VERSION_NAME='0.3.7-beta'; $env:VERSION_CODE='17'
+  $env:VERSION_NAME='0.3.7-beta.1'; $env:VERSION_CODE='20'
   $env:KEYSTORE_FILE='D:\DSH\TokiNote\keys\release.jks'
   $env:KEYSTORE_PASSWORD='…'; $env:KEY_ALIAS='tokinote'; $env:KEY_PASSWORD='…'
   .\gradlew.bat --offline assembleRelease -x lintVitalAnalyzeRelease -x lintVitalRelease
-  gh release create 0.3.7-beta app\build\outputs\apk\release\app-release.apk --title "0.3.7 Beta" --notes-file .github\release-notes\0.3.7-beta.md --target main --prerelease
+  gh release create 0.3.7-beta.1 app\build\outputs\apk\release\app-release.apk --title "0.3.7 Beta 1" --notes-file .github\release-notes\0.3.7-beta.1.md --target main --prerelease
   ```
 - 模拟器 AVD `Pixel_10_Pro`（API 37）；**adb 手势注入对 Compose 不稳定**，长按/点击常无效，交互验证优先真机
 - github.com:443 时不时机翻；`git push` 失败可改用 GitHub Git Data API
@@ -90,7 +90,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 目前已清理为 0.3.4 正式版 + 0.3.7-beta + 0.1.0；后续按 release/beta 两通道更新
+2. 当前为 0.3.4 正式版 + 0.3.7-beta.1 + 0.1.0；后续按 release/beta 两通道更新
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
