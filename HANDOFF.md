@@ -18,6 +18,7 @@
   - Release 通道只读正式版
 - 不再使用 Alpha 通道
 - 发版前与用户确认版本号和文案
+- Release Notes 固定使用 `docs/release-standard.md` 的「新增功能 / 设计特性」两段式模板；跨工作区同步 Luma、TokiTodo 前需用户确认
 - 包名固定 `com.tokinote.app`
 - **CI 与 Release 工作流仍是红的**：GitHub runner 上 Gradle 解析 AGP 插件异常（本地完全正常）。
   发版方式固定为：本地 `assembleRelease`（带 VERSION_* / KEYSTORE_* 环境变量）→ 将 APK 命名为 `TokiNote-<versionName>.apk` → `gh release create <tag> TokiNote-<versionName>.apk --notes-file ...`
