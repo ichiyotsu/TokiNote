@@ -70,6 +70,23 @@ class UpdateCheckerTest {
         assertTrue(releaseOnly?.version == "0.3.6")
     }
 
+    @Test
+    fun `alpha channel only accepts alpha versions`() {
+        assertTrue(UpdateChecker.matchesChannel(release("0.3.8-alpha1"), "alpha"))
+        assertTrue(UpdateChecker.matchesChannel(release("v0.3.8-ALPHA.2"), "alpha"))
+        assertFalse(UpdateChecker.matchesChannel(release("0.3.8-beta"), "alpha"))
+        assertFalse(UpdateChecker.matchesChannel(release("0.3.8"), "alpha"))
+    }
+
+    @Test
+    fun `alpha channel selects newest alpha`() {
+        val latest = UpdateChecker.pickLatest(
+            listOf(release("0.3.8-alpha1"), release("0.3.8-alpha2"), release("0.3.7-beta")),
+            "alpha",
+        )
+        assertTrue(latest?.version == "0.3.8-alpha2")
+    }
+
     private fun release(version: String): ReleaseInfo = ReleaseInfo(
         tag = version,
         version = version.removePrefix("v"),

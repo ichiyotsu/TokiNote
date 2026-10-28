@@ -33,11 +33,14 @@ object UpdateChecker {
     /** 测试版：0.2.9-beta / 0.2.9-beta.1（允许 v 前缀与大小写）。 */
     private val betaVersion = Regex("""^\d+(\.\d+)*-beta(\.\d+)?$""", RegexOption.IGNORE_CASE)
 
+    /** Alpha：0.3.8-alpha1 / 0.3.8-alpha.1。 */
+    private val alphaVersion = Regex("""^\d+(\.\d+)*-alpha(\.?\d+)?$""", RegexOption.IGNORE_CASE)
+
     /**
      * 最新版本：
-     * - release 只看 tag 形如 0.2.7 的标准版；
-     * - beta 同时看测试版和正式版；正式版核心版本更高时优先正式版，
-     *   同一核心版本时仍保留测试版。通道设置不会因此改变。
+     * - release 只看标准版；
+     * - beta 同时看测试版和正式版，正式版核心版本更高时优先正式版；
+     * - alpha 只看 alpha 版本。
      */
     fun latest(channel: String = "release"): ReleaseInfo? {
         val array = JSONArray(httpGet(RELEASES_URL))
@@ -55,6 +58,7 @@ object UpdateChecker {
     internal fun pickLatest(releases: List<ReleaseInfo>, channel: String): ReleaseInfo? {
         var stable: ReleaseInfo? = null
         var beta: ReleaseInfo? = null
+        var alpha: ReleaseInfo? = null
         releases.forEach { info ->
             val version = info.version.trim().removePrefix("v").removePrefix("V")
             when {
@@ -65,8 +69,13 @@ object UpdateChecker {
                 betaVersion.matches(version) -> {
                     if (beta == null || isNewer(info.version, beta!!.version)) beta = info
                 }
+
+                alphaVersion.matches(version) -> {
+                    if (alpha == null || isNewer(info.version, alpha!!.version)) alpha = info
+                }
             }
         }
+        if (channel.equals("alpha", ignoreCase = true)) return alpha
         if (!channel.equals("beta", ignoreCase = true)) return stable
         val stableInfo = stable ?: return beta
         val betaInfo = beta ?: return stableInfo
@@ -78,10 +87,12 @@ object UpdateChecker {
     /** 通道匹配规则，单独提出来便于测试。beta 通道也允许正式版。 */
     internal fun matchesChannel(info: ReleaseInfo, channel: String): Boolean {
         val version = info.version.trim().removePrefix("v").removePrefix("V")
-        return if (channel.equals("beta", ignoreCase = true)) {
-            betaVersion.matches(version) || stableVersion.matches(version)
-        } else {
-            stableVersion.matches(version)
+        return when {
+            channel.equals("alpha", ignoreCase = true) -> alphaVersion.matches(version)
+            channel.equals("beta", ignoreCase = true) ->
+                betaVersion.matches(version) || stableVersion.matches(version)
+
+            else -> stableVersion.matches(version)
         }
     }
 

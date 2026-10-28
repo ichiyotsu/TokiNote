@@ -1035,7 +1035,11 @@ private fun UpdateChannelDropdown(
         animationSpec = spring(dampingRatio = 0.62f, stiffness = 420f),
         label = "updateChannelArrow",
     )
-    val selectedLabel = if (settings.updateChannel == "beta") "Beta" else "Release"
+    val selectedLabel = when (settings.updateChannel) {
+        "beta" -> "Beta"
+        "alpha" -> "Alpha"
+        else -> "Release"
+    }
     var menuAppeared by remember { mutableStateOf(false) }
     LaunchedEffect(expanded) {
         if (expanded) {
@@ -1088,7 +1092,7 @@ private fun UpdateChannelDropdown(
             tonalElevation = 4.dp,
             shadowElevation = 10.dp,
         ) {
-            listOf("release" to "Release", "beta" to "Beta").forEach { (value, label) ->
+            listOf("release" to "Release", "beta" to "Beta", "alpha" to "Alpha").forEach { (value, label) ->
                 val selected = settings.updateChannel == value
                 DropdownMenuItem(
                     text = {

@@ -1,15 +1,15 @@
 # TokiNote — 交接文档（HANDOFF）
 
-> 最后更新：2026-10-28（0.3.7-beta 发布）
+> 最后更新：2026-10-28（0.3.8-alpha1 发布）
 > 工作区：`D:\DSH\TokiNote\project`（git 仓库）；工具：`..\tools`；密钥：`..\keys`
 > 新会话先读本文件，再读 `docs/design-refs/`。
 
 ## 1. 仓库与发布
 
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
-- 最新 Beta：**0.3.7-beta**（Pre-release，versionCode 17，2026-10-28 发布）；最新正式版 0.3.4（versionCode 12）；旧 0.3.6 正式版已撤回
-- 版本规则：正式版 tag `x.y.z`（如 `0.2.8`）；beta tag `x.y.z-beta` 或 `x.y.z-beta.N`（Pre-release，标题 `0.2.x Beta`）；**发版前必须与用户核对版本号 + 文案**
-- 更新通道按 tag 区分：Release 只匹配 `0.2.7` 这类纯数字 tag；Beta 同时匹配 `-beta` 与正式版，正式版核心版本更高时优先正式版，同核心仍保留测试版；通道设置不因更新正式版而改变（`UpdateChecker` 有单测）
+- 最新 Alpha：**0.3.8-alpha1**（Pre-release，versionCode 18，2026-10-28 发布）；最新 Beta 0.3.7-beta（versionCode 17）；最新正式版 0.3.4（versionCode 12）；旧 0.3.6 正式版及 0.3.5/0.3.6 Beta 已删除
+- 版本规则：正式版 tag `x.y.z`（完整功能）；beta `x.y.z-beta`（基本完善的新功能）；alpha `x.y.z-alphaN`（实机测试）；**发版前必须与用户核对版本号 + 文案**
+- 更新通道：Release 只读正式版；Beta 读取 beta + 更高正式版；Alpha 只读 alpha（`UpdateChecker` 有单测）
 - 包名固定 `com.tokinote.app`
 - **CI 与 Release 工作流仍是红的**：GitHub runner 上 Gradle 解析 AGP 插件异常（本地完全正常）。
   发版方式固定为：本地 `assembleRelease`（带 VERSION_* / KEYSTORE_* 环境变量）→ `gh release create <tag> app-release.apk --notes-file ...`
@@ -26,13 +26,13 @@
 - 无系统 git/gh：`tools\mingit\cmd\git.exe`、`tools\gh\bin\gh.exe`
 - gh：`GH_CONFIG_DIR=tools\gh-config`、`LOCALAPPDATA=tools\gh-la`（current dir 是 project，路径写成 `..\tools\...`）
 - 构建：`$env:JAVA_HOME="D:\Application\Android Studio\jbr"; $env:ANDROID_HOME="C:\Users\tokisaki\AppData\Local\Android\Sdk"; .\gradlew.bat --offline assembleDebug`
-- 发版构建（0.3.7-beta 验证）：
+- 发版构建（0.3.8-alpha1 验证）：
   ```powershell
-  $env:VERSION_NAME='0.3.7-beta'; $env:VERSION_CODE='17'
+  $env:VERSION_NAME='0.3.8-alpha1'; $env:VERSION_CODE='18'
   $env:KEYSTORE_FILE='D:\DSH\TokiNote\keys\release.jks'
   $env:KEYSTORE_PASSWORD='…'; $env:KEY_ALIAS='tokinote'; $env:KEY_PASSWORD='…'
   .\gradlew.bat --offline assembleRelease -x lintVitalAnalyzeRelease -x lintVitalRelease
-  gh release create 0.3.7-beta app\build\outputs\apk\release\app-release.apk --title "0.3.7 Beta" --notes-file .github\release-notes\0.3.7-beta.md --target main --prerelease
+  gh release create 0.3.8-alpha1 app\build\outputs\apk\release\app-release.apk --title "0.3.8 Alpha 1" --notes-file .github\release-notes\0.3.8-alpha1.md --target main --prerelease
   ```
 - 模拟器 AVD `Pixel_10_Pro`（API 37）；**adb 手势注入对 Compose 不稳定**，长按/点击常无效，交互验证优先真机
 - github.com:443 时不时机翻；`git push` 失败可改用 GitHub Git Data API
@@ -80,7 +80,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 0.3.7-beta 已发布；One UI 9 悬浮 Dock / 顶部标题与摘要 / 边到边网格 / 蓝粉渐变 / Pad 顶部居中已实现，等待真机回归（设计下拉、字体列表、Beta→正式版更新逻辑）
+2. 0.3.8-alpha1 已发布，进入 Alpha 实机测试阶段（One UI 9、Pad、字体列表、Alpha 通道）
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
