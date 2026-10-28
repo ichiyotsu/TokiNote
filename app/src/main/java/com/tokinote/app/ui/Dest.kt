@@ -17,6 +17,7 @@ sealed interface Dest {
 
 enum class SettingsPage {
     Appearance,
+    Components,
     Data,
     About,
 }

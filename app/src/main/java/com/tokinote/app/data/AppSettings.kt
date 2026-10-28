@@ -37,6 +37,8 @@ data class AppSettings(
     val userName: String = "ichiyo tokisaki",
     val userEmail: String = "ichiyo@tokinote.app",
     val avatarPath: String = "",
+    /** 可选的专注组件是否启用；组件未安装时始终视为未启用。 */
+    val focusComponentEnabled: Boolean = false,
 )
 
 /** 一段已完成的专注记录，用于统计。 */

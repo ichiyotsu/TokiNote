@@ -241,4 +241,21 @@
     <string name="profile_storage_title">TokiNote 存储空间</string>
     <string name="profile_storage_used">应用已占用 %1$s</string>
     <string name="storage_settings_failed">无法打开系统存储设置</string>
+    <string name="settings_components">组件</string>
+    <string name="settings_components_sub">专注等可选功能</string>
+    <string name="components_intro">按需下载组件；未安装或未启用时，不会出现在底栏。</string>
+    <string name="component_focus_name">专注</string>
+    <string name="component_focus_desc">番茄钟、专注统计与计时器设置</string>
+    <string name="component_status_installed">已下载 · v%1$s</string>
+    <string name="component_status_missing">未下载</string>
+    <string name="component_enabled">启用专注组件</string>
+    <string name="component_enabled_hint">启用后底栏显示「专注」，可随时关闭。</string>
+    <string name="component_download">下载组件</string>
+    <string name="component_downloading">正在下载组件…</string>
+    <string name="component_download_failed">组件下载或校验失败，请重试</string>
+    <string name="component_delete">删除组件</string>
+    <string name="component_delete_title">删除专注组件？</string>
+    <string name="component_delete_body">删除后底栏的专注入口会消失，已记录的专注数据不会删除。</string>
+    <string name="component_delete_failed">删除组件失败</string>
+    <string name="component_local_only">组件安装在本机；删除后需要重新下载。</string>
 </resources>

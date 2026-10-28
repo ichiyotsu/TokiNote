@@ -118,6 +118,7 @@ fun SettingsScreen(
         config.screenWidthDp > config.screenHeightDp
     val items = listOf(
         Triple(SettingsPage.Appearance, stringResource(R.string.settings_appearance), stringResource(R.string.settings_appearance_sub)),
+        Triple(SettingsPage.Components, stringResource(R.string.settings_components), stringResource(R.string.settings_components_sub)),
         Triple(SettingsPage.Data, stringResource(R.string.settings_data), stringResource(R.string.settings_data_sub)),
         Triple(SettingsPage.About, stringResource(R.string.settings_about), stringResource(R.string.settings_about_sub, appVersionName(LocalContext.current))),
     ).filter { searchActive.not() || query.isBlank() || it.second.contains(query, true) || it.third.contains(query, true) }
@@ -226,6 +227,7 @@ private fun SettingsEntry(
 ) {
     val icon = when (item.first) {
         SettingsPage.Appearance -> Icons.Filled.Palette
+        SettingsPage.Components -> Icons.Filled.Code
         SettingsPage.Data -> Icons.Filled.Storage
         SettingsPage.About -> Icons.Filled.Info
     }
@@ -248,6 +250,7 @@ fun SettingsSidebar(
 ) {
     val entries = listOf(
         Triple(SettingsPage.Appearance, stringResource(R.string.settings_appearance), Icons.Filled.Palette),
+        Triple(SettingsPage.Components, stringResource(R.string.settings_components), Icons.Filled.Code),
         Triple(SettingsPage.Data, stringResource(R.string.settings_data), Icons.Filled.Storage),
         Triple(SettingsPage.About, stringResource(R.string.settings_about), Icons.Filled.Info),
     )

@@ -72,9 +72,11 @@ fun FloatingNavBar(
     onSelect: (Dest) -> Unit,
     modifier: Modifier = Modifier,
     glass: Modifier = Modifier,
+    showFocus: Boolean = true,
     action: (@Composable () -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(36.dp)
+    val entries = if (showFocus) navEntries else navEntries.filterNot { it.dest == Dest.Focus }
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -95,7 +97,7 @@ fun FloatingNavBar(
                     .padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                navEntries.forEach { entry ->
+                entries.forEach { entry ->
                     NavItem(
                         entry = entry,
                         selected = current == entry.dest,

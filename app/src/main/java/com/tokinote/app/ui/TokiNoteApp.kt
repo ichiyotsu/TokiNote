@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
@@ -38,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tokinote.app.R
 import com.tokinote.app.data.AppViewModel
+import com.tokinote.app.data.FocusComponent
 import com.tokinote.app.ui.components.FloatingNavBar
 import com.tokinote.app.ui.components.NavActionButton
 import com.tokinote.app.ui.focus.FocusScreen
@@ -67,6 +70,7 @@ import com.tokinote.app.ui.notes.MediaViewerScreen
 import com.tokinote.app.ui.notes.TimelineScreen
 import com.tokinote.app.ui.settings.AboutScreen
 import com.tokinote.app.ui.settings.AppearanceSettings
+import com.tokinote.app.ui.settings.ComponentsSettings
 import com.tokinote.app.ui.settings.DataSettings
 import com.tokinote.app.ui.settings.ArchiveListScreen
 import com.tokinote.app.ui.settings.SettingsScreen
@@ -79,12 +83,18 @@ import dev.chrisbanes.haze.rememberHazeState
 
 @Composable
 fun TokiNoteApp(viewModel: AppViewModel) {
+    val context = LocalContext.current
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val labels by viewModel.labels.collectAsStateWithLifecycle()
     val groups by viewModel.groups.collectAsStateWithLifecycle()
     val folders by viewModel.folders.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
+    var componentRevision by remember { mutableIntStateOf(0) }
+    val focusInstalled = remember(settings.focusComponentEnabled, componentRevision) {
+        FocusComponent.installed(context)
+    }
+    val focusAvailable = settings.focusComponentEnabled && focusInstalled
     val configuration = LocalConfiguration.current
     val wideSettings = configuration.smallestScreenWidthDp >= 600 &&
         configuration.screenWidthDp > configuration.screenHeightDp
@@ -129,6 +139,15 @@ fun TokiNoteApp(viewModel: AppViewModel) {
         is Dest.Editor, Dest.Calendar, is Dest.MediaViewer -> Dest.Notes
         else -> current
     }
+    LaunchedEffect(focusAvailable) {
+        if (!focusAvailable && backStack.any {
+                it == Dest.Focus || it == Dest.FocusSummary || it == Dest.Timer
+            }
+        ) {
+            backStack.clear()
+            backStack.add(Dest.Notes)
+        }
+    }
     var settingsSearch by remember { mutableStateOf(false) }
     var previewOpen by remember { mutableStateOf(false) }
     var drawerOpen by remember { mutableStateOf(false) }
@@ -171,6 +190,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                         .navigationBarsPadding()
                         .padding(bottom = 8.dp),
                     glass = glass,
+                    showFocus = focusAvailable,
                     action = if (selectedTab == Dest.Notes || selectedTab == Dest.Focus || selectedTab == Dest.Settings) {
                         {
                             androidx.compose.runtime.remember(selectedTab) { androidx.compose.animation.core.Animatable(0.55f) }.let { pop ->
@@ -391,6 +411,15 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                                         showHeader = false,
                                     )
 
+                                    SettingsPage.Components -> ComponentsSettings(
+                                        settings = settings,
+                                        contentPadding = PaddingValues(0.dp),
+                                        onBack = { goBack() },
+                                        onUpdate = viewModel::updateSettings,
+                                        onComponentChanged = { componentRevision++ },
+                                        showHeader = false,
+                                    )
+
                                     SettingsPage.Data -> DataSettings(
                                         noteCount = notes.count { !it.archived && it.deletedAt == null },
                                         archiveCount = notes.count { it.archived },
@@ -421,6 +450,14 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                                 contentPadding = padding,
                                 onBack = { goBack() },
                                 onUpdate = viewModel::updateSettings,
+                            )
+
+                            SettingsPage.Components -> ComponentsSettings(
+                                settings = settings,
+                                contentPadding = padding,
+                                onBack = { goBack() },
+                                onUpdate = viewModel::updateSettings,
+                                onComponentChanged = { componentRevision++ },
                             )
 
                             SettingsPage.Data -> DataSettings(

@@ -178,6 +178,7 @@ class TokiStore(context: Context) {
                 userName = json.optString("userName", "ichiyo tokisaki"),
                 userEmail = json.optString("userEmail", "ichiyo@tokinote.app"),
                 avatarPath = json.optString("avatarPath", ""),
+                focusComponentEnabled = json.optBoolean("focusComponentEnabled", false),
             )
         }.getOrDefault(AppSettings())
     }
@@ -201,6 +202,7 @@ class TokiStore(context: Context) {
             put("userName", settings.userName)
             put("userEmail", settings.userEmail)
             put("avatarPath", settings.avatarPath)
+            put("focusComponentEnabled", settings.focusComponentEnabled)
         }
         prefs.edit().putString(KEY_SETTINGS, json.toString()).apply()
     }
