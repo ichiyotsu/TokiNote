@@ -19,6 +19,10 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.ViewAgenda
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.SwapVert
+import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -89,7 +93,7 @@ fun TopSearchBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
         TopActionButton(
-            icon = Icons.Filled.Menu,
+            icon = if (oneUi) Icons.Outlined.Menu else Icons.Filled.Menu,
             contentDescription = stringResource(R.string.drawer_open),
             tooltip = stringResource(R.string.tooltip_navigation),
             onClick = onMenu,
@@ -154,7 +158,11 @@ fun TopSearchBar(
         if (showViewSort) {
             Spacer(Modifier.width(4.dp))
             TopActionButton(
-                icon = if (viewMode == HomeViewMode.Grid) Icons.Filled.ViewAgenda else Icons.Filled.GridView,
+                icon = if (viewMode == HomeViewMode.Grid) {
+                    if (oneUi) Icons.Outlined.ViewAgenda else Icons.Filled.ViewAgenda
+                } else {
+                    if (oneUi) Icons.Outlined.GridView else Icons.Filled.GridView
+                },
                 contentDescription = stringResource(
                     if (viewMode == HomeViewMode.Grid) R.string.view_list else R.string.view_grid,
                 ),
@@ -167,7 +175,7 @@ fun TopSearchBar(
             )
             Spacer(Modifier.width(4.dp))
             TopActionButton(
-                icon = Icons.Filled.SwapVert,
+                icon = if (oneUi) Icons.Outlined.SwapVert else Icons.Filled.SwapVert,
                 contentDescription = stringResource(
                     if (sortAscending) R.string.sort_descending else R.string.sort_ascending,
                 ),

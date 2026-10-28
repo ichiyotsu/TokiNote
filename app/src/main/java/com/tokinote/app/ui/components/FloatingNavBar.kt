@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.StickyNote2
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -77,38 +79,118 @@ fun FloatingNavBar(
     showFocus: Boolean = true,
     action: (@Composable () -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(if (LocalDesignStyle.current == DesignStyle.OneUI) 28.dp else 36.dp)
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
+    val shape = RoundedCornerShape(if (oneUi) 28.dp else 36.dp)
     val entries = if (showFocus) navEntries else navEntries.filterNot { it.dest == Dest.Focus }
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(150.dp),
+            .height(if (oneUi) 92.dp else 150.dp),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Row(
+        if (oneUi) {
+            Column(
                 modifier = Modifier
-                    .animateContentSize(
-                        animationSpec = spring(dampingRatio = 0.72f, stiffness = 380f),
-                    )
-                    .clip(shape)
+                    .fillMaxWidth()
                     .then(glass)
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f)),
             ) {
-                entries.forEach { entry ->
-                    NavItem(
-                        entry = entry,
-                        selected = current == entry.dest,
-                        onSelect = onSelect,
-                    )
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    entries.forEach { entry ->
+                        OneUINavItem(
+                            entry = entry,
+                            selected = current == entry.dest,
+                            onSelect = onSelect,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    action?.invoke()
                 }
             }
-            action?.invoke()
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .animateContentSize(
+                            animationSpec = spring(dampingRatio = 0.72f, stiffness = 380f),
+                        )
+                        .clip(shape)
+                        .then(glass)
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    entries.forEach { entry ->
+                        NavItem(
+                            entry = entry,
+                            selected = current == entry.dest,
+                            onSelect = onSelect,
+                        )
+                    }
+                }
+                action?.invoke()
+            }
         }
+    }
+}
+
+@Composable
+private fun OneUINavItem(
+    entry: NavEntry,
+    selected: Boolean,
+    onSelect: (Dest) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val haptic = LocalHapticFeedback.current
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(
+                interactionSource = interaction,
+                indication = ripple(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSelect(entry.dest)
+                },
+            )
+            .pressScale(interaction, pressedScale = 0.94f)
+            .padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = if (selected) entry.selectedIcon else entry.icon,
+            contentDescription = stringResource(entry.label),
+            tint = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.size(24.dp),
+        )
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = stringResource(entry.label),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            maxLines = 1,
+        )
     }
 }
 

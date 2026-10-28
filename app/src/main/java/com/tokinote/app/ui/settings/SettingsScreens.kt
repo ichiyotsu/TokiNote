@@ -16,6 +16,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import android.graphics.Typeface
+import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -86,11 +87,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.AppSettings
 import com.tokinote.app.data.AppFont
 import com.tokinote.app.data.ColorPreset
+import com.tokinote.app.data.CustomFont
 import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.ReleaseInfo
 import com.tokinote.app.data.ThemeMode
@@ -312,9 +315,14 @@ fun SettingsSidebar(
 @Composable
 private fun FontPicker(
     selected: AppFont,
-    onSelect: (AppFont) -> Unit,
+    selectedPath: String,
+    customFonts: List<CustomFont>,
+    onSelect: (AppFont, String) -> Unit,
+    onDeleteCustom: (CustomFont) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val selectedCustom = customFonts.firstOrNull { it.path == selectedPath }
+    val presets = listOf(AppFont.Auto, AppFont.Samsung, AppFont.Md3e, AppFont.PingFang)
     Box {
         Row(
             modifier = Modifier
@@ -326,7 +334,13 @@ private fun FontPicker(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = fontLabel(selected),
+                text = if (selected == AppFont.Custom && selectedCustom != null) {
+                    selectedCustom.name
+                } else if (selected == AppFont.Custom) {
+                    stringResource(R.string.font_custom)
+                } else {
+                    fontLabel(selected)
+                },
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
@@ -343,13 +357,13 @@ private fun FontPicker(
             shape = RoundedCornerShape(22.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
-            AppFont.entries.forEach { font ->
+            presets.forEach { font ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = fontLabel(font),
                             style = MaterialTheme.typography.titleSmall,
-                            color = if (font == selected) {
+                            color = if (font == selected && selected != AppFont.Custom) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface
@@ -357,10 +371,135 @@ private fun FontPicker(
                         )
                     },
                     onClick = {
-                        onSelect(font)
+                        onSelect(font, "")
                         expanded = false
                     },
-                    trailingIcon = if (font == selected) {
+                    trailingIcon = if (font == selected && selected != AppFont.Custom) {
+                        {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                )
+            }
+            customFonts.forEach { font ->
+                val isSelected = selected == AppFont.Custom && selectedPath == font.path
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = font.name,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    onClick = {
+                        onSelect(AppFont.Custom, font.path)
+                        expanded = false
+                    },
+                    trailingIcon = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    expanded = false
+                                    onDeleteCustom(font)
+                                },
+                                modifier = Modifier.size(30.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = stringResource(R.string.font_delete_title),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        }
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DesignStyleDropdown(
+    selected: DesignStyle,
+    onSelect: (DesignStyle) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(22.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.82f))
+                .clickable { expanded = true }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = if (selected == DesignStyle.OneUI) {
+                    stringResource(R.string.design_style_oneui)
+                } else {
+                    stringResource(R.string.design_style_md3e)
+                },
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowDown,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            shape = RoundedCornerShape(22.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ) {
+            DesignStyle.entries.forEach { style ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = if (style == DesignStyle.OneUI) {
+                                stringResource(R.string.design_style_oneui)
+                            } else {
+                                stringResource(R.string.design_style_md3e)
+                            },
+                            style = MaterialTheme.typography.titleSmall,
+                            color = if (style == selected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                        )
+                    },
+                    onClick = {
+                        onSelect(style)
+                        expanded = false
+                    },
+                    trailingIcon = if (style == selected) {
                         {
                             Icon(
                                 imageVector = Icons.Filled.Check,
@@ -381,12 +520,9 @@ private fun FontPicker(
 @Composable
 private fun fontLabel(font: AppFont): String = when (font) {
     AppFont.Auto -> stringResource(R.string.font_auto)
-    AppFont.Roboto -> stringResource(R.string.font_roboto)
     AppFont.Samsung -> stringResource(R.string.font_samsung)
     AppFont.Md3e -> stringResource(R.string.font_md3e)
     AppFont.PingFang -> stringResource(R.string.font_pingfang)
-    AppFont.MiSans -> stringResource(R.string.font_misuns)
-    AppFont.OppoSans -> stringResource(R.string.font_opposans)
     AppFont.Custom -> stringResource(R.string.font_custom)
 }
 
@@ -426,12 +562,28 @@ fun AppearanceSettings(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var pendingDelete by remember { mutableStateOf<CustomFont?>(null) }
     val pickFont = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri ->
         if (uri != null) {
             scope.launch {
-                val target = File(context.filesDir, "custom_font_${System.currentTimeMillis()}.ttf")
+                val displayName = withContext(Dispatchers.IO) {
+                    runCatching {
+                        context.contentResolver.query(
+                            uri,
+                            arrayOf(OpenableColumns.DISPLAY_NAME),
+                            null,
+                            null,
+                            null,
+                        )?.use { cursor ->
+                            if (cursor.moveToFirst()) cursor.getString(0) else null
+                        }
+                    }.getOrNull()
+                }?.takeIf { it.isNotBlank() } ?: "Custom.ttf"
+                val baseName = displayName.substringBeforeLast('.').ifBlank { "Custom" }
+                val safeName = baseName.replace(Regex("[^\\p{L}\\p{N}_-]"), "_").take(32)
+                val target = File(context.filesDir, "custom_font_${System.currentTimeMillis()}_$safeName.ttf")
                 val copied = withContext(Dispatchers.IO) {
                     runCatching {
                         context.contentResolver.openInputStream(uri)?.use { input ->
@@ -440,15 +592,15 @@ fun AppearanceSettings(
                     }.getOrDefault(false)
                 }
                 if (copied) {
-                    if (settings.customFontPath.isNotBlank()) {
-                        val old = File(settings.customFontPath)
-                        if (old.absolutePath != target.absolutePath &&
-                            old.absolutePath.startsWith(context.filesDir.absolutePath)
-                        ) {
-                            old.delete()
-                        }
+                    onUpdate {
+                        it.copy(
+                            font = AppFont.Custom,
+                            customFontPath = target.absolutePath,
+                            customFonts = it.customFonts.filterNot { item ->
+                                item.path == target.absolutePath
+                            } + CustomFont(baseName.take(40), target.absolutePath),
+                        )
                     }
-                    onUpdate { it.copy(font = AppFont.Custom, customFontPath = target.absolutePath) }
                 } else {
                     target.delete()
                     Toast.makeText(context, R.string.font_custom_failed, Toast.LENGTH_LONG).show()
@@ -477,11 +629,7 @@ fun AppearanceSettings(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
             )
-            PillGroup(
-                options = listOf(
-                    DesignStyle.MaterialExpressive to stringResource(R.string.design_style_md3e),
-                    DesignStyle.OneUI to stringResource(R.string.design_style_oneui),
-                ),
+            DesignStyleDropdown(
                 selected = settings.designStyle,
                 onSelect = { style -> onUpdate { it.copy(designStyle = style) } },
             )
@@ -494,7 +642,12 @@ fun AppearanceSettings(
             )
             FontPicker(
                 selected = settings.font,
-                onSelect = { font -> onUpdate { it.copy(font = font) } },
+                selectedPath = settings.customFontPath,
+                customFonts = settings.customFonts,
+                onSelect = { font, path ->
+                    onUpdate { it.copy(font = font, customFontPath = path) }
+                },
+                onDeleteCustom = { pendingDelete = it },
             )
             Spacer(Modifier.height(6.dp))
             Row(
@@ -503,7 +656,8 @@ fun AppearanceSettings(
             ) {
                 Text(
                     text = if (settings.font == AppFont.Custom) {
-                        File(settings.customFontPath).name.ifBlank { stringResource(R.string.font_custom) }
+                        settings.customFonts.firstOrNull { it.path == settings.customFontPath }?.name
+                            ?: File(settings.customFontPath).name.ifBlank { stringResource(R.string.font_custom) }
                     } else {
                         stringResource(R.string.font_system_fallback)
                     },
@@ -582,6 +736,46 @@ fun AppearanceSettings(
             )
             Spacer(Modifier.height(24.dp))
         }
+    }
+
+    pendingDelete?.let { font ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text(stringResource(R.string.font_delete_title)) },
+            text = { Text(stringResource(R.string.font_delete_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        File(font.path).delete()
+                        onUpdate { current ->
+                            current.copy(
+                                customFonts = current.customFonts.filterNot { it.path == font.path },
+                                font = if (current.font == AppFont.Custom &&
+                                    current.customFontPath == font.path
+                                ) {
+                                    AppFont.Auto
+                                } else {
+                                    current.font
+                                },
+                                customFontPath = if (current.customFontPath == font.path) {
+                                    ""
+                                } else {
+                                    current.customFontPath
+                                },
+                            )
+                        }
+                        pendingDelete = null
+                    },
+                ) {
+                    Text(stringResource(R.string.action_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
     }
 }
 
@@ -808,12 +1002,6 @@ private fun UpdateCheckRow(
                 }
             }
         }
-        Box(
-            modifier = Modifier
-                .width(1.dp)
-                .height(34.dp)
-                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)),
-        )
         Box(
             modifier = Modifier.padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center,

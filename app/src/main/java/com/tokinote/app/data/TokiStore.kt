@@ -167,6 +167,18 @@ class TokiStore(context: Context) {
                     AppFont.valueOf(json.optString("font", AppFont.Auto.name))
                 }.getOrDefault(AppFont.Auto),
                 customFontPath = json.optString("customFontPath", ""),
+                customFonts = json.optJSONArray("customFonts")?.let { array ->
+                    buildList {
+                        for (index in 0 until array.length()) {
+                            val font = array.optJSONObject(index) ?: continue
+                            val name = font.optString("name")
+                            val path = font.optString("path")
+                            if (name.isNotBlank() && path.isNotBlank()) {
+                                add(CustomFont(name, path))
+                            }
+                        }
+                    }
+                }.orEmpty(),
                 dynamicColor = json.optBoolean("dynamicColor", true),
                 colorPreset = runCatching {
                     ColorPreset.valueOf(json.optString("colorPreset", ColorPreset.Matcha.name))
@@ -196,6 +208,14 @@ class TokiStore(context: Context) {
             put("designStyle", settings.designStyle.name)
             put("font", settings.font.name)
             put("customFontPath", settings.customFontPath)
+            put("customFonts", JSONArray().apply {
+                settings.customFonts.forEach { font ->
+                    put(JSONObject().apply {
+                        put("name", font.name)
+                        put("path", font.path)
+                    })
+                }
+            })
             put("dynamicColor", settings.dynamicColor)
             put("colorPreset", settings.colorPreset.name)
             put("amoled", settings.amoled)

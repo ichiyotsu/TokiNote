@@ -23,14 +23,17 @@ enum class DesignStyle {
 /** 字体预设；Auto 跟随当前设计风格。 */
 enum class AppFont {
     Auto,
-    Roboto,
     Samsung,
     Md3e,
     PingFang,
-    MiSans,
-    OppoSans,
     Custom,
 }
+
+/** 用户导入的自定义字体。 */
+data class CustomFont(
+    val name: String,
+    val path: String,
+)
 
 /** 专注计时器的时长设置，默认值与 Tomato 一致（25 / 5 / 15 / 4）。 */
 data class AppSettings(
@@ -38,6 +41,7 @@ data class AppSettings(
     val designStyle: DesignStyle = DesignStyle.MaterialExpressive,
     val font: AppFont = AppFont.Auto,
     val customFontPath: String = "",
+    val customFonts: List<CustomFont> = emptyList(),
     val dynamicColor: Boolean = true,
     val amoled: Boolean = false,
     val colorPreset: ColorPreset = ColorPreset.Matcha,

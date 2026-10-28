@@ -352,12 +352,9 @@ private fun resolveFontFamily(
     val fallback = if (oneUi) SamsungSans else GoogleSansFlex
     return when (font) {
         AppFont.Auto -> fallback
-        AppFont.Roboto -> FontFamily.SansSerif
         AppFont.Samsung -> SamsungSans
         AppFont.Md3e -> GoogleSansFlex
         AppFont.PingFang -> systemFontFamily("PingFang SC")
-        AppFont.MiSans -> systemFontFamily("MiSans")
-        AppFont.OppoSans -> systemFontFamily("OPPO Sans")
         AppFont.Custom -> runCatching {
             val file = File(customFontPath)
             if (file.isFile && file.length() > 0) FontFamily(Font(file)) else fallback
