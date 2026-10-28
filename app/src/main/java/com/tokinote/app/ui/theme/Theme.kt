@@ -1,6 +1,7 @@
 package com.tokinote.app.ui.theme
 
 import android.os.Build
+import android.graphics.Typeface
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -14,8 +15,12 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import com.tokinote.app.data.AppFont
 import com.tokinote.app.data.ColorPreset
 import com.tokinote.app.data.DesignStyle
+import java.io.File
 
 val lightScheme = lightColorScheme(
     primary = primaryLight,
@@ -249,6 +254,8 @@ private fun ColorScheme.withPreset(preset: ColorPreset, dark: Boolean): ColorSch
 fun TokiNoteTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     designStyle: DesignStyle = DesignStyle.MaterialExpressive,
+    font: AppFont = AppFont.Auto,
+    customFontPath: String = "",
     dynamicColor: Boolean = false,
     amoled: Boolean = false,
     colorPreset: ColorPreset = ColorPreset.Matcha,
@@ -312,6 +319,10 @@ fun TokiNoteTheme(
         amoled && darkTheme -> preset.trueBlack()
         else -> preset
     }
+    val baseTypography = if (oneUi) OneUITypography else TokiTypography
+    val typography = baseTypography.withFont(
+        resolveFontFamily(context, font, customFontPath, oneUi),
+    )
 
     CompositionLocalProvider(
         LocalDarkTheme provides darkTheme,
@@ -324,9 +335,35 @@ fun TokiNoteTheme(
     ) {
         MaterialTheme(
             colorScheme = scheme,
-            typography = if (oneUi) OneUITypography else TokiTypography,
+            typography = typography,
             shapes = if (oneUi) OneUIShapes else TokiShapes,
             content = content,
         )
     }
 }
+
+/** 字体预设解析；自定义字体从应用私有目录读取，失败时回退到当前风格默认字体。 */
+private fun resolveFontFamily(
+    context: android.content.Context,
+    font: AppFont,
+    customFontPath: String,
+    oneUi: Boolean,
+): FontFamily {
+    val fallback = if (oneUi) SamsungSans else GoogleSansFlex
+    return when (font) {
+        AppFont.Auto -> fallback
+        AppFont.Roboto -> FontFamily.SansSerif
+        AppFont.Samsung -> SamsungSans
+        AppFont.Md3e -> GoogleSansFlex
+        AppFont.PingFang -> systemFontFamily("PingFang SC")
+        AppFont.MiSans -> systemFontFamily("MiSans")
+        AppFont.OppoSans -> systemFontFamily("OPPO Sans")
+        AppFont.Custom -> runCatching {
+            val file = File(customFontPath)
+            if (file.isFile && file.length() > 0) FontFamily(Font(file)) else fallback
+        }.getOrDefault(fallback)
+    }
+}
+
+private fun systemFontFamily(name: String): FontFamily =
+    FontFamily(Typeface.create(name, Typeface.NORMAL))
