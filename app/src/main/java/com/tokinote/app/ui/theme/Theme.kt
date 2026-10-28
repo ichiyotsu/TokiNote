@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontFamily
 import com.tokinote.app.data.AppFont
 import com.tokinote.app.data.ColorPreset
 import com.tokinote.app.data.DesignStyle
+import com.tokinote.app.data.TokiFeatures
 import java.io.File
 
 val lightScheme = lightColorScheme(
@@ -262,7 +263,12 @@ fun TokiNoteTheme(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val oneUi = designStyle == DesignStyle.OneUI
+    val effectiveDesignStyle = if (TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED) {
+        designStyle
+    } else {
+        DesignStyle.MaterialExpressive
+    }
+    val oneUi = effectiveDesignStyle == DesignStyle.OneUI
     val base = when {
         oneUi -> if (darkTheme) oneUiDarkScheme else oneUiLightScheme
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
@@ -326,7 +332,7 @@ fun TokiNoteTheme(
 
     CompositionLocalProvider(
         LocalDarkTheme provides darkTheme,
-        LocalDesignStyle provides designStyle,
+        LocalDesignStyle provides effectiveDesignStyle,
         LocalCardShape provides if (oneUi) OneUICardShape else ExpressiveCardShape,
         LocalChipShape provides if (oneUi) OneUIChipShape else ExpressiveChipShape,
         LocalFabShape provides if (oneUi) OneUIFabShape else ExpressiveFabShape,

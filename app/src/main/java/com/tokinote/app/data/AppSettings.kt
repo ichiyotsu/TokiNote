@@ -29,6 +29,11 @@ enum class AppFont {
     Custom,
 }
 
+/** 发布开关：0.3.5 固定 MD3E，设计风格入口暂不可用。 */
+object TokiFeatures {
+    const val DESIGN_STYLE_SWITCH_ENABLED = false
+}
+
 /** 用户导入的自定义字体。 */
 data class CustomFont(
     val name: String,

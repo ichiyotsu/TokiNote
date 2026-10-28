@@ -100,6 +100,7 @@ import com.tokinote.app.data.CustomFont
 import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.ReleaseInfo
 import com.tokinote.app.data.ThemeMode
+import com.tokinote.app.data.TokiFeatures
 import com.tokinote.app.data.UpdateChecker
 import com.tokinote.app.ui.SettingsPage
 import com.tokinote.app.ui.components.ExpressiveTopBar
@@ -634,17 +635,19 @@ fun AppearanceSettings(
                 .padding(horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 20.dp),
         ) {
             Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.design_style),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
-            )
-            DesignStyleDropdown(
-                selected = settings.designStyle,
-                onSelect = { style -> onUpdate { it.copy(designStyle = style) } },
-            )
-            Spacer(Modifier.height(16.dp))
+            if (TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED) {
+                Text(
+                    text = stringResource(R.string.design_style),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+                )
+                DesignStyleDropdown(
+                    selected = settings.designStyle,
+                    onSelect = { style -> onUpdate { it.copy(designStyle = style) } },
+                )
+                Spacer(Modifier.height(16.dp))
+            }
             Text(
                 text = stringResource(R.string.setting_font),
                 style = MaterialTheme.typography.labelLarge,
