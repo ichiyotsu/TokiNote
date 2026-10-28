@@ -9,7 +9,7 @@
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
 - 最新 Beta：**0.3.5-beta**（Pre-release，versionCode 14，2026-10-28 发布）；最新正式版 0.3.4（versionCode 12）
 - 版本规则：正式版 tag `x.y.z`（如 `0.2.8`）；beta tag `x.y.z-beta` 或 `x.y.z-beta.N`（Pre-release，标题 `0.2.x Beta`）；**发版前必须与用户核对版本号 + 文案**
-- 更新通道严格按 tag 区分，不需要单独分支：Release 只匹配 `0.2.7` 这类纯数字 tag，Beta 只匹配 `0.2.9-beta` 这类带 `-beta` 的 tag（`UpdateChecker.matchesChannel` 有单测）
+- 更新通道按 tag 区分：Release 只匹配 `0.2.7` 这类纯数字 tag；Beta 同时匹配 `-beta` 与正式版，正式版核心版本更高时优先正式版，同核心仍保留测试版；通道设置不因更新正式版而改变（`UpdateChecker` 有单测）
 - 包名固定 `com.tokinote.app`
 - **CI 与 Release 工作流仍是红的**：GitHub runner 上 Gradle 解析 AGP 插件异常（本地完全正常）。
   发版方式固定为：本地 `assembleRelease`（带 VERSION_* / KEYSTORE_* 环境变量）→ `gh release create <tag> app-release.apk --notes-file ...`

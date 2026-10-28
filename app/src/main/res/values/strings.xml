@@ -110,7 +110,7 @@
     <string name="update_no_apk">这个版本没有可用的 APK</string>
     <string name="update_permission">请先允许 TokiNote 安装未知应用</string>
     <string name="update_help_title">正式版与测试版</string>
-    <string name="update_help_body">Release 为稳定版；Beta 会提前收到测试版，可能不稳定。</string>
+    <string name="update_help_body">Release 为稳定版；Beta 会提前收到测试版，也可能收到更高的正式版。</string>
     <string name="album_empty">这个月还没有照片</string>
     <string name="album_download">保存到相册</string>
     <string name="album_downloaded">已保存到系统相册</string>

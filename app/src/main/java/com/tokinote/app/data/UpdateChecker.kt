@@ -36,25 +36,50 @@ object UpdateChecker {
     /**
      * 最新版本：
      * - release 只看 tag 形如 0.2.7 的标准版；
-     * - beta 只看 tag 形如 0.2.9-beta 的测试版。
-     * 两个通道都只从 GitHub Releases 读取，不会混用。
+     * - beta 同时看测试版和正式版；正式版核心版本更高时优先正式版，
+     *   同一核心版本时仍保留测试版。通道设置不会因此改变。
      */
     fun latest(channel: String = "release"): ReleaseInfo? {
         val array = JSONArray(httpGet(RELEASES_URL))
-        for (index in 0 until array.length()) {
-            val json = array.optJSONObject(index) ?: continue
-            if (json.optBoolean("draft", false)) continue
-            val info = json.toReleaseInfo()
-            if (matchesChannel(info, channel)) return info
+        val releases = buildList {
+            for (index in 0 until array.length()) {
+                val json = array.optJSONObject(index) ?: continue
+                if (json.optBoolean("draft", false)) continue
+                add(json.toReleaseInfo())
+            }
         }
-        return null
+        return pickLatest(releases, channel)
     }
 
-    /** 通道匹配规则，单独提出来便于测试。 */
+    /** 从已拉取的 release 列表中挑选当前通道应展示的版本。 */
+    internal fun pickLatest(releases: List<ReleaseInfo>, channel: String): ReleaseInfo? {
+        var stable: ReleaseInfo? = null
+        var beta: ReleaseInfo? = null
+        releases.forEach { info ->
+            val version = info.version.trim().removePrefix("v").removePrefix("V")
+            when {
+                stableVersion.matches(version) -> {
+                    if (stable == null || isNewer(info.version, stable!!.version)) stable = info
+                }
+
+                betaVersion.matches(version) -> {
+                    if (beta == null || isNewer(info.version, beta!!.version)) beta = info
+                }
+            }
+        }
+        if (!channel.equals("beta", ignoreCase = true)) return stable
+        val stableInfo = stable ?: return beta
+        val betaInfo = beta ?: return stableInfo
+        val stableCore = ParsedVersion.parse(stableInfo.version).core
+        val betaCore = ParsedVersion.parse(betaInfo.version).core
+        return if (compareCore(stableCore, betaCore) > 0) stableInfo else betaInfo
+    }
+
+    /** 通道匹配规则，单独提出来便于测试。beta 通道也允许正式版。 */
     internal fun matchesChannel(info: ReleaseInfo, channel: String): Boolean {
         val version = info.version.trim().removePrefix("v").removePrefix("V")
         return if (channel.equals("beta", ignoreCase = true)) {
-            betaVersion.matches(version)
+            betaVersion.matches(version) || stableVersion.matches(version)
         } else {
             stableVersion.matches(version)
         }
