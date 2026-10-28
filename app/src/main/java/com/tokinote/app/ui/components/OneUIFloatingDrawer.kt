@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -195,7 +196,7 @@ fun OneUIFloatingDrawer(
                         ),
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = null)
-                        Spacer(Modifier.padding(horizontal = 4.dp))
+                        Spacer(Modifier.width(6.dp))
                         Text("管理文件夹", fontWeight = FontWeight.Medium)
                     }
                 }
