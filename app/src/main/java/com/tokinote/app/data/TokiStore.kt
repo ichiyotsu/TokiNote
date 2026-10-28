@@ -179,6 +179,7 @@ class TokiStore(context: Context) {
                         }
                     }
                 }.orEmpty(),
+                syncFolderUri = json.optString("syncFolderUri", ""),
                 dynamicColor = json.optBoolean("dynamicColor", true),
                 colorPreset = runCatching {
                     ColorPreset.valueOf(json.optString("colorPreset", ColorPreset.Matcha.name))
@@ -216,6 +217,7 @@ class TokiStore(context: Context) {
                     })
                 }
             })
+            put("syncFolderUri", settings.syncFolderUri)
             put("dynamicColor", settings.dynamicColor)
             put("colorPreset", settings.colorPreset.name)
             put("amoled", settings.amoled)
@@ -280,8 +282,20 @@ class TokiStore(context: Context) {
         groups: List<NoteGroup>,
         folders: List<AlbumFolder>,
         settings: AppSettings,
+        sessions: List<FocusSession> = emptyList(),
     ): String {
         val notesArray = JSONArray().apply { notes.forEach { put(it.toJson()) } }
+        val sessionsArray = JSONArray().apply {
+            sessions.forEach { session ->
+                put(
+                    JSONObject().apply {
+                        put("endedAt", session.endedAt)
+                        put("minutes", session.minutes)
+                        put("breakMinutes", session.breakMinutes)
+                    },
+                )
+            }
+        }
         val labelsArray = JSONArray().apply {
             labels.forEach { label ->
                 put(
@@ -325,6 +339,7 @@ class TokiStore(context: Context) {
             put("labels", labelsArray)
             put("groups", groupsArray)
             put("folders", foldersArray)
+            put("sessions", sessionsArray)
             put("settings", JSONObject().apply {
                 put("themeMode", settings.themeMode.name)
                 put("colorPreset", settings.colorPreset.name)
@@ -344,6 +359,45 @@ class TokiStore(context: Context) {
             })
         }.toString(2)
     }
+
+    /** 云快照恢复：只替换笔记与专注统计，保留本机标签、分组和设置。 */
+    fun importSyncJson(raw: String): Boolean = runCatching {
+        val json = JSONObject(raw)
+        val notesJson = json.optJSONArray("notes") ?: return false
+        val notes = buildList {
+            for (index in 0 until notesJson.length()) {
+                notesJson.optJSONObject(index)?.let { add(it.toNote()) }
+            }
+        }
+        val sessionsJson = json.optJSONArray("sessions")
+        val sessions = buildList {
+            if (sessionsJson != null) {
+                for (index in 0 until sessionsJson.length()) {
+                    val item = sessionsJson.optJSONObject(index) ?: continue
+                    add(
+                        FocusSession(
+                            endedAt = item.optLong("endedAt", 0L),
+                            minutes = item.optInt("minutes", 0),
+                            breakMinutes = item.optInt("breakMinutes", 0),
+                        ),
+                    )
+                }
+            }
+        }
+        prefs.edit()
+            .putString(KEY_NOTES, JSONArray().apply { notes.forEach { put(it.toJson()) } }.toString())
+            .putString(KEY_SESSIONS, JSONArray().apply {
+                sessions.forEach { session ->
+                    put(JSONObject().apply {
+                        put("endedAt", session.endedAt)
+                        put("minutes", session.minutes)
+                        put("breakMinutes", session.breakMinutes)
+                    })
+                }
+            }.toString())
+            .apply()
+        true
+    }.getOrDefault(false)
 
     fun clearAll() {
         prefs.edit().clear().apply()

@@ -237,13 +237,57 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     /* ----------------------------- data ----------------------------- */
 
+    fun importDocx(uri: android.net.Uri): Boolean {
+        val app = getApplication<Application>()
+        val title = DocxCodec.displayName(app, uri)
+        val body = DocxCodec.read(app, uri) ?: return false
+        val group = _groups.value.firstOrNull { it.name == "导入" }
+            ?: createGroup("导入", emptySet())
+            ?: return false
+        val note = Note(
+            id = UUID.randomUUID().toString(),
+            title = title,
+            body = body,
+            day = LocalDate.now().toEpochDay(),
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+        )
+        updateNotes { it + note }
+        updateGroup(group.id, group.name, group.noteIds + note.id)
+        return true
+    }
+
+    fun exportDocx(uri: android.net.Uri): Boolean = runCatching {
+        val bytes = DocxCodec.write(_notes.value.filter { !it.archived && it.deletedAt == null })
+        getApplication<Application>().contentResolver.openOutputStream(uri)?.use { it.write(bytes) } != null
+    }.getOrDefault(false)
+
     fun exportJson(): String = store.exportJson(
         _notes.value,
         _labels.value,
         _groups.value,
         _folders.value,
         _settings.value,
+        _sessions.value,
     )
+
+    fun cloudUpload(): Boolean {
+        val uri = _settings.value.syncFolderUri.takeIf { it.isNotBlank() } ?: return false
+        return CloudSync.write(
+            getApplication(),
+            android.net.Uri.parse(uri),
+            exportJson(),
+        )
+    }
+
+    fun cloudRestore(): Boolean {
+        val uri = _settings.value.syncFolderUri.takeIf { it.isNotBlank() } ?: return false
+        val raw = CloudSync.read(getApplication(), android.net.Uri.parse(uri)) ?: return false
+        if (!store.importSyncJson(raw)) return false
+        _notes.value = store.loadNotes()
+        _sessions.value = store.loadSessions()
+        return true
+    }
 
     fun clearAll() {
         store.clearAll()

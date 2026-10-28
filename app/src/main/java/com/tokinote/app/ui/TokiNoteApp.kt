@@ -109,24 +109,24 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val accent = MaterialTheme.colorScheme.primary
     val oneUi = LocalDesignStyle.current == com.tokinote.app.data.DesignStyle.OneUI
     val smoke = when {
-        oneUi && darkTheme -> Color.Black.copy(alpha = 0.55f)
-        oneUi -> Color.White.copy(alpha = 0.55f)
+        oneUi && darkTheme -> Color.Black.copy(alpha = 0.62f)
+        oneUi -> Color.Black.copy(alpha = 0.42f)
         darkTheme -> Color.Black.copy(alpha = 0.16f)
         else -> Color.Black.copy(alpha = 0.03f)
     }
     val frost = if (oneUi) {
-        Color.White.copy(alpha = if (darkTheme) 0.06f else 0.18f)
+        Color.White.copy(alpha = if (darkTheme) 0.06f else 0.08f)
     } else {
         Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f)
     }
     val glassFallback = if (oneUi) {
-        if (darkTheme) Color.Black.copy(alpha = 0.72f) else Color.White.copy(alpha = 0.72f)
+        Color.Black.copy(alpha = 0.72f)
     } else {
         Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f)
     }
     val glass = Modifier.tokiGlass(
         hazeState = hazeState,
-        blurRadius = if (oneUi) 40.dp else 30.dp,
+        blurRadius = if (oneUi) 52.dp else 30.dp,
         tints = listOf(smoke, frost),
         fallback = glassFallback,
     )
@@ -262,6 +262,7 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                                 },
                                 onOpenStats = { backStack.add(Dest.FocusSummary) },
                                 onOpenSettingsSearch = { settingsSearch = true },
+                                glass = glass,
                             )
                                 }
                             }
@@ -468,10 +469,19 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                                         noteCount = notes.count { !it.archived && it.deletedAt == null },
                                         archiveCount = notes.count { it.archived },
                                         trashCount = notes.count { it.deletedAt != null },
+                                        importedCount = notes.count { note ->
+                                            groups.any { it.name == "导入" && note.id in it.noteIds }
+                                        },
+                                        settings = settings,
                                         onOpenArchive = { backStack.add(Dest.Archive) },
                                         onOpenTrash = { backStack.add(Dest.Trash) },
                                         contentPadding = PaddingValues(0.dp),
                                         onBack = { goBack() },
+                                        onImportDocx = viewModel::importDocx,
+                                        onExportDocx = viewModel::exportDocx,
+                                        onCloudUpload = viewModel::cloudUpload,
+                                        onCloudRestore = viewModel::cloudRestore,
+                                        onUpdateSettings = viewModel::updateSettings,
                                         exportJson = viewModel::exportJson,
                                         onClearAll = viewModel::clearAll,
                                         showHeader = false,
@@ -508,10 +518,19 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                                 noteCount = notes.count { !it.archived && it.deletedAt == null },
                                 archiveCount = notes.count { it.archived },
                                 trashCount = notes.count { it.deletedAt != null },
+                                importedCount = notes.count { note ->
+                                    groups.any { it.name == "导入" && note.id in it.noteIds }
+                                },
+                                settings = settings,
                                 onOpenArchive = { backStack.add(Dest.Archive) },
                                 onOpenTrash = { backStack.add(Dest.Trash) },
                                 contentPadding = padding,
                                 onBack = { goBack() },
+                                onImportDocx = viewModel::importDocx,
+                                onExportDocx = viewModel::exportDocx,
+                                onCloudUpload = viewModel::cloudUpload,
+                                onCloudRestore = viewModel::cloudRestore,
+                                onUpdateSettings = viewModel::updateSettings,
                                 exportJson = viewModel::exportJson,
                                 onClearAll = viewModel::clearAll,
                             )
@@ -567,24 +586,28 @@ private fun NavActionFor(
     onNewNote: () -> Unit,
     onOpenStats: () -> Unit,
     onOpenSettingsSearch: () -> Unit,
+    glass: Modifier,
 ) {
     when (tab) {
         Dest.Notes -> NavActionButton(
             icon = Icons.Filled.Add,
             contentDescription = stringResource(R.string.entry_new),
             onClick = onNewNote,
+            glass = glass,
         )
 
         Dest.Settings -> NavActionButton(
             icon = Icons.Filled.Search,
             contentDescription = "搜索设置",
             onClick = onOpenSettingsSearch,
+            glass = glass,
         )
 
         Dest.Focus -> NavActionButton(
             icon = Icons.Filled.BarChart,
             contentDescription = stringResource(R.string.focus_summary),
             onClick = onOpenStats,
+            glass = glass,
         )
 
         else -> Unit

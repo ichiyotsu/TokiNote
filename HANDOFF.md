@@ -47,7 +47,7 @@
 
 ## 4. 技术栈（已全面升级）
 
-- **隐私边界（硬约束）**：除「检查更新」和后续「公告拉取」外，App 不发起任何网络请求；不接入匿名统计、账号上报、用户 ID/邮箱上传，所有笔记与个人资料只留在本机
+- **隐私边界（硬约束）**：除「检查更新」「公告拉取」和用户主动选择的云盘文件夹同步外，App 不发起网络请求；不接入统计、账号上报，笔记与个人资料只留在本机或用户选定的云盘
 - Kotlin **2.4.21**、Compose **1.12.1**、Material3 **1.5.0-beta02**、AGP 9.4.1、Gradle 9.6
 - **minSdk 31（Android 12）**，compileSdk/targetSdk 37；向下覆盖 Android 12–15；Haze 在 API 31+ 使用 RenderEffect，低版本保留 fallback
 - Android 12–15 兼容：显式 `enableEdgeToEdge` + `setDecorFitsSystemWindows(false)`，状态栏透明、导航栏对比度关闭；手势导航保持透明，3-button 导航栏沿用系统不透明处理；已在 Android 12（API 31）与 API 37 模拟器验证启动、编辑页 IME、抽屉玻璃和 R8 release
@@ -60,6 +60,8 @@
 - **设计风格**：外观新增 MD3E / One UI；One UI 采用悬浮玻璃 Dock、全宽列表行、圆形 FAB、线性图标、Samsung Sans、#0381FE、26dp focus block、24dp 边距与低饱和蓝粉渐变背景
 - **字体**：外观可选跟随风格、Samsung Sans、GoogleSans、苹方，或导入本地 TTF；导入的字体进入下拉列表并可确认删除；苹方使用设备字体，缺字时回退
 - **可选专注组件**：设置 → 组件；从 0.3.4 Release 的 `focus-component-1.0.zip` 下载并校验 SHA-256，安装到 `files/components/focus`；启用后底栏才显示专注，可关闭开关或删除组件
+- **云同步**：数据页选择 Google Drive / OneDrive 文件夹（SAF），上传快照 / 从云端恢复；快照含笔记和专注统计
+- **DOCX**：数据页支持导入 DOCX（归入「导入」分组，标题取文件名）和导出全部笔记
 
 ## 5. 已完成的功能
 

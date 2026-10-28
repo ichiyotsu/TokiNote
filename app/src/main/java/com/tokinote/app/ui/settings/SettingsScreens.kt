@@ -46,8 +46,11 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.SdStorage
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.SystemUpdate
@@ -792,18 +795,66 @@ fun DataSettings(
     noteCount: Int,
     archiveCount: Int,
     trashCount: Int,
+    importedCount: Int,
+    settings: AppSettings,
     contentPadding: PaddingValues,
     onBack: () -> Unit,
     onOpenArchive: () -> Unit,
     onOpenTrash: () -> Unit,
+    onImportDocx: (Uri) -> Boolean,
+    onExportDocx: (Uri) -> Boolean,
+    onCloudUpload: () -> Boolean,
+    onCloudRestore: () -> Boolean,
+    onUpdateSettings: ((AppSettings) -> AppSettings) -> Unit,
     exportJson: () -> String,
     onClearAll: () -> Unit,
     showHeader: Boolean = true,
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
     var showClearDialog by remember { mutableStateOf(false) }
     var cacheBytes by remember { mutableStateOf(dirSize(context.cacheDir)) }
+    var syncing by remember { mutableStateOf(false) }
+    val syncFolderPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                )
+            }
+            onUpdateSettings { it.copy(syncFolderUri = uri.toString()) }
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            val ok = onImportDocx(uri)
+            Toast.makeText(
+                context,
+                if (ok) R.string.docx_imported else R.string.docx_failed,
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+    val exportDocxLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ),
+    ) { uri ->
+        if (uri != null) {
+            val ok = onExportDocx(uri)
+            Toast.makeText(
+                context,
+                if (ok) R.string.docx_exported else R.string.docx_failed,
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -872,11 +923,106 @@ fun DataSettings(
             Spacer(Modifier.height(16.dp))
             SegmentedColumn {
                 SegmentedListItem(
+                    title = stringResource(R.string.data_import),
+                    subtitle = stringResource(R.string.data_import_sub),
+                    icon = Icons.Filled.FileDownload,
+                    index = 0,
+                    count = 1,
+                    onClick = { importLauncher.launch(arrayOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document")) },
+                    trailing = {
+                        Text(
+                            text = importedCount.toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.cloud_sync),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+            )
+            SegmentedColumn {
+                SegmentedListItem(
+                    title = stringResource(R.string.cloud_folder),
+                    subtitle = stringResource(R.string.cloud_folder_sub),
+                    icon = Icons.Filled.Cloud,
+                    index = 0,
+                    count = 1,
+                    onClick = { syncFolderPicker.launch(null) },
+                    trailing = {
+                        Text(
+                            text = stringResource(
+                                if (settings.syncFolderUri.isBlank()) {
+                                    R.string.cloud_not_connected
+                                } else {
+                                    R.string.cloud_connected
+                                },
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (settings.syncFolderUri.isBlank()) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
+                        )
+                    },
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(
+                    enabled = settings.syncFolderUri.isNotBlank() && !syncing,
+                    onClick = {
+                        syncing = true
+                        scope.launch {
+                            val ok = withContext(Dispatchers.IO) { onCloudUpload() }
+                            syncing = false
+                            Toast.makeText(
+                                context,
+                                if (ok) R.string.cloud_done else R.string.cloud_failed,
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    },
+                ) {
+                    Text(stringResource(R.string.cloud_upload))
+                }
+                TextButton(
+                    enabled = settings.syncFolderUri.isNotBlank() && !syncing,
+                    onClick = {
+                        syncing = true
+                        scope.launch {
+                            val ok = withContext(Dispatchers.IO) { onCloudRestore() }
+                            syncing = false
+                            Toast.makeText(
+                                context,
+                                if (ok) R.string.cloud_done else R.string.cloud_failed,
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    },
+                ) {
+                    Text(stringResource(R.string.cloud_restore))
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            SegmentedColumn {
+                SegmentedListItem(
                     title = stringResource(R.string.data_export),
                     subtitle = stringResource(R.string.data_export_sub),
                     icon = Icons.Filled.Code,
                     index = 0,
-                    count = 4,
+                    count = 5,
                     onClick = {
                         clipboard.setText(AnnotatedString(exportJson()))
                         Toast.makeText(context, R.string.data_exported, Toast.LENGTH_SHORT).show()
@@ -884,11 +1030,20 @@ fun DataSettings(
                     trailing = { Chevron() },
                 )
                 SegmentedListItem(
+                    title = stringResource(R.string.data_export_docx),
+                    subtitle = stringResource(R.string.data_export_docx_sub),
+                    icon = Icons.Filled.Description,
+                    index = 1,
+                    count = 5,
+                    onClick = { exportDocxLauncher.launch("TokiNote.docx") },
+                    trailing = { Chevron() },
+                )
+                SegmentedListItem(
                     title = stringResource(R.string.data_cache),
                     subtitle = formatSize(cacheBytes),
                     icon = Icons.Filled.CleaningServices,
-                    index = 1,
-                    count = 4,
+                    index = 2,
+                    count = 5,
                     onClick = {
                         clearCache(context.cacheDir)
                         cacheBytes = 0L
@@ -899,8 +1054,8 @@ fun DataSettings(
                     title = stringResource(R.string.data_storage),
                     subtitle = stringResource(R.string.data_storage_desc),
                     icon = Icons.Filled.SdStorage,
-                    index = 2,
-                    count = 4,
+                    index = 3,
+                    count = 5,
                     onClick = {},
                     trailing = {
                         Text(
@@ -914,8 +1069,8 @@ fun DataSettings(
                     title = stringResource(R.string.data_clear),
                     subtitle = null,
                     icon = Icons.Filled.DeleteForever,
-                    index = 3,
-                    count = 4,
+                    index = 4,
+                    count = 5,
                     onClick = { showClearDialog = true },
                     trailing = { Chevron() },
                 )

@@ -42,6 +42,8 @@ data class AppSettings(
     val font: AppFont = AppFont.Auto,
     val customFontPath: String = "",
     val customFonts: List<CustomFont> = emptyList(),
+    /** SAF 授权的 Google Drive / OneDrive 同步文件夹。 */
+    val syncFolderUri: String = "",
     val dynamicColor: Boolean = true,
     val amoled: Boolean = false,
     val colorPreset: ColorPreset = ColorPreset.Matcha,
