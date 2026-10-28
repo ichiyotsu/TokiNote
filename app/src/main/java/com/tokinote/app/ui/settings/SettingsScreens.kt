@@ -145,6 +145,14 @@ fun SettingsScreen(
                 ),
         ) {
             Spacer(Modifier.height(28.dp))
+            if (LocalDesignStyle.current == DesignStyle.OneUI) {
+                Text(
+                    text = stringResource(R.string.nav_settings),
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 12.dp),
+                )
+            }
             if (searchActive) {
                 androidx.compose.material3.OutlinedTextField(
                     value = query,

@@ -19,6 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,18 +64,30 @@ fun SegmentedListItem(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
-    val shape = if (oneUi) RoundedCornerShape(26.dp) else segmentedShape(index, count)
+    val shape = if (oneUi) RectangleShape else segmentedShape(index, count)
     val container = if (oneUi) {
         MaterialTheme.colorScheme.surfaceContainerLow
     } else {
         MaterialTheme.colorScheme.surfaceContainerHigh
     }
+    val dividerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
             .background(container)
+            .drawBehind {
+                if (oneUi && index < count - 1) {
+                    val y = size.height - 1.dp.toPx()
+                    drawLine(
+                        color = dividerColor,
+                        start = Offset(0f, y),
+                        end = Offset(size.width, y),
+                        strokeWidth = 1.dp.toPx(),
+                    )
+                }
+            }
             .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -133,7 +148,11 @@ fun SegmentedColumn(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
+    Column(
+        modifier = modifier,
+        verticalArrangement = if (oneUi) Arrangement.Top else Arrangement.spacedBy(2.dp),
+    ) {
         content()
     }
 }

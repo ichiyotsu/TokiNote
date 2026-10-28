@@ -261,12 +261,13 @@ fun NavActionButton(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val haptic = LocalHapticFeedback.current
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     Surface(
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             onClick()
         },
-        shape = RoundedCornerShape(18.dp),
+        shape = if (oneUi) CircleShape else RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
         shadowElevation = 2.dp,

@@ -4,6 +4,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -13,10 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.ui.pressScale
+import com.tokinote.app.ui.theme.LocalDesignStyle
 
 /**
  * 全局顶栏操作按钮：独立圆角矩形、半透明深色磨砂底、细边高光与轻阴影。
@@ -30,18 +34,19 @@ fun GlassIconButton(
     modifier: Modifier = Modifier,
     size: Dp = 44.dp,
     iconSize: Dp = 21.dp,
-    shape: RoundedCornerShape = RoundedCornerShape(16.dp),
+    shape: Shape = RoundedCornerShape(16.dp),
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.62f),
     shadowElevation: Dp = 2.dp,
 ) {
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     val interaction = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
-        shape = shape,
+        shape = if (oneUi) CircleShape else shape,
         color = containerColor,
         contentColor = tint,
-        shadowElevation = shadowElevation,
+        shadowElevation = if (oneUi) 0.dp else shadowElevation,
         interactionSource = interaction,
         modifier = modifier
             .size(size)
