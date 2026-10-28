@@ -49,7 +49,7 @@
 - **玻璃统一入口**：`ui/theme/Glass.kt` 的 `Modifier.tokiGlass()` 统一 Haze 输入、模糊半径、tint 和 fallback；底栏、顶栏与抽屉 30dp 走同一条链路
 - **代码瘦身**：删除 `WavyRing`、旧 `JournalTopBar` / `JournalTabs` / `SearchResultRow` / `NoteGroupBar`、未使用的 ViewModel 方法，以及 107 条废弃字符串；当前 release APK 约 6.5 MB
 - **Pad 横屏适配**：抽屉宽度限制 260dp；笔记网格自适应 2–4 列；专注页时钟左 / 操作右（约 6:4）；设置首页两列，二级页左侧 3:7 快捷栏
-- **设计风格**：外观新增 MD3E / One UI；One UI 使用 Samsung Sans、Roboto、#0381FE、26dp focus block、24dp 边距与白色 focus block / 深色模式；玻璃、抽屉、底栏、卡片圆角同步切换
+- **设计风格**：外观新增 MD3E / One UI；One UI 采用悬浮玻璃 Dock、全宽列表行、圆形 FAB、线性图标、Samsung Sans、#0381FE、26dp focus block、24dp 边距与低饱和蓝粉渐变背景
 - **字体**：外观可选跟随风格、Samsung Sans、GoogleSans、苹方，或导入本地 TTF；导入的字体进入下拉列表并可确认删除；苹方使用设备字体，缺字时回退
 - **可选专注组件**：设置 → 组件；从 0.3.4 Release 的 `focus-component-1.0.zip` 下载并校验 SHA-256，安装到 `files/components/focus`；启用后底栏才显示专注，可关闭开关或删除组件
 
@@ -80,7 +80,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 0.3.6-beta 已发布，等待真机回归（One UI 全宽底栏/列表、设计下拉、字体预设与自定义 TTF 列表、Beta→正式版更新逻辑）
+2. 0.3.6-beta 已发布；One UI 9 悬浮 Dock / 顶部标题与摘要 / 边到边网格 / 蓝粉渐变已实现，等待真机回归（设计下拉、字体预设与自定义 TTF 列表、Beta→正式版更新逻辑）
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）

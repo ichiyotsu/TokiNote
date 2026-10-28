@@ -147,7 +147,7 @@ fun NoteCard(
                     }
                 }
 
-                if (note.body.isNotBlank()) {
+                if (!oneUi && note.body.isNotBlank()) {
                     Spacer(Modifier.height(5.dp))
                     Text(
                         text = note.body,

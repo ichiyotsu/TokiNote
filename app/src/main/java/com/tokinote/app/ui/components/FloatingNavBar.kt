@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -80,29 +82,30 @@ fun FloatingNavBar(
     action: (@Composable () -> Unit)? = null,
 ) {
     val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
-    val shape = RoundedCornerShape(if (oneUi) 28.dp else 36.dp)
+    val shape = RoundedCornerShape(if (oneUi) 32.dp else 36.dp)
     val entries = if (showFocus) navEntries else navEntries.filterNot { it.dest == Dest.Focus }
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(if (oneUi) 92.dp else 150.dp),
+            .height(if (oneUi) 104.dp else 150.dp),
         contentAlignment = Alignment.BottomCenter,
     ) {
         if (oneUi) {
-            Column(
+            Row(
                 modifier = Modifier
+                    .widthIn(max = 560.dp)
                     .fillMaxWidth()
-                    .then(glass)
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f)),
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
             ) {
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
-                )
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .padding(horizontal = 12.dp),
+                        .clip(shape)
+                        .then(glass)
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.78f))
+                        .border(1.dp, Color.White.copy(alpha = 0.16f), shape)
+                        .padding(horizontal = 6.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     entries.forEach { entry ->
@@ -110,11 +113,11 @@ fun FloatingNavBar(
                             entry = entry,
                             selected = current == entry.dest,
                             onSelect = onSelect,
-                            modifier = Modifier.weight(1f),
                         )
                     }
-                    action?.invoke()
                 }
+                Spacer(Modifier.width(10.dp))
+                action?.invoke()
             }
         } else {
             Row(
@@ -150,13 +153,17 @@ private fun OneUINavItem(
     entry: NavEntry,
     selected: Boolean,
     onSelect: (Dest) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val haptic = LocalHapticFeedback.current
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
+    Row(
+        modifier = Modifier
+            .height(48.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                else Color.Transparent,
+            )
             .clickable(
                 interactionSource = interaction,
                 indication = ripple(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
@@ -166,9 +173,8 @@ private fun OneUINavItem(
                 },
             )
             .pressScale(interaction, pressedScale = 0.94f)
-            .padding(vertical = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = if (selected) entry.selectedIcon else entry.icon,
@@ -178,12 +184,12 @@ private fun OneUINavItem(
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
             },
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(21.dp),
         )
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.width(6.dp))
         Text(
             text = stringResource(entry.label),
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelLarge,
             color = if (selected) {
                 MaterialTheme.colorScheme.primary
             } else {

@@ -115,7 +115,7 @@ fun SegmentedListItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (subtitle != null) {
+            if (subtitle != null && !oneUi) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,

@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,6 +66,7 @@ import com.tokinote.app.ui.theme.tokiGlass
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -278,27 +280,47 @@ fun TimelineScreen(
                 .fillMaxWidth()
                 .onSizeChanged { headerHeight = it.height },
         ) {
-            TopSearchBar(
-                query = query,
-                onQueryChange = { query = it },
-                viewMode = viewMode,
-                onToggleView = {
-                    viewMode = if (viewMode == HomeViewMode.List) {
-                        HomeViewMode.Grid
-                    } else {
-                        HomeViewMode.List
-                    }
-                },
-                sortAscending = sortAscending,
-                onToggleSort = { sortAscending = !sortAscending },
-                avatarEmoji = settings.avatarEmoji,
-                avatarPath = settings.avatarPath,
-                backdropProgress = backdropProgress,
-                showViewSort = tab != HomeTab.Stats,
-                onMenu = { drawerOpen = true },
-                onAvatar = { profileOpen = true },
-                glass = drawerGlass,
-            )
+            Column {
+                if (oneUi) {
+                    OneUIHomeHeading(
+                        title = when (tab) {
+                            HomeTab.Notes -> selectedGroup?.name ?: stringResource(R.string.nav_notes)
+                            HomeTab.Album -> stringResource(R.string.nav_album)
+                            HomeTab.Stats -> stringResource(R.string.tab_stats)
+                        },
+                        counts = if (tab == HomeTab.Notes) {
+                            listOf(
+                                notes.size to stringResource(R.string.nav_notes),
+                                notes.count { it.pinned } to stringResource(R.string.section_pinned),
+                                labels.size to stringResource(R.string.labels_title),
+                            )
+                        } else {
+                            emptyList()
+                        },
+                    )
+                }
+                TopSearchBar(
+                    query = query,
+                    onQueryChange = { query = it },
+                    viewMode = viewMode,
+                    onToggleView = {
+                        viewMode = if (viewMode == HomeViewMode.List) {
+                            HomeViewMode.Grid
+                        } else {
+                            HomeViewMode.List
+                        }
+                    },
+                    sortAscending = sortAscending,
+                    onToggleSort = { sortAscending = !sortAscending },
+                    avatarEmoji = settings.avatarEmoji,
+                    avatarPath = settings.avatarPath,
+                    backdropProgress = backdropProgress,
+                    showViewSort = tab != HomeTab.Stats,
+                    onMenu = { drawerOpen = true },
+                    onAvatar = { profileOpen = true },
+                    glass = drawerGlass,
+                )
+            }
         }
     }
 
@@ -446,6 +468,61 @@ fun TimelineScreen(
 }
 
 @Composable
+private fun OneUIHomeHeading(
+    title: String,
+    counts: List<Pair<Int, String>>,
+) {
+    val date = remember {
+        LocalDate.now().format(DateTimeFormatter.ofPattern("M月d日 EEEE", Locale.CHINA))
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 6.dp),
+    ) {
+        Text(
+            text = date,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+        )
+        if (counts.isNotEmpty()) {
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                counts.forEach { (count, label) ->
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.78f),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = count.toString(),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun NoteFeed(
     notes: List<Note>,
     labels: List<Label>,
@@ -482,6 +559,16 @@ private fun NoteFeed(
         top = topInset + 4.dp,
         bottom = contentPadding.calculateBottomPadding() + 80.dp,
     )
+    val gridPadding = if (oneUi) {
+        PaddingValues(
+            start = 0.dp,
+            end = 0.dp,
+            top = padding.calculateTopPadding(),
+            bottom = padding.calculateBottomPadding(),
+        )
+    } else {
+        padding
+    }
 
     if (viewMode == HomeViewMode.Grid) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -490,7 +577,7 @@ private fun NoteFeed(
                 columns = GridCells.Fixed(columns),
                 modifier = Modifier.fillMaxSize(),
                 state = gridState,
-                contentPadding = padding,
+                contentPadding = gridPadding,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
