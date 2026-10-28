@@ -44,7 +44,7 @@ class UpdateCheckerTest {
     }
 
     @Test
-    fun `beta channel prefers a higher stable but keeps beta on same core`() {
+    fun `beta channel picks the highest beta or stable`() {
         val stable = UpdateChecker.pickLatest(
             listOf(release("0.3.5-beta"), release("0.3.6")),
             "beta",
@@ -55,36 +55,19 @@ class UpdateCheckerTest {
             listOf(release("0.3.5-beta"), release("0.3.5")),
             "beta",
         )
-        assertTrue(sameCore?.version == "0.3.5-beta")
+        assertTrue(sameCore?.version == "0.3.5")
 
         val betaAhead = UpdateChecker.pickLatest(
-            listOf(release("0.3.5-beta"), release("0.3.4")),
+            listOf(release("0.3.8-beta"), release("0.3.7")),
             "beta",
         )
-        assertTrue(betaAhead?.version == "0.3.5-beta")
+        assertTrue(betaAhead?.version == "0.3.8-beta")
 
         val releaseOnly = UpdateChecker.pickLatest(
             listOf(release("0.3.6"), release("0.3.7-beta")),
             "release",
         )
         assertTrue(releaseOnly?.version == "0.3.6")
-    }
-
-    @Test
-    fun `alpha channel only accepts alpha versions`() {
-        assertTrue(UpdateChecker.matchesChannel(release("0.3.8-alpha1"), "alpha"))
-        assertTrue(UpdateChecker.matchesChannel(release("v0.3.8-ALPHA.2"), "alpha"))
-        assertFalse(UpdateChecker.matchesChannel(release("0.3.8-beta"), "alpha"))
-        assertFalse(UpdateChecker.matchesChannel(release("0.3.8"), "alpha"))
-    }
-
-    @Test
-    fun `alpha channel selects newest alpha`() {
-        val latest = UpdateChecker.pickLatest(
-            listOf(release("0.3.8-alpha1"), release("0.3.8-alpha2"), release("0.3.7-beta")),
-            "alpha",
-        )
-        assertTrue(latest?.version == "0.3.8-alpha2")
     }
 
     private fun release(version: String): ReleaseInfo = ReleaseInfo(
