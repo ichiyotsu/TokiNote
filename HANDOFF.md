@@ -7,10 +7,9 @@
 ## 1. 仓库与发布
 
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
-- 当前只保留 3 个 Release：
-  - 正式版 **0.3.5**（Latest，versionCode 22）
-  - Beta **0.3.7-beta.2**（versionCode 21）
-  - 首个版本 **0.1.0**
+- 当前 Release：正式版 **0.3.5**（Latest，versionCode 22）、Beta **0.3.7-beta.2**（versionCode 21）、**0.1.0**
+- 发布策略：正式版与 Beta 轮流迭代；**从 0.3.5 起不再删除旧 Release，全部保留历史**
+- 正式版只从 Beta 验证后的内容收敛；Beta 可领先正式版多个版本
 - 发布开关：`TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED = false`，0.3.5 固定 MD3E，外观不显示设计风格入口
 - 版本规则：
   - 正式版 `x.y.z`：完整、稳定
@@ -92,7 +91,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 当前为 0.3.5 正式版 + 0.3.7-beta.2 + 0.1.0；0.3.5 固定 MD3E；APK 命名 `TokiNote-<version>.apk`
+2. 当前为 0.3.5 正式版 + 0.3.7-beta.2 + 0.1.0；后续正式版/Beta 轮流迭代，旧 Release 全部保留；0.3.5 固定 MD3E；APK 命名 `TokiNote-<version>.apk`
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
