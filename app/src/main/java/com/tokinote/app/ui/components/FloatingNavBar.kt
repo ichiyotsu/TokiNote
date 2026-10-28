@@ -88,7 +88,7 @@ fun FloatingNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(if (oneUi) 112.dp else 150.dp),
+            .height(if (oneUi) 104.dp else 150.dp),
         contentAlignment = Alignment.BottomCenter,
     ) {
         if (oneUi) {
@@ -103,7 +103,7 @@ fun FloatingNavBar(
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .height(72.dp)
+                        .height(64.dp)
                         .clip(shape)
                         .then(glass)
                         .background(Color(0xFF1C1C1E).copy(alpha = 0.55f))
@@ -275,7 +275,7 @@ fun NavActionButton(
         shadowElevation = if (oneUi) 0.dp else 2.dp,
         interactionSource = interaction,
         modifier = Modifier
-            .size(if (oneUi) 72.dp else 64.dp)
+            .size(if (oneUi) 64.dp else 64.dp)
             .clip(if (oneUi) CircleShape else RoundedCornerShape(18.dp))
             .then(if (oneUi) glass else Modifier)
             .pressScale(interaction, pressedScale = 0.9f),
