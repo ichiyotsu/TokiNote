@@ -1037,7 +1037,7 @@ private fun UpdateChannelDropdown(
     )
     val selectedLabel = when (settings.updateChannel) {
         "beta" -> "Beta"
-        "alpha" -> "Alpha"
+        "alpha" -> stringResource(R.string.update_channel_alpha)
         else -> "Release"
     }
     var menuAppeared by remember { mutableStateOf(false) }
@@ -1092,7 +1092,11 @@ private fun UpdateChannelDropdown(
             tonalElevation = 4.dp,
             shadowElevation = 10.dp,
         ) {
-            listOf("release" to "Release", "beta" to "Beta", "alpha" to "Alpha").forEach { (value, label) ->
+            listOf(
+                "release" to "Release",
+                "beta" to "Beta",
+                "alpha" to stringResource(R.string.update_channel_alpha),
+            ).forEach { (value, label) ->
                 val selected = settings.updateChannel == value
                 DropdownMenuItem(
                     text = {
