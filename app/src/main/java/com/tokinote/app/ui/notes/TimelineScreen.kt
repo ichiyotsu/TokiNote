@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -176,6 +178,7 @@ fun TimelineScreen(
     val hazeState = rememberHazeState()
     val darkTheme = LocalDarkTheme.current
     val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
+    val isPad = LocalConfiguration.current.smallestScreenWidthDp >= 600
     val drawerGlass = Modifier.tokiGlass(
         hazeState = hazeState,
         blurRadius = if (oneUi) 40.dp else 30.dp,
@@ -279,8 +282,17 @@ fun TimelineScreen(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .onSizeChanged { headerHeight = it.height },
+            contentAlignment = Alignment.TopCenter,
         ) {
-            Column {
+            Column(
+                modifier = if (oneUi && isPad) {
+                    Modifier
+                        .widthIn(max = 880.dp)
+                        .fillMaxWidth()
+                } else {
+                    Modifier.fillMaxWidth()
+                },
+            ) {
                 if (oneUi) {
                     OneUIHomeHeading(
                         title = when (tab) {
