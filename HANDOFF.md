@@ -1,6 +1,6 @@
 # TokiNote — 交接文档（HANDOFF）
 
-> 最后更新：2026-10-28（0.3.7-beta.1 发布）
+> 最后更新：2026-10-28（0.3.7-beta.2 发布）
 > 工作区：`D:\DSH\TokiNote\project`（git 仓库）；工具：`..\tools`；密钥：`..\keys`
 > 新会话先读本文件，再读 `docs/design-refs/`。
 
@@ -9,7 +9,7 @@
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
 - 当前只保留 3 个 Release：
   - 正式版 **0.3.4**（Latest，versionCode 12）
-  - Beta **0.3.7-beta.1**（versionCode 20）
+  - Beta **0.3.7-beta.2**（versionCode 21）
   - 首个版本 **0.1.0**
 - 版本规则：
   - 正式版 `x.y.z`：完整、稳定
@@ -20,7 +20,7 @@
 - 发版前与用户确认版本号和文案
 - 包名固定 `com.tokinote.app`
 - **CI 与 Release 工作流仍是红的**：GitHub runner 上 Gradle 解析 AGP 插件异常（本地完全正常）。
-  发版方式固定为：本地 `assembleRelease`（带 VERSION_* / KEYSTORE_* 环境变量）→ `gh release create <tag> app-release.apk --notes-file ...`
+  发版方式固定为：本地 `assembleRelease`（带 VERSION_* / KEYSTORE_* 环境变量）→ 将 APK 命名为 `TokiNote-<versionName>.apk` → `gh release create <tag> TokiNote-<versionName>.apk --notes-file ...`
   - 0.2.7 实际命令见第 3 节；tag 由 `gh release create --target main` 创建（提交 `7b0e0c3`）
 
 ## 2. 签名密钥（重要）
@@ -34,13 +34,14 @@
 - 无系统 git/gh：`tools\mingit\cmd\git.exe`、`tools\gh\bin\gh.exe`
 - gh：`GH_CONFIG_DIR=tools\gh-config`、`LOCALAPPDATA=tools\gh-la`（current dir 是 project，路径写成 `..\tools\...`）
 - 构建：`$env:JAVA_HOME="D:\Application\Android Studio\jbr"; $env:ANDROID_HOME="C:\Users\tokisaki\AppData\Local\Android\Sdk"; .\gradlew.bat --offline assembleDebug`
-- 发版构建（0.3.7-beta.1 示例）：
+- 发版构建（0.3.7-beta.2 示例）：
   ```powershell
-  $env:VERSION_NAME='0.3.7-beta.1'; $env:VERSION_CODE='20'
+  $env:VERSION_NAME='0.3.7-beta.2'; $env:VERSION_CODE='21'
   $env:KEYSTORE_FILE='D:\DSH\TokiNote\keys\release.jks'
   $env:KEYSTORE_PASSWORD='…'; $env:KEY_ALIAS='tokinote'; $env:KEY_PASSWORD='…'
   .\gradlew.bat --offline assembleRelease -x lintVitalAnalyzeRelease -x lintVitalRelease
-  gh release create 0.3.7-beta.1 app\build\outputs\apk\release\app-release.apk --title "0.3.7 Beta 1" --notes-file .github\release-notes\0.3.7-beta.1.md --target main --prerelease
+  Copy-Item app\build\outputs\apk\release\app-release.apk build\TokiNote-0.3.7-beta.2.apk
+  gh release create 0.3.7-beta.2 build\TokiNote-0.3.7-beta.2.apk --title "0.3.7 Beta 2" --notes-file .github\release-notes\0.3.7-beta.2.md --target main --prerelease
   ```
 - 模拟器 AVD `Pixel_10_Pro`（API 37）；**adb 手势注入对 Compose 不稳定**，长按/点击常无效，交互验证优先真机
 - github.com:443 时不时机翻；`git push` 失败可改用 GitHub Git Data API
@@ -90,7 +91,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 当前为 0.3.4 正式版 + 0.3.7-beta.1 + 0.1.0；后续按 release/beta 两通道更新
+2. 当前为 0.3.4 正式版 + 0.3.7-beta.2 + 0.1.0；后续按 release/beta 两通道更新；APK 命名 `TokiNote-<version>.apk`
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
