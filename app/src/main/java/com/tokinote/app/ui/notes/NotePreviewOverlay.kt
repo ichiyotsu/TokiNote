@@ -51,8 +51,8 @@ import com.tokinote.app.R
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.ui.TokiMotion
-import com.tokinote.app.ui.theme.ExpressiveCardShape
-import com.tokinote.app.ui.theme.ExpressiveChipShape
+import com.tokinote.app.ui.theme.LocalCardShape
+import com.tokinote.app.ui.theme.LocalChipShape
 import com.tokinote.app.ui.theme.labelInk
 import kotlinx.coroutines.launch
 
@@ -70,6 +70,8 @@ fun NotePreviewOverlay(
     onArchive: (String) -> Unit,
     onTrash: (String) -> Unit,
 ) {
+    val cardShape = LocalCardShape.current
+    val chipShape = LocalChipShape.current
     val progress = remember(note.id) { Animatable(0f) }
     val scope = rememberCoroutineScope()
     var targetBounds by remember { mutableStateOf<Rect?>(null) }
@@ -152,7 +154,7 @@ fun NotePreviewOverlay(
 
             Surface(
                 modifier = modifier,
-                shape = ExpressiveCardShape,
+                shape = cardShape,
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
                 shadowElevation = 18.dp,
             ) {
@@ -206,7 +208,7 @@ fun NotePreviewOverlay(
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                     color = ink,
                                     modifier = Modifier
-                                        .clip(ExpressiveChipShape)
+                                        .clip(chipShape)
                                         .background(ink.copy(alpha = 0.08f))
                                         .padding(horizontal = 9.dp, vertical = 3.dp),
                                 )
@@ -231,7 +233,7 @@ fun NotePreviewOverlay(
                     ) {
                         FilledTonalButton(
                             onClick = { onOpen(note.id) },
-                            shape = ExpressiveChipShape,
+                            shape = chipShape,
                         ) {
                             Text(stringResource(R.string.preview_open))
                         }

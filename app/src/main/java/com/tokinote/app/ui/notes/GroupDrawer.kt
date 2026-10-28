@@ -63,11 +63,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.tokinote.app.R
 import com.tokinote.app.data.AlbumFolder
+import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
 import com.tokinote.app.ui.TokiMotion
 import com.tokinote.app.ui.pressScale
-import com.tokinote.app.ui.theme.ExpressiveChipShape
+import com.tokinote.app.ui.theme.LocalChipShape
+import com.tokinote.app.ui.theme.LocalDesignStyle
 import com.tokinote.app.ui.theme.Micro5Charted
 import java.time.Instant
 import java.time.ZoneId
@@ -103,6 +105,7 @@ fun GroupDrawer(
     onEditFolder: (AlbumFolder) -> Unit,
 ) {
     BackHandler(enabled = open, onBack = onDismiss)
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     var notesExpanded by rememberSaveable { mutableStateOf(true) }
     var albumExpanded by rememberSaveable { mutableStateOf(true) }
     val scrimInteraction = remember { MutableInteractionSource() }
@@ -164,7 +167,13 @@ fun GroupDrawer(
                     modifier = Modifier
                         .matchParentSize()
                         .then(glass)
-                        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.55f)),
+                        .background(
+                        if (oneUi) {
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.62f)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.55f)
+                        },
+                    ),
                 )
                 Column(
                     modifier = Modifier
@@ -312,7 +321,7 @@ private fun DrawerTabRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp)
-            .clip(ExpressiveChipShape)
+            .clip(LocalChipShape.current)
             .background(
                 if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
             )
@@ -358,7 +367,7 @@ private fun CollapsibleHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(ExpressiveChipShape)
+            .clip(LocalChipShape.current)
             .clickable(onClick = onToggle)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -396,7 +405,7 @@ private fun DrawerRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 1.dp)
-            .clip(ExpressiveChipShape)
+            .clip(LocalChipShape.current)
             .background(
                 if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
             )
@@ -463,7 +472,7 @@ private fun CreateRow(label: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 3.dp)
-            .clip(ExpressiveChipShape)
+            .clip(LocalChipShape.current)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -97,8 +97,8 @@ import com.tokinote.app.data.TextWeight
 import com.tokinote.app.ui.TokiMotion
 import com.tokinote.app.ui.components.GlassIconButton
 import com.tokinote.app.ui.pressScale
-import com.tokinote.app.ui.theme.ExpressiveChipShape
-import com.tokinote.app.ui.theme.ExpressiveIslandShape
+import com.tokinote.app.ui.theme.LocalChipShape
+import com.tokinote.app.ui.theme.LocalIslandShape
 import com.tokinote.app.ui.theme.labelInk
 import com.tokinote.app.ui.theme.labelTint
 import kotlinx.coroutines.Dispatchers
@@ -581,9 +581,9 @@ fun JournalEditorScreen(
                             stiffness = 380f,
                         ),
                     )
-                    .clip(ExpressiveIslandShape)
+                    .clip(LocalIslandShape.current)
                     .background(toolbarTint.copy(alpha = 0.94f))
-                    .border(1.dp, accent.copy(alpha = 0.22f), ExpressiveIslandShape)
+                    .border(1.dp, accent.copy(alpha = 0.22f), LocalIslandShape.current)
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -746,12 +746,13 @@ private fun InfoChip(
     text: String,
     onClick: (() -> Unit)? = null,
 ) {
+    val chipShape = LocalChipShape.current
     Surface(
-        shape = ExpressiveChipShape,
+        shape = chipShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
         modifier = if (onClick != null) {
             Modifier
-                .clip(ExpressiveChipShape)
+                .clip(chipShape)
                 .clickable(onClick = onClick)
         } else {
             Modifier
@@ -1123,7 +1124,7 @@ private fun EditorTool(
     Box(
         modifier = Modifier
             .size(46.dp)
-            .clip(ExpressiveChipShape)
+            .clip(LocalChipShape.current)
             .background(if (selected) accent.copy(alpha = 0.28f) else Color.Transparent)
             .pressScale(interaction, pressedScale = 0.86f)
             .clickable(

@@ -87,6 +87,7 @@ import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.AppSettings
 import com.tokinote.app.data.ColorPreset
+import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.ReleaseInfo
 import com.tokinote.app.data.ThemeMode
 import com.tokinote.app.data.UpdateChecker
@@ -97,6 +98,7 @@ import com.tokinote.app.ui.components.PillGroup
 import com.tokinote.app.ui.components.SegmentedColumn
 import com.tokinote.app.ui.components.SegmentedListItem
 import com.tokinote.app.ui.components.segmentedShape
+import com.tokinote.app.ui.theme.LocalDesignStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -131,7 +133,9 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
+                .padding(
+                    horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 16.dp,
+                ),
         ) {
             Spacer(Modifier.height(28.dp))
             if (searchActive) {
@@ -348,9 +352,24 @@ fun AppearanceSettings(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 20.dp),
         ) {
             Spacer(Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.design_style),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+            )
+            PillGroup(
+                options = listOf(
+                    DesignStyle.MaterialExpressive to stringResource(R.string.design_style_md3e),
+                    DesignStyle.OneUI to stringResource(R.string.design_style_oneui),
+                ),
+                selected = settings.designStyle,
+                onSelect = { style -> onUpdate { it.copy(designStyle = style) } },
+            )
+            Spacer(Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.theme_mode),
                 style = MaterialTheme.typography.labelLarge,
@@ -450,7 +469,7 @@ fun DataSettings(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 20.dp),
         ) {
             Spacer(Modifier.height(8.dp))
 
@@ -861,7 +880,7 @@ fun AboutScreen(
         Column(            modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 20.dp),
             horizontalAlignment = Alignment.Start,
         ) {
             Spacer(Modifier.height(12.dp))

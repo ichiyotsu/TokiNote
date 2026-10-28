@@ -35,6 +35,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
+import com.tokinote.app.data.DesignStyle
+import com.tokinote.app.ui.theme.LocalDesignStyle
 
 enum class HomeTab { Notes, Album, Stats }
 
@@ -61,6 +63,7 @@ fun TopSearchBar(
     glass: Modifier = Modifier,
     modifier: Modifier = Modifier,
 ) {
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -76,13 +79,13 @@ fun TopSearchBar(
                     scaleY = 0.92f + 0.08f * backdropProgress.coerceIn(0f, 1f)
                     transformOrigin = TransformOrigin(0.5f, 0f)
                 }
-                .clip(RoundedCornerShape(30.dp))
+                .clip(RoundedCornerShape(if (oneUi) 26.dp else 30.dp))
                 .then(glass),
         )
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = if (oneUi) 24.dp else 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
         TopActionButton(
@@ -99,8 +102,16 @@ fun TopSearchBar(
                 .height(48.dp)
                 .clip(CircleShape)
                 .background(
-                    MaterialTheme.colorScheme.surfaceContainer.copy(
-                        alpha = 0.58f * (1f - backdropProgress.coerceIn(0f, 1f)),
+                    (if (oneUi) {
+                        MaterialTheme.colorScheme.surfaceContainerLow
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainer
+                    }).copy(
+                        alpha = if (oneUi) {
+                            0.94f - 0.34f * backdropProgress.coerceIn(0f, 1f)
+                        } else {
+                            0.58f * (1f - backdropProgress.coerceIn(0f, 1f))
+                        },
                     ),
                 )
                 .padding(horizontal = 14.dp),

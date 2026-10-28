@@ -13,6 +13,15 @@ val TokiShapes = Shapes(
     extraLarge = RoundedCornerShape(36.dp),
 )
 
+/** One UI：对称、26dp focus block 圆角，强调内容而不是容器。 */
+val OneUIShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(18.dp),
+    large = RoundedCornerShape(26.dp),
+    extraLarge = RoundedCornerShape(32.dp),
+)
+
 /** 笔记卡片：四角不对称，避免通用圆角的“模板感”。 */
 val ExpressiveCardShape = RoundedCornerShape(
     topStart = 34.dp,
@@ -40,3 +49,9 @@ val ExpressiveFabShape = RoundedCornerShape(
 /** 编辑页悬浮工具岛 / 信息面板。 */
 val ExpressiveIslandShape = RoundedCornerShape(34.dp)
 val ExpressiveSheetShape = RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp)
+
+val OneUICardShape = RoundedCornerShape(26.dp)
+val OneUIChipShape = RoundedCornerShape(20.dp)
+val OneUIFabShape = RoundedCornerShape(22.dp)
+val OneUIIslandShape = RoundedCornerShape(26.dp)
+val OneUISheetShape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)

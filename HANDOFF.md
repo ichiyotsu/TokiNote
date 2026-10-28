@@ -49,6 +49,7 @@
 - **玻璃统一入口**：`ui/theme/Glass.kt` 的 `Modifier.tokiGlass()` 统一 Haze 输入、模糊半径、tint 和 fallback；底栏、顶栏与抽屉 30dp 走同一条链路
 - **代码瘦身**：删除 `WavyRing`、旧 `JournalTopBar` / `JournalTabs` / `SearchResultRow` / `NoteGroupBar`、未使用的 ViewModel 方法，以及 107 条废弃字符串；当前 release APK 约 6.5 MB
 - **Pad 横屏适配**：抽屉宽度限制 260dp；笔记网格自适应 2–4 列；专注页时钟左 / 操作右（约 6:4）；设置首页两列，二级页左侧 3:7 快捷栏
+- **设计风格**：外观新增 MD3E / One UI；One UI 使用 Roboto、#0381FE、26dp focus block、24dp 边距与白色 focus block / 深色模式；玻璃、抽屉、底栏、卡片圆角同步切换
 - **可选专注组件**：设置 → 组件；从 0.3.4 Release 的 `focus-component-1.0.zip` 下载并校验 SHA-256，安装到 `files/components/focus`；启用后底栏才显示专注，可关闭开关或删除组件
 
 ## 5. 已完成的功能

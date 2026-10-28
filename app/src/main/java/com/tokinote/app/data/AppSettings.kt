@@ -14,9 +14,16 @@ enum class ColorPreset {
     Orange,
 }
 
+/** 整体设计语言；MD3E 为现有 Expressive，OneUI 为三星 One UI 风格。 */
+enum class DesignStyle {
+    MaterialExpressive,
+    OneUI,
+}
+
 /** 专注计时器的时长设置，默认值与 Tomato 一致（25 / 5 / 15 / 4）。 */
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.System,
+    val designStyle: DesignStyle = DesignStyle.MaterialExpressive,
     val dynamicColor: Boolean = true,
     val amoled: Boolean = false,
     val colorPreset: ColorPreset = ColorPreset.Matcha,

@@ -41,7 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.AlbumFolder
-import com.tokinote.app.ui.theme.ExpressiveChipShape
+import com.tokinote.app.ui.theme.LocalChipShape
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -230,7 +230,7 @@ fun AlbumFolderSheet(
                         nameError = true
                     }
                 },
-                shape = ExpressiveChipShape,
+                shape = LocalChipShape.current,
             ) {
                 Text(
                     stringResource(

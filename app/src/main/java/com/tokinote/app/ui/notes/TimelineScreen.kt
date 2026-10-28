@@ -54,11 +54,13 @@ import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.data.AlbumFolder
 import com.tokinote.app.data.AppSettings
+import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
 import androidx.compose.ui.graphics.Color
 import com.tokinote.app.ui.theme.LocalDarkTheme
+import com.tokinote.app.ui.theme.LocalDesignStyle
 import com.tokinote.app.ui.theme.tokiGlass
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -171,14 +173,26 @@ fun TimelineScreen(
 
     val hazeState = rememberHazeState()
     val darkTheme = LocalDarkTheme.current
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     val drawerGlass = Modifier.tokiGlass(
         hazeState = hazeState,
-        blurRadius = 30.dp,
-        tints = listOf(
-            Color.Black.copy(alpha = if (darkTheme) 0.16f else 0.03f),
-            Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f),
-        ),
-        fallback = Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f),
+        blurRadius = if (oneUi) 40.dp else 30.dp,
+        tints = if (oneUi) {
+            listOf(
+                Color.White.copy(alpha = if (darkTheme) 0.06f else 0.55f),
+                Color.White.copy(alpha = if (darkTheme) 0.04f else 0.18f),
+            )
+        } else {
+            listOf(
+                Color.Black.copy(alpha = if (darkTheme) 0.16f else 0.03f),
+                Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f),
+            )
+        },
+        fallback = if (oneUi) {
+            if (darkTheme) Color.Black.copy(alpha = 0.72f) else Color.White.copy(alpha = 0.72f)
+        } else {
+            Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f)
+        },
     )
 
     LaunchedEffect(previewNote) {
@@ -444,6 +458,7 @@ private fun NoteFeed(
     onLongPress: (Note, Rect) -> Unit,
     onScrollChanged: (Boolean) -> Unit,
 ) {
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
     val scrolled = if (viewMode == HomeViewMode.Grid) {
@@ -462,8 +477,8 @@ private fun NoteFeed(
     val pinned = notes.filter { it.pinned }
     val others = notes.filterNot { it.pinned }
     val padding = PaddingValues(
-        start = 16.dp,
-        end = 16.dp,
+        start = if (oneUi) 24.dp else 16.dp,
+        end = if (oneUi) 24.dp else 16.dp,
         top = topInset + 4.dp,
         bottom = contentPadding.calculateBottomPadding() + 80.dp,
     )

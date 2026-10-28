@@ -46,8 +46,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
+import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.ui.Dest
 import com.tokinote.app.ui.pressScale
+import com.tokinote.app.ui.theme.LocalDesignStyle
 
 private data class NavEntry(
     val dest: Dest,
@@ -75,7 +77,7 @@ fun FloatingNavBar(
     showFocus: Boolean = true,
     action: (@Composable () -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(36.dp)
+    val shape = RoundedCornerShape(if (LocalDesignStyle.current == DesignStyle.OneUI) 28.dp else 36.dp)
     val entries = if (showFocus) navEntries else navEntries.filterNot { it.dest == Dest.Focus }
     Box(
         modifier = modifier

@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
 
             TokiNoteTheme(
                 darkTheme = darkTheme,
+                designStyle = settings.designStyle,
                 dynamicColor = settings.dynamicColor,
                 amoled = settings.amoled,
                 colorPreset = settings.colorPreset,

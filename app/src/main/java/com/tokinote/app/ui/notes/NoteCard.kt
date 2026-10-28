@@ -42,10 +42,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
+import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.ui.pressScale
-import com.tokinote.app.ui.theme.ExpressiveCardShape
+import com.tokinote.app.ui.theme.LocalCardShape
+import com.tokinote.app.ui.theme.LocalDesignStyle
 import com.tokinote.app.ui.theme.labelInk
 
 /**
@@ -62,7 +64,8 @@ fun NoteCard(
     onClick: () -> Unit,
     onLongPress: (Rect) -> Unit,
 ) {
-    val shape = ExpressiveCardShape
+    val shape = LocalCardShape.current
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val haptic = LocalHapticFeedback.current
     var bounds by remember { mutableStateOf(Rect.Zero) }
@@ -86,7 +89,7 @@ fun NoteCard(
             )
             .pressScale(interaction),
         shape = shape,
-        color = if (note.pinned) {
+        color = if (note.pinned && !oneUi) {
             MaterialTheme.colorScheme.surfaceContainerHigh
         } else {
             MaterialTheme.colorScheme.surfaceContainerLow

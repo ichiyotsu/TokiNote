@@ -160,6 +160,9 @@ class TokiStore(context: Context) {
                 themeMode = runCatching {
                     ThemeMode.valueOf(json.optString("themeMode", ThemeMode.System.name))
                 }.getOrDefault(ThemeMode.System),
+                designStyle = runCatching {
+                    DesignStyle.valueOf(json.optString("designStyle", DesignStyle.MaterialExpressive.name))
+                }.getOrDefault(DesignStyle.MaterialExpressive),
                 dynamicColor = json.optBoolean("dynamicColor", true),
                 colorPreset = runCatching {
                     ColorPreset.valueOf(json.optString("colorPreset", ColorPreset.Matcha.name))
@@ -186,6 +189,7 @@ class TokiStore(context: Context) {
     fun saveSettings(settings: AppSettings) {
         val json = JSONObject().apply {
             put("themeMode", settings.themeMode.name)
+            put("designStyle", settings.designStyle.name)
             put("dynamicColor", settings.dynamicColor)
             put("colorPreset", settings.colorPreset.name)
             put("amoled", settings.amoled)

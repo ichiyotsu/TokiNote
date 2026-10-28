@@ -67,7 +67,7 @@ import com.tokinote.app.R
 import com.tokinote.app.data.AppSettings
 import com.tokinote.app.data.Attachments
 import com.tokinote.app.ui.TokiMotion
-import com.tokinote.app.ui.theme.ExpressiveChipShape
+import com.tokinote.app.ui.theme.LocalChipShape
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -299,7 +299,7 @@ private fun UserCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(ExpressiveChipShape)
+                    .clip(LocalChipShape.current)
                     .clickable(onClick = onToggle)
                     .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,

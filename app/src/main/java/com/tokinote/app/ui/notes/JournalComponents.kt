@@ -55,7 +55,7 @@ import com.tokinote.app.R
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.ui.pressScale
-import com.tokinote.app.ui.theme.ExpressiveCardShape
+import com.tokinote.app.ui.theme.LocalCardShape
 import com.tokinote.app.ui.theme.labelInk
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -97,7 +97,7 @@ fun JournalCard(
     showTime: Boolean = true,
     labels: List<Label> = emptyList(),
 ) {
-    val shape = ExpressiveCardShape
+    val shape = LocalCardShape.current
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     var bounds by remember { mutableStateOf(Rect.Zero) }
     val haptic = LocalHapticFeedback.current

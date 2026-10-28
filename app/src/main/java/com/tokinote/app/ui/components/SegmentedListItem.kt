@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.tokinote.app.data.DesignStyle
+import com.tokinote.app.ui.theme.LocalDesignStyle
 
 /**
  * 分段列表的外形：首项大圆角在上，末项大圆角在下，中间只有小圆角，
@@ -58,13 +60,19 @@ fun SegmentedListItem(
     subtitle: String? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    val shape = segmentedShape(index, count)
+    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
+    val shape = if (oneUi) RoundedCornerShape(26.dp) else segmentedShape(index, count)
+    val container = if (oneUi) {
+        MaterialTheme.colorScheme.surfaceContainerLow
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(container)
             .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,

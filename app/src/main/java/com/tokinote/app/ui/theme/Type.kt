@@ -118,3 +118,80 @@ val TokiTypography: Typography = Typography()
             fontWeight = FontWeight.SemiBold,
         ),
     )
+
+/**
+ * One UI 的排版更接近系统无衬线字体：标题更粗、行高更舒展，
+ * 正文使用系统字体而不是 Expressive 的 Google Sans Flex。
+ */
+val OneUITypography: Typography = Typography()
+    .withFont(FontFamily.SansSerif)
+    .copy(
+        displayLarge = Typography().displayLarge.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Bold,
+            fontSize = 56.sp,
+            lineHeight = 64.sp,
+            letterSpacing = (-1.2).sp,
+        ),
+        headlineLarge = Typography().headlineLarge.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Bold,
+            fontSize = 34.sp,
+            lineHeight = 42.sp,
+            letterSpacing = (-0.4).sp,
+        ),
+        headlineMedium = Typography().headlineMedium.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Bold,
+            fontSize = 28.sp,
+            lineHeight = 36.sp,
+            letterSpacing = (-0.2).sp,
+        ),
+        headlineSmall = Typography().headlineSmall.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 24.sp,
+            lineHeight = 32.sp,
+        ),
+        titleLarge = Typography().titleLarge.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 22.sp,
+            lineHeight = 28.sp,
+        ),
+        titleMedium = Typography().titleMedium.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 17.sp,
+            lineHeight = 24.sp,
+        ),
+        titleSmall = Typography().titleSmall.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 15.sp,
+            lineHeight = 21.sp,
+        ),
+        bodyLarge = Typography().bodyLarge.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Normal,
+            fontSize = 16.sp,
+            lineHeight = 24.sp,
+        ),
+        bodyMedium = Typography().bodyMedium.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontSize = 14.sp,
+            lineHeight = 21.sp,
+        ),
+        labelLarge = Typography().labelLarge.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+        ),
+        labelMedium = Typography().labelMedium.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            lineHeight = 17.sp,
+        ),
+    )
