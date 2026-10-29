@@ -64,7 +64,7 @@ fun SegmentedListItem(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
-    val shape = if (oneUi) RectangleShape else segmentedShape(index, count)
+    val shape = if (oneUi) RoundedCornerShape(28.dp) else segmentedShape(index, count)
     val container = if (oneUi) {
         MaterialTheme.colorScheme.surfaceContainerLow
     } else {
@@ -78,7 +78,7 @@ fun SegmentedListItem(
             .clip(shape)
             .background(container)
             .drawBehind {
-                if (oneUi && index < count - 1) {
+                if (!oneUi && index < count - 1) {
                     val y = size.height - 1.dp.toPx()
                     drawLine(
                         color = dividerColor,
@@ -151,7 +151,7 @@ fun SegmentedColumn(
     val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     Column(
         modifier = modifier,
-        verticalArrangement = if (oneUi) Arrangement.Top else Arrangement.spacedBy(2.dp),
+        verticalArrangement = if (oneUi) Arrangement.spacedBy(8.dp) else Arrangement.spacedBy(2.dp),
     ) {
         content()
     }

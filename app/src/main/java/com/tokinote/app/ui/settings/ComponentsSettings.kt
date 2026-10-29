@@ -24,6 +24,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -48,11 +49,11 @@ import com.tokinote.app.data.AppSettings
 import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.FocusComponent
 import com.tokinote.app.data.UpdateChecker
+import java.io.File
 import com.tokinote.app.ui.theme.LocalDesignStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 @Composable
 fun ComponentsSettings(
@@ -120,12 +121,6 @@ fun ComponentsSettings(
                     vertical = 12.dp,
                 ),
         ) {
-            Text(
-                text = stringResource(R.string.components_intro),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 16.dp),
-            )
             Surface(
                 shape = RoundedCornerShape(26.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -133,50 +128,38 @@ fun ComponentsSettings(
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp),
-                        ) {
-                            Icon(
-                                Icons.Filled.Timer,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .padding(12.dp)
-                                    .fillMaxSize(),
-                            )
-                        }
-                        Spacer(Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.component_focus_name),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Text(
-                                text = stringResource(R.string.component_focus_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
                         Text(
-                            text = if (installed) {
-                                stringResource(R.string.component_status_installed, installedVersion.orEmpty())
-                            } else {
-                                stringResource(R.string.component_status_missing)
-                            },
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (installed) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
+                            text = stringResource(R.string.component_focus_name),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
                         )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "${componentSizeMb(context)} MB",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.weight(1f))
+                        if (installed) {
+                            Switch(
+                                checked = settings.focusComponentEnabled,
+                                onCheckedChange = { enabled ->
+                                    onUpdate { it.copy(focusComponentEnabled = enabled) }
+                                    onComponentChanged()
+                                },
+                            )
+                            IconButton(onClick = { confirmDelete = true }) {
+                                Icon(
+                                    Icons.Filled.Delete,
+                                    contentDescription = stringResource(R.string.component_delete),
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                        }
                     }
 
-                    Spacer(Modifier.height(18.dp))
                     if (!installed) {
+                        Spacer(Modifier.height(18.dp))
                         if (downloading) {
                             Text(
                                 text = stringResource(R.string.component_downloading),
@@ -194,41 +177,6 @@ fun ComponentsSettings(
                                 Spacer(Modifier.width(8.dp))
                                 Text(stringResource(R.string.component_download))
                             }
-                        }
-                    } else {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.component_enabled),
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
-                                Text(
-                                    text = stringResource(R.string.component_enabled_hint),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            Switch(
-                                checked = settings.focusComponentEnabled,
-                                onCheckedChange = { enabled ->
-                                    onUpdate { it.copy(focusComponentEnabled = enabled) }
-                                    onComponentChanged()
-                                },
-                            )
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        HorizontalDivider()
-                        Spacer(Modifier.height(4.dp))
-                        TextButton(
-                            onClick = { confirmDelete = true },
-                            modifier = Modifier.align(Alignment.End),
-                        ) {
-                            Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.component_delete))
                         }
                     }
 
@@ -291,4 +239,10 @@ fun ComponentsSettings(
             },
         )
     }
+}
+
+private fun componentSizeMb(context: android.content.Context): Long {
+    val dir = File(context.filesDir, "components/focus")
+    val bytes = if (dir.exists()) dir.walkTopDown().filter { it.isFile }.sumOf { it.length() } else 0L
+    return (bytes / (1024L * 1024L)).coerceAtLeast(0L)
 }

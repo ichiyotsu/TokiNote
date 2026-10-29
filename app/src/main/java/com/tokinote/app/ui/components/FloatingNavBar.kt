@@ -94,7 +94,7 @@ fun FloatingNavBar(
         if (oneUi) {
             Row(
                 modifier = Modifier
-                    .widthIn(max = 560.dp)
+                    .widthIn(max = 364.dp)
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -103,10 +103,10 @@ fun FloatingNavBar(
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .height(64.dp)
+                        .height(51.dp)
                         .clip(shape)
                         .then(glass)
-                        .background(Color(0xFF1C1C1E).copy(alpha = 0.55f))
+                        .background(Color(0xFF1C1C1E).copy(alpha = 0.78f))
                         .border(1.dp, Color.White.copy(alpha = 0.14f), shape)
                         .padding(horizontal = 5.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -182,7 +182,7 @@ private fun OneUINavItem(
         Icon(
             imageVector = if (selected) entry.selectedIcon else entry.icon,
             contentDescription = stringResource(entry.label),
-            tint = if (selected) Color.White else Color.White.copy(alpha = 0.68f),
+            tint = if (selected) Color.White else MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
             modifier = Modifier.size(23.dp),
         )
         Spacer(Modifier.height(3.dp))
@@ -275,7 +275,7 @@ fun NavActionButton(
         shadowElevation = if (oneUi) 0.dp else 2.dp,
         interactionSource = interaction,
         modifier = Modifier
-            .size(if (oneUi) 64.dp else 64.dp)
+            .size(if (oneUi) 51.dp else 64.dp)
             .clip(if (oneUi) CircleShape else RoundedCornerShape(18.dp))
             .then(if (oneUi) glass else Modifier)
             .pressScale(interaction, pressedScale = 0.9f),

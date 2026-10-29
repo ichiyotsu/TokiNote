@@ -70,7 +70,6 @@ import com.tokinote.app.ui.TokiMotion
 import com.tokinote.app.ui.pressScale
 import com.tokinote.app.ui.theme.LocalChipShape
 import com.tokinote.app.ui.theme.LocalDesignStyle
-import com.tokinote.app.ui.theme.Micro5Charted
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -183,12 +182,10 @@ fun GroupDrawer(
                 ) {
                     Text(
                         text = " TokiNote ",
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontFamily = Micro5Charted,
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontSize = 31.sp,
                             lineHeight = 35.sp,
-                            fontWeight = FontWeight.Normal,
-                            letterSpacing = 0.sp,
+                            fontWeight = FontWeight.Bold,
                         ),
                         color = MaterialTheme.colorScheme.primary,
                     )

@@ -353,12 +353,14 @@ private fun UserCard(
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                     )
-                    Text(
-                        text = settings.userEmail,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
-                        maxLines = 1,
-                    )
+                    if (settings.userEmail.isNotBlank()) {
+                        Text(
+                            text = settings.userEmail,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                            maxLines = 1,
+                        )
+                    }
                 }
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,

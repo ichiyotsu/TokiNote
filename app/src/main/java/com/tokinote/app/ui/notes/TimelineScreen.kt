@@ -484,19 +484,11 @@ private fun OneUIHomeHeading(
     title: String,
     counts: List<Pair<Int, String>>,
 ) {
-    val date = remember {
-        LocalDate.now().format(DateTimeFormatter.ofPattern("M月d日 EEEE", Locale.CHINA))
-    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 6.dp),
     ) {
-        Text(
-            text = date,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         Text(
             text = title,
             style = MaterialTheme.typography.headlineLarge,
