@@ -2,15 +2,15 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:viewportWidth="24"
+    android:viewportHeight="24">
     <group
-        android:scaleX="0.0406"
-        android:scaleY="0.0406"
-        android:translateX="35.42"
-        android:translateY="73.49">
+        android:scaleX="0.66"
+        android:scaleY="0.66"
+        android:translateX="4.08"
+        android:translateY="4.08">
         <path
             android:fillColor="#FFFFFFFF"
-            android:pathData="M400-280h160v-80H400v80Zm0-160h280v-80H400v80ZM280-600h400v-80H280v80Zm200 120ZM265-80q-79 0-134.5-55.5T75-270q0-57 29.5-102t77.5-68H80v-80h240v240h-80v-97q-37 8-61 38t-24 69q0 46 32.5 78t77.5 32v80Zm135-40v-80h360v-560H200v160h-80v-160q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H400Z" />
+            android:pathData="M6.375 22q-1.875 0-3.187-1.3T1.875 17.525q0-1.325 .675-2.387t1.8-1.638H2v-1.5h5.5v5.5h-1.5v-2.975q-1.125 .125-1.875 .975t-.75 2q0 1.25 .875 2.125t2.125 .875v1.5Zm.55-13.525h10.15v-1.5H6.925v1.5Zm2.075 12.525v-3.975h4.8v-1.5H9v-2.775h8.075v-1.5H9v-.75H3v-6q0-.6 .45-1.05t1.05-.45h15q.6 0 1.05 .45t.45 1.05v15q0 .6-.45 1.05t-1.05 .45H9Z" />
     </group>
 </vector>
