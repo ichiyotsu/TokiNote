@@ -18,7 +18,7 @@ object FocusComponent {
     const val ID = "focus"
     const val VERSION = "1.0.0"
     const val DOWNLOAD_URL =
-        "https://github.com/ichiyotsu/TokiNote/releases/download/0.3.4/focus-component-1.0.zip"
+        "https://github.com/ichiyotsu/TokiNote/releases/download/0.3.5/focus-component-1.0.zip"
 
     /** 组件包校验值；与 Release 中的 zip 保持一致。 */
     const val SHA256 = "B9D2D21E998503C647DFF2AB64AAE122A1EF8DEBF08B146571EB0AC3A5652F84"

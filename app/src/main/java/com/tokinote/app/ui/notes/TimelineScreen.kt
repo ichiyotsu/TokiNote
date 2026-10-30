@@ -565,8 +565,8 @@ private fun NoteFeed(
     )
     val gridPadding = if (oneUi) {
         PaddingValues(
-            start = 0.dp,
-            end = 0.dp,
+            start = 16.dp,
+            end = 16.dp,
             top = padding.calculateTopPadding(),
             bottom = padding.calculateBottomPadding(),
         )
@@ -582,8 +582,8 @@ private fun NoteFeed(
                 modifier = Modifier.fillMaxSize(),
                 state = gridState,
                 contentPadding = gridPadding,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (oneUi) 12.dp else 10.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
             if (pinned.isNotEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {

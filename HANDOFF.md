@@ -10,7 +10,7 @@
 - 当前 Release：正式版 **0.3.5**（Latest，versionCode 22）、Beta **0.3.7-beta.3**（versionCode 24）、**0.3.7-beta.2**、**0.1.0**
 - 发布策略：正式版与 Beta 轮流迭代；**从 0.3.5 起不再删除旧 Release，全部保留历史**
 - 正式版只从 Beta 验证后的内容收敛；Beta 可领先正式版多个版本
-- 发布开关：`TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED = false`，0.3.5 固定 MD3E，外观不显示设计风格入口
+- 发布开关：`TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED = true`，外观显示设计风格入口（MD3E / One UI）
 - 版本规则：
   - 正式版 `x.y.z`：完整、稳定
   - Beta `x.y.z-beta` / `x.y.z-beta.N`：可领先正式版多个版本，也可能包含不同功能
@@ -61,7 +61,7 @@
 - **Pad 横屏适配**：抽屉宽度限制 260dp；笔记网格自适应 2–4 列；专注页时钟左 / 操作右（约 6:4）；设置首页两列，二级页左侧 3:7 快捷栏
 - **设计风格**：外观新增 MD3E / One UI；One UI 采用悬浮玻璃 Dock、全宽列表行、圆形 FAB、线性图标、Samsung Sans、#0381FE、26dp focus block、24dp 边距与低饱和蓝粉渐变背景
 - **字体**：外观可选跟随风格、Samsung Sans、GoogleSans、苹方，或导入本地 TTF；导入的字体进入下拉列表并可确认删除；苹方使用设备字体，缺字时回退
-- **可选专注组件**：设置 → 组件；从 0.3.4 Release 的 `focus-component-1.0.zip` 下载并校验 SHA-256，安装到 `files/components/focus`；启用后底栏才显示专注，可关闭开关或删除组件
+- **可选专注组件**：设置 → 组件；从 0.3.5 Release 的 `focus-component-1.0.zip` 下载并校验 SHA-256，安装到 `files/components/focus`；启用后底栏才显示专注，可关闭开关或删除组件
 - **云同步**：数据页选择 Google Drive / OneDrive 文件夹（SAF），上传快照 / 从云端恢复；快照含笔记和专注统计
 - **DOCX**：数据页支持导入 DOCX（归入「导入」分组，标题取文件名）和导出全部笔记
 
