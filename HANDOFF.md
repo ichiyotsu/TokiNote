@@ -1,13 +1,13 @@
 # TokiNote — 交接文档（HANDOFF）
 
-> 最后更新：2026-10-30（0.3.7-beta.3 发布）
+> 最后更新：2026-10-30（0.3.7-beta.4 发布）
 > 工作区：`D:\DSH\TokiNote\project`（git 仓库）；工具：`..\tools`；密钥：`..\keys`
 > 新会话先读本文件，再读 `docs/design-refs/`。
 
 ## 1. 仓库与发布
 
 - 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
-- 当前 Release：正式版 **0.3.5**（Latest，versionCode 22）、Beta **0.3.7-beta.3**（versionCode 24）、**0.3.7-beta.2**、**0.1.0**
+- 当前 Release：正式版 **0.3.5**（Latest，versionCode 22）、Beta **0.3.7-beta.4**（versionCode 25）、**0.3.7-beta.3**、**0.3.7-beta.2**、**0.1.0**
 - 发布策略：正式版与 Beta 轮流迭代；**从 0.3.5 起不再删除旧 Release，全部保留历史**
 - 正式版只从 Beta 验证后的内容收敛；Beta 可领先正式版多个版本
 - 发布开关：`TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED = true`，外观显示设计风格入口（MD3E / One UI）
@@ -35,14 +35,14 @@
 - 无系统 git/gh：`tools\mingit\cmd\git.exe`、`tools\gh\bin\gh.exe`
 - gh：`GH_CONFIG_DIR=tools\gh-config`、`LOCALAPPDATA=tools\gh-la`（current dir 是 project，路径写成 `..\tools\...`）
 - 构建：`$env:JAVA_HOME="D:\Application\Android Studio\jbr"; $env:ANDROID_HOME="C:\Users\tokisaki\AppData\Local\Android\Sdk"; .\gradlew.bat --offline assembleDebug`
-- 发版构建（0.3.7-beta.3 示例）：
+- 发版构建（0.3.7-beta.4 示例）：
   ```powershell
-  $env:VERSION_NAME='0.3.7-beta.3'; $env:VERSION_CODE='24'
+  $env:VERSION_NAME='0.3.7-beta.4'; $env:VERSION_CODE='25'
   $env:KEYSTORE_FILE='D:\DSH\TokiNote\keys\release.jks'
   $env:KEYSTORE_PASSWORD='…'; $env:KEY_ALIAS='tokinote'; $env:KEY_PASSWORD='…'
   .\gradlew.bat --offline assembleRelease -x lintVitalAnalyzeRelease -x lintVitalRelease
-  Copy-Item app\build\outputs\apk\release\app-release.apk build\TokiNote-0.3.7-beta.3.apk
-  gh release create 0.3.7-beta.3 build\TokiNote-0.3.7-beta.3.apk --title "0.3.7 Beta 3" --notes-file .github\release-notes\0.3.7-beta.3.md --target main --prerelease
+  Copy-Item app\build\outputs\apk\release\app-release.apk build\TokiNote-0.3.7-beta.4.apk
+  gh release create 0.3.7-beta.4 build\TokiNote-0.3.7-beta.4.apk --title "0.3.7 Beta 4" --notes-file .github\release-notes\0.3.7-beta.4.md --target main --prerelease
   ```
 - 模拟器 AVD `Pixel_10_Pro`（API 37）；**adb 手势注入对 Compose 不稳定**，长按/点击常无效，交互验证优先真机
 - github.com:443 时不时机翻；`git push` 失败可改用 GitHub Git Data API
@@ -92,7 +92,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 当前为 0.3.5 正式版 + 0.3.7-beta.3 + 0.3.7-beta.2 + 0.1.0；后续正式版/Beta 轮流迭代，旧 Release 全部保留；0.3.5 固定 MD3E；APK 命名 `TokiNote-<version>.apk`
+2. 当前为 0.3.5 正式版 + 0.3.7-beta.4 + 0.3.7-beta.3 + 0.3.7-beta.2 + 0.1.0；后续正式版/Beta 轮流迭代，旧 Release 全部保留；One UI 入口已开启；APK 命名 `TokiNote-<version>.apk`
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
