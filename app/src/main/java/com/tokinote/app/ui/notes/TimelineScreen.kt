@@ -563,27 +563,36 @@ private fun NoteFeed(
         top = topInset + 4.dp,
         bottom = contentPadding.calculateBottomPadding() + 80.dp,
     )
-    val gridPadding = if (oneUi) {
-        PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = padding.calculateTopPadding(),
-            bottom = padding.calculateBottomPadding(),
-        )
-    } else {
-        padding
-    }
-
     if (viewMode == HomeViewMode.Grid) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val columns = (maxWidth / 190.dp).toInt().coerceIn(2, 4)
+            val horizontalPadding = when {
+                maxWidth >= 840.dp -> 32.dp
+                maxWidth >= 600.dp -> 24.dp
+                else -> 16.dp
+            }
+            val gridGap = when {
+                maxWidth >= 840.dp -> 20.dp
+                maxWidth >= 600.dp -> 16.dp
+                else -> 12.dp
+            }
+            val responsiveGridPadding = if (oneUi) {
+                PaddingValues(
+                    start = horizontalPadding,
+                    end = horizontalPadding,
+                    top = padding.calculateTopPadding(),
+                    bottom = padding.calculateBottomPadding(),
+                )
+            } else {
+                padding
+            }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),
                 modifier = Modifier.fillMaxSize(),
                 state = gridState,
-                contentPadding = gridPadding,
-                horizontalArrangement = Arrangement.spacedBy(if (oneUi) 12.dp else 10.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = responsiveGridPadding,
+                horizontalArrangement = Arrangement.spacedBy(gridGap),
+                verticalArrangement = Arrangement.spacedBy(gridGap),
             ) {
             if (pinned.isNotEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
