@@ -2,6 +2,7 @@ package com.tokinote.app.data
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.tokinote.app.TokiNoteApplication
 import java.time.LocalDate
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,7 @@ import kotlinx.coroutines.flow.update
  */
 class AppViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val store = TokiStore(application)
+    private val store = (application as TokiNoteApplication).store
 
     private val _notes = MutableStateFlow(store.loadNotes())
     val notes: StateFlow<List<Note>> = _notes.asStateFlow()
@@ -44,6 +45,19 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _sessions = MutableStateFlow(store.loadSessions())
     val sessions: StateFlow<List<FocusSession>> = _sessions.asStateFlow()
+
+    private val sessionListener: (FocusSession) -> Unit = { session ->
+        _sessions.update { current -> if (session in current) current else current + session }
+    }
+
+    init {
+        store.addSessionListener(sessionListener)
+    }
+
+    override fun onCleared() {
+        store.removeSessionListener(sessionListener)
+        super.onCleared()
+    }
 
     /* ----------------------------- notes ----------------------------- */
 
@@ -221,18 +235,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     /* ----------------------------- focus ----------------------------- */
 
-    fun recordFocusSession(minutes: Int) {
+    fun recordFocusSession(minutes: Int, endedAt: Long = System.currentTimeMillis()) {
         if (minutes <= 0) return
-        val updated = _sessions.value + FocusSession(System.currentTimeMillis(), minutes)
-        _sessions.update { updated }
-        store.saveSessions(updated)
+        store.appendSession(FocusSession(endedAt, minutes))
     }
 
-    fun recordBreakSession(minutes: Int) {
+    fun recordBreakSession(minutes: Int, endedAt: Long = System.currentTimeMillis()) {
         if (minutes <= 0) return
-        val updated = _sessions.value + FocusSession(System.currentTimeMillis(), 0, minutes)
-        _sessions.update { updated }
-        store.saveSessions(updated)
+        store.appendSession(FocusSession(endedAt, 0, minutes))
     }
 
     /* ----------------------------- data ----------------------------- */
@@ -297,6 +307,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _folders.update { emptyList() }
         _sessions.update { emptyList() }
         _settings.update { AppSettings() }
+        val engine = (getApplication() as TokiNoteApplication).focusEngine
+        engine.reset()
+        engine.configure(AppSettings())
     }
 
     private fun updateNotes(transform: (List<Note>) -> List<Note>) {

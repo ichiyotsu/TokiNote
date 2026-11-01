@@ -28,9 +28,20 @@ import com.tokinote.app.data.AppViewModel
 import com.tokinote.app.data.ThemeMode
 import com.tokinote.app.ui.TokiNoteApp
 import com.tokinote.app.ui.LocalMotionEnabled
+import com.tokinote.app.ui.focus.FocusUiVisibility
 import com.tokinote.app.ui.theme.TokiNoteTheme
 
 class MainActivity : ComponentActivity() {
+
+    override fun onStart() {
+        super.onStart()
+        FocusUiVisibility.started = true
+    }
+
+    override fun onStop() {
+        FocusUiVisibility.started = false
+        super.onStop()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(

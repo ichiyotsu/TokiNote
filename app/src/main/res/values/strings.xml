@@ -121,6 +121,22 @@
 
     <!-- 计时器 -->
     <string name="timer_custom">自定义</string>
+    <string name="timer_pick_duration">选择时长</string>
+    <string name="timer_confirm">确定</string>
+    <string name="timer_decrease">减少</string>
+    <string name="timer_increase">增加</string>
+    <string name="focus_notif_channel">专注计时</string>
+    <string name="focus_notif_channel_desc">显示正在进行的专注或休息</string>
+    <string name="focus_notif_done_channel">专注结束</string>
+    <string name="focus_notif_done_channel_desc">一段专注或休息结束时提醒</string>
+    <string name="focus_notif_running_focus">专注中</string>
+    <string name="focus_notif_running_short">短休息中</string>
+    <string name="focus_notif_running_long">长休息中</string>
+    <string name="focus_notif_indefinite">不定时专注中</string>
+    <string name="focus_notif_done_focus">专注结束</string>
+    <string name="focus_notif_done_break">休息结束</string>
+    <string name="focus_notif_done_focus_body">已完成 %1$s</string>
+    <string name="focus_notif_done_break_body">休息了 %1$s</string>
 
     <!-- 设置 / 关于 / 更新 -->
     <string name="setting_motion">减弱动效</string>

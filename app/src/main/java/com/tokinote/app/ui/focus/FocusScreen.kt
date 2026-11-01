@@ -1,5 +1,6 @@
 package com.tokinote.app.ui.focus
 
+import android.os.SystemClock
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -38,9 +39,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -61,8 +64,9 @@ import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.ui.LocalMotionEnabled
 import com.tokinote.app.ui.components.GlassIconButton
-import com.tokinote.app.ui.formatClock
+import com.tokinote.app.ui.formatElapsed
 import com.tokinote.app.ui.pressScale
+import kotlinx.coroutines.isActive
 
 @Composable
 fun FocusScreen(
@@ -72,7 +76,7 @@ fun FocusScreen(
     onReset: () -> Unit,
     onSkip: () -> Unit,
     onOpenTimerSettings: () -> Unit,
-    onStartIndefinite: () -> Unit,
+    onScheduleIndefinite: (Long) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     val motion = LocalMotionEnabled.current
@@ -113,17 +117,16 @@ fun FocusScreen(
     LaunchedEffect(animatingOut) {
         if (animatingOut) {
             kotlinx.coroutines.delay(430)
-            onStartIndefinite()
             animatingOut = false
         }
     }
 
-    val progress by animateFloatAsState(
-        targetValue = state.progress,
-        animationSpec = tween(if (motion) 900 else 0),
-        label = "ringProgress",
-    )
-    val displaySeconds = if (state.indefinite) state.elapsedSeconds else state.remainingSeconds
+    val requestIndefinite = {
+        if (!animatingOut && !state.running && !state.indefinite) {
+            if (motion) animatingOut = true
+            onScheduleIndefinite(if (motion) 430L else 0L)
+        }
+    }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -148,13 +151,12 @@ fun FocusScreen(
                 ) {
                     FocusTimer(
                         state = state,
-                        progress = progress,
                         accent = accent,
                         track = track,
                         timeScale = timeScale,
                         timeAlpha = timeAlpha,
                         animatingOut = animatingOut,
-                        onRequestIndefinite = { if (!animatingOut) animatingOut = true },
+                        onRequestIndefinite = requestIndefinite,
                         maxSize = ringSize,
                         timeSize = 96.sp,
                     )
@@ -187,13 +189,12 @@ fun FocusScreen(
             ) {
                 FocusTimer(
                     state = state,
-                    progress = progress,
                     accent = accent,
                     track = track,
                     timeScale = timeScale,
                     timeAlpha = timeAlpha,
                     animatingOut = animatingOut,
-                    onRequestIndefinite = { if (!animatingOut) animatingOut = true },
+                    onRequestIndefinite = requestIndefinite,
                     maxSize = 390.dp,
                     timeSize = 78.sp,
                 )
@@ -224,7 +225,6 @@ fun FocusScreen(
 @Composable
 private fun FocusTimer(
     state: FocusState,
-    progress: Float,
     accent: Color,
     track: Color,
     timeScale: Float,
@@ -235,6 +235,16 @@ private fun FocusTimer(
     timeSize: TextUnit,
     modifier: Modifier = Modifier,
 ) {
+    val now = rememberTimerNow(state.running)
+    val remainingMillis = liveRemainingMillis(state, now)
+    val elapsedMillis = liveElapsedMillis(state, now)
+    val showSeconds = if (state.indefinite) (elapsedMillis / 1000L).toInt() else ceilSeconds(remainingMillis)
+    val progress = if (state.indefinite || state.totalMillis <= 0L) {
+        0f
+    } else {
+        (1f - remainingMillis.toFloat() / state.totalMillis.toFloat()).coerceIn(0f, 1f)
+    }
+    val clockText = formatElapsed(showSeconds)
     Box(
         modifier = modifier
             .widthIn(max = maxSize)
@@ -279,7 +289,7 @@ private fun FocusTimer(
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = formatClock(if (state.indefinite) state.elapsedSeconds else state.remainingSeconds),
+                text = clockText,
                 style = MaterialTheme.typography.displayLarge.copy(
                     fontSize = timeSize,
                     lineHeight = timeSize * 1.05f,
@@ -321,6 +331,9 @@ private fun FocusActions(
 ) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
+            modifier = Modifier
+                .widthIn(max = 360.dp)
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -329,6 +342,7 @@ private fun FocusActions(
                 accent = accent,
                 onAccent = onAccent,
                 onClick = onToggle,
+                modifier = Modifier.weight(1f),
             )
             SecondaryFocusButton(
                 icon = Icons.Filled.Refresh,
@@ -354,7 +368,7 @@ private fun FocusActions(
         Text(
             text = stringResource(
                 R.string.focus_next_hint,
-                formatClock(state.nextMode.minutes(state.settings) * 60),
+                formatElapsed(state.nextMode.minutes(state.settings) * 60),
                 stringResource(state.nextMode.labelRes),
             ),
             style = MaterialTheme.typography.bodyMedium,
@@ -363,12 +377,8 @@ private fun FocusActions(
         )
         Spacer(Modifier.height(18.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            val total = state.settings.sessionsBeforeLongBreak
-            val filled = if (state.completedInCycle > 0 && state.completedInCycle % total == 0) {
-                total
-            } else {
-                state.completedInCycle % total
-            }
+            val total = state.settings.sessionsBeforeLongBreak.coerceAtLeast(1)
+            val filled = filledSessionCount(state.completedInCycle, total, state.mode)
             repeat(total) { index ->
                 Box(
                     modifier = Modifier
@@ -425,6 +435,7 @@ private fun PrimaryFocusButton(
     accent: Color,
     onAccent: Color,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val interaction = remember { MutableInteractionSource() }
     Surface(
@@ -434,8 +445,7 @@ private fun PrimaryFocusButton(
         contentColor = onAccent,
         shadowElevation = 4.dp,
         interactionSource = interaction,
-        modifier = Modifier
-            .width(186.dp)
+        modifier = modifier
             .height(84.dp)
             .pressScale(interaction, pressedScale = 0.88f),
     ) {
@@ -488,5 +498,45 @@ private fun SecondaryFocusButton(
                 modifier = Modifier.size(24.dp),
             )
         }
+    }
+}
+
+internal fun filledSessionCount(completedInCycle: Int, cycleLength: Int, mode: FocusMode): Int {
+    val cycle = cycleLength.coerceAtLeast(1)
+    return if (mode != FocusMode.Focus && completedInCycle > 0 && completedInCycle % cycle == 0) {
+        cycle
+    } else {
+        completedInCycle.mod(cycle)
+    }
+}
+
+@Composable
+private fun rememberTimerNow(running: Boolean): Long {
+    var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    LaunchedEffect(running) {
+        now = SystemClock.elapsedRealtime()
+        if (!running) return@LaunchedEffect
+        while (isActive) {
+            withFrameMillis {
+                now = SystemClock.elapsedRealtime()
+            }
+        }
+    }
+    return now
+}
+
+private fun liveRemainingMillis(state: FocusState, now: Long): Long {
+    return if (state.running && !state.indefinite && state.deadlineElapsed > 0L) {
+        (state.deadlineElapsed - now).coerceAtLeast(0L)
+    } else {
+        state.remainingMillis
+    }
+}
+
+private fun liveElapsedMillis(state: FocusState, now: Long): Long {
+    return when {
+        !state.indefinite -> 0L
+        state.running -> state.elapsedBaseMillis + (now - state.runStartedElapsed).coerceAtLeast(0L)
+        else -> state.elapsedBaseMillis
     }
 }

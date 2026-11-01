@@ -1,6 +1,12 @@
 package com.tokinote.app.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -37,6 +43,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -55,6 +62,9 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tokinote.app.R
@@ -132,11 +142,24 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     )
 
     LaunchedEffect(settings) { focusViewModel.configure(settings) }
-    LaunchedEffect(focusViewModel) {
-        focusViewModel.focusCompleted.collect { minutes -> viewModel.recordFocusSession(minutes) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, focusViewModel) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) focusViewModel.sync()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    LaunchedEffect(focusViewModel) {
-        focusViewModel.breakCompleted.collect { minutes -> viewModel.recordBreakSession(minutes) }
+    val notificationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { }
+    fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < 33) return
+        val granted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!granted) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
     val backStack = rememberSaveable(
@@ -325,11 +348,17 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                 Dest.Focus -> FocusScreen(
                     state = focusState,
                     contentPadding = padding,
-                    onToggle = focusViewModel::toggle,
+                    onToggle = {
+                        if (!focusState.running) requestNotificationPermission()
+                        focusViewModel.toggle()
+                    },
                     onReset = focusViewModel::reset,
                     onSkip = focusViewModel::skip,
                     onOpenTimerSettings = { backStack.add(Dest.Timer) },
-                    onStartIndefinite = focusViewModel::startIndefinite,
+                    onScheduleIndefinite = { delayMs ->
+                        requestNotificationPermission()
+                        focusViewModel.scheduleIndefinite(delayMs)
+                    },
                 )
 
                 Dest.Settings -> SettingsScreen(
