@@ -51,13 +51,13 @@
     <string name="settings_about">关于</string>
     <string name="settings_about_sub">版本 %1$s</string>
     <string name="setting_font">字体</string>
-    <string name="font_auto">跟随设计风格</string>
+    <string name="font_auto">Google Sans（默认）</string>
     <string name="font_samsung">Samsung Sans</string>
     <string name="font_md3e">GoogleSans</string>
     <string name="font_pingfang">苹方</string>
     <string name="font_custom">自定义 TTF</string>
     <string name="font_choose_ttf">选择 TTF</string>
-    <string name="font_system_fallback">苹方使用设备字体，未安装时回退</string>
+    <string name="font_system_fallback">拉丁字母和数字用 Google Sans，中文用思源黑体。子集没有的字回退到系统字体。苹方使用设备字体，未安装时回退。</string>
     <string name="font_custom_failed">无法读取该字体文件</string>
     <string name="font_delete_title">删除这个字体？</string>
     <string name="font_delete_body">字体会从列表中移除；如果正在使用，将切回跟随设计风格。</string>

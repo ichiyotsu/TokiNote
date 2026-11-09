@@ -323,7 +323,8 @@ private fun FontPicker(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedCustom = customFonts.firstOrNull { it.path == selectedPath }
-    val presets = listOf(AppFont.Auto, AppFont.Samsung, AppFont.Md3e, AppFont.PingFang)
+    val shown = if (selected == AppFont.Md3e) AppFont.Auto else selected
+    val presets = listOf(AppFont.Auto, AppFont.Samsung, AppFont.PingFang)
     Box {
         Row(
             modifier = Modifier
@@ -364,7 +365,7 @@ private fun FontPicker(
                         Text(
                             text = fontLabel(font),
                             style = MaterialTheme.typography.titleSmall,
-                            color = if (font == selected && selected != AppFont.Custom) {
+                            color = if (font == shown && shown != AppFont.Custom) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface
@@ -375,7 +376,7 @@ private fun FontPicker(
                         onSelect(font, "")
                         expanded = false
                     },
-                    trailingIcon = if (font == selected && selected != AppFont.Custom) {
+                    trailingIcon = if (font == shown && shown != AppFont.Custom) {
                         {
                             Icon(
                                 imageVector = Icons.Filled.Check,

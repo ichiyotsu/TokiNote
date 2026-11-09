@@ -7,51 +7,14 @@ import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 
 /**
- * Google Sans Flex (variable), the typeface Tomato uses. Weight is applied through the
- * font's variable axis so the rounded 600/700 cuts look like the reference app.
+ * 左侧抽屉标题使用的展示字体（Google Fonts / Micro 5 Charted）。
+ * 正文和界面排版不用它，走 [GoogleSansFlex]。
  */
-val GoogleSansFlex = FontFamily(
-    Font(
-        resId = R.font.google_sans_flex,
-        weight = FontWeight.Normal,
-        style = FontStyle.Normal,
-        variationSettings = FontVariation.Settings(FontVariation.weight(400)),
-    ),
-    Font(
-        resId = R.font.google_sans_flex,
-        weight = FontWeight.Medium,
-        style = FontStyle.Normal,
-        variationSettings = FontVariation.Settings(FontVariation.weight(500)),
-    ),
-    Font(
-        resId = R.font.google_sans_flex,
-        weight = FontWeight.SemiBold,
-        style = FontStyle.Normal,
-        variationSettings = FontVariation.Settings(FontVariation.weight(600)),
-    ),
-    Font(
-        resId = R.font.google_sans_flex,
-        weight = FontWeight.Bold,
-        style = FontStyle.Normal,
-        variationSettings = FontVariation.Settings(FontVariation.weight(700)),
-    ),
-)
-
-/** 三星 One UI / Samsung Sans（随包提供的拉丁字形，中文由系统字体回退）。 */
-val SamsungSans = FontFamily(
-    Font(R.font.samsung_sans, weight = FontWeight.Normal),
-    Font(R.font.samsung_sans_medium, weight = FontWeight.Medium),
-    Font(R.font.samsung_sans_medium, weight = FontWeight.SemiBold),
-    Font(R.font.samsung_sans_medium, weight = FontWeight.Bold),
-)
-
-/** 左侧抽屉标题使用的展示字体（Google Fonts / Micro 5 Charted）。 */
 val Micro5Charted = FontFamily(
     Font(
         resId = R.font.micro5_charted,
