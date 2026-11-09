@@ -97,7 +97,7 @@ public enum FocusPresentation {
     }
 }
 
-#if canImport(ActivityKit)
+#if os(iOS)
 import ActivityKit
 
 public struct FocusActivityAttributes: ActivityAttributes {
