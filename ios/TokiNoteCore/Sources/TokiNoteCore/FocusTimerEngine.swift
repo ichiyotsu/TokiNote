@@ -62,6 +62,7 @@ public final class FocusTimerEngine {
     private var segmentMinutes = 0
     private var scheduleGeneration = 0
     private var ticker: Task<Void, Never>?
+    private var tickerToken: TickerToken?
     private var indefiniteJob: Task<Void, Never>?
     private var _state: FocusState
 
@@ -390,18 +391,11 @@ public final class FocusTimerEngine {
     private func ensureTickerLocked() {
         guard enableTasks else { return }
         if let ticker, !ticker.isCancelled { return }
-        let box = TaskBox()
-        let task = Task { [weak self] in
-            defer {
-                guard let self else { return }
-                self.lock.lock()
-                if self.ticker === box.task {
-                    self.ticker = nil
-                }
-                self.lock.unlock()
-            }
+        let token = TickerToken()
+        tickerToken = token
+        ticker = Task { [weak self] in
+            guard let self else { return }
             while !Task.isCancelled {
-                guard let self else { return }
                 let (wait, events) = self.tickOnce()
                 self.dispatch(events)
                 if wait <= 0 || Task.isCancelled { break }
@@ -411,9 +405,17 @@ public final class FocusTimerEngine {
                     break
                 }
             }
+            self.clearTicker(token)
         }
-        box.task = task
-        ticker = task
+    }
+
+    private func clearTicker(_ token: TickerToken) {
+        lock.lock()
+        if tickerToken === token {
+            ticker = nil
+            tickerToken = nil
+        }
+        lock.unlock()
     }
 
     private func tickOnce() -> (Int64, [FocusTimerEvent]) {
@@ -428,6 +430,7 @@ public final class FocusTimerEngine {
     private func stopTickerLocked() {
         let job = ticker
         ticker = nil
+        tickerToken = nil
         job?.cancel()
     }
 
@@ -535,6 +538,4 @@ public final class FocusTimerEngine {
     }
 }
 
-private final class TaskBox {
-    var task: Task<Void, Never>?
-}
+private final class TickerToken {}
