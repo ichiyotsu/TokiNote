@@ -67,7 +67,7 @@ public func nextFocusMode(mode: FocusMode, completedInCycle: Int, sessionsBefore
     }
 }
 
-public struct FocusState: Equatable, Sendable {
+public struct FocusTimerState: Equatable, Sendable {
     public var mode: FocusMode
     public var running: Bool
     public var remainingSeconds: Int
@@ -145,14 +145,14 @@ public func filledSessionCount(completedInCycle: Int, cycleLength: Int, mode: Fo
     return remainder >= 0 ? remainder : remainder + cycle
 }
 
-public func liveRemainingMillis(_ state: FocusState, now: Int64) -> Int64 {
+public func liveRemainingMillis(_ state: FocusTimerState, now: Int64) -> Int64 {
     if state.running && !state.indefinite && state.deadlineElapsed > 0 {
         return max(0, state.deadlineElapsed - now)
     }
     return state.remainingMillis
 }
 
-public func liveElapsedMillis(_ state: FocusState, now: Int64) -> Int64 {
+public func liveElapsedMillis(_ state: FocusTimerState, now: Int64) -> Int64 {
     if !state.indefinite { return 0 }
     if state.running {
         return state.elapsedBaseMillis + max(0, now - state.runStartedElapsed)
@@ -160,7 +160,7 @@ public func liveElapsedMillis(_ state: FocusState, now: Int64) -> Int64 {
     return state.elapsedBaseMillis
 }
 
-public func displaySeconds(_ state: FocusState, now: Int64) -> Int {
+public func displaySeconds(_ state: FocusTimerState, now: Int64) -> Int {
     if state.indefinite {
         return max(0, Int(liveElapsedMillis(state, now: now) / 1000))
     }

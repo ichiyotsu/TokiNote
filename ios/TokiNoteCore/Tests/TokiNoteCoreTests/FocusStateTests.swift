@@ -1,42 +1,42 @@
 import Testing
 @testable import TokiNoteCore
 
-struct FocusStateTests {
+struct FocusTimerStateTests {
     private let settings = AppSettings(sessionsBeforeLongBreak: 4)
 
     @Test("early focus sessions lead to a short break")
     func earlyFocusSessionsLeadToAShortBreak() {
-        let state = FocusState(mode: .focus, completedInCycle: 0, settings: settings)
+        let state = FocusTimerState(mode: .focus, completedInCycle: 0, settings: settings)
         #expect(state.nextMode == .shortBreak)
     }
 
     @Test("every fourth focus session leads to a long break")
     func everyFourthFocusSessionLeadsToALongBreak() {
-        let state = FocusState(mode: .focus, completedInCycle: 3, settings: settings)
+        let state = FocusTimerState(mode: .focus, completedInCycle: 3, settings: settings)
         #expect(state.nextMode == .longBreak)
     }
 
     @Test("breaks always lead back to focus")
     func breaksAlwaysLeadBackToFocus() {
-        let shortBreak = FocusState(mode: .shortBreak, settings: settings)
-        let longBreak = FocusState(mode: .longBreak, settings: settings)
+        let shortBreak = FocusTimerState(mode: .shortBreak, settings: settings)
+        let longBreak = FocusTimerState(mode: .longBreak, settings: settings)
         #expect(shortBreak.nextMode == .focus)
         #expect(longBreak.nextMode == .focus)
     }
 
     @Test("progress reflects elapsed time")
     func progressReflectsElapsedTime() {
-        let half = FocusState(remainingSeconds: 750, totalSeconds: 1500)
-        let fresh = FocusState(remainingSeconds: 1500, totalSeconds: 1500)
+        let half = FocusTimerState(remainingSeconds: 750, totalSeconds: 1500)
+        let fresh = FocusTimerState(remainingSeconds: 1500, totalSeconds: 1500)
         #expect(abs(half.progress - 0.5) < 0.001)
         #expect(abs(fresh.progress) < 0.001)
     }
 
     @Test("session index wraps inside the cycle")
     func sessionIndexWrapsInsideTheCycle() {
-        #expect(FocusState(completedInCycle: 0, settings: settings).sessionIndex == 1)
-        #expect(FocusState(completedInCycle: 3, settings: settings).sessionIndex == 4)
-        #expect(FocusState(completedInCycle: 4, settings: settings).sessionIndex == 1)
+        #expect(FocusTimerState(completedInCycle: 0, settings: settings).sessionIndex == 1)
+        #expect(FocusTimerState(completedInCycle: 3, settings: settings).sessionIndex == 4)
+        #expect(FocusTimerState(completedInCycle: 4, settings: settings).sessionIndex == 1)
     }
 
     @Test("session dots reset when the next focus cycle starts")
@@ -49,7 +49,7 @@ struct FocusStateTests {
 
     @Test("zero length cycle does not divide by zero")
     func zeroLengthCycleDoesNotDivideByZero() {
-        let state = FocusState(settings: AppSettings(sessionsBeforeLongBreak: 0))
+        let state = FocusTimerState(settings: AppSettings(sessionsBeforeLongBreak: 0))
         #expect(state.nextMode == .longBreak)
         #expect(state.sessionIndex == 1)
     }

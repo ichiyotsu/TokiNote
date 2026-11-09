@@ -66,7 +66,7 @@ public enum FocusWidgetStore {
 
 public enum FocusPresentation {
     public static func widgetSnapshot(
-        state: FocusState,
+        state: FocusTimerState,
         nowElapsed: Int64,
         nowWall: Int64,
         modeTitle: String,

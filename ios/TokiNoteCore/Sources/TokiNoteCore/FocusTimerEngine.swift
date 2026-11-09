@@ -47,7 +47,7 @@ public final class FocusTimerEngine {
     private let lock = NSRecursiveLock()
 
     public var sessionRecorder: (FocusSession) -> Void
-    private var stateSink: ((FocusState) -> Void)?
+    private var stateSink: ((FocusTimerState) -> Void)?
 
     private var settings: AppSettings
     private var phase: FocusPhase = .idle
@@ -64,7 +64,7 @@ public final class FocusTimerEngine {
     private var ticker: Task<Void, Never>?
     private var tickerToken: TickerToken?
     private var indefiniteJob: Task<Void, Never>?
-    private var _state: FocusState
+    private var _state: FocusTimerState
 
     public init(
         clock: FocusClock,
@@ -78,7 +78,7 @@ public final class FocusTimerEngine {
         self.enableTasks = enableTasks
         self.sessionRecorder = sessionRecorder
         self.settings = initialSettings
-        self._state = FocusState(settings: initialSettings)
+        self._state = FocusTimerState(settings: initialSettings)
         if let saved = persistence.load() {
             applySnapshot(saved)
         } else {
@@ -87,13 +87,13 @@ public final class FocusTimerEngine {
         _state = derive(clock.elapsedRealtime())
     }
 
-    public var state: FocusState {
+    public var state: FocusTimerState {
         lock.lock()
         defer { lock.unlock() }
         return _state
     }
 
-    public var onStateChange: ((FocusState) -> Void)? {
+    public var onStateChange: ((FocusTimerState) -> Void)? {
         get {
             lock.lock()
             defer { lock.unlock() }
@@ -482,7 +482,7 @@ public final class FocusTimerEngine {
         )
     }
 
-    private func derive(_ now: Int64) -> FocusState {
+    private func derive(_ now: Int64) -> FocusTimerState {
         let liveRemaining: Int64
         if indefinite {
             liveRemaining = 0
@@ -499,7 +499,7 @@ public final class FocusTimerEngine {
         } else {
             liveElapsed = elapsedBaseMillis
         }
-        return FocusState(
+        return FocusTimerState(
             mode: mode,
             running: phase == .running,
             remainingSeconds: ceilSeconds(liveRemaining),

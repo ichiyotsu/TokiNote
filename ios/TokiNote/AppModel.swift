@@ -58,7 +58,7 @@ final class FocusController {
     private let clock = SystemFocusClock()
     private let notifications: FocusNotificationScheduler
     private let activities = FocusActivityCenter()
-    private(set) var state: FocusState
+    private(set) var state: FocusTimerState
     var onSession: ((FocusSession) -> Void)?
 
     init(settings: AppSettings) {
@@ -135,12 +135,12 @@ final class FocusController {
 
     var elapsedNow: Int64 { clock.elapsedRealtime() }
 
-    private func apply(_ newState: FocusState) {
+    private func apply(_ newState: FocusTimerState) {
         state = newState
         publish(newState)
     }
 
-    private func publish(_ newState: FocusState) {
+    private func publish(_ newState: FocusTimerState) {
         let detail = newState.indefinite
             ? L10n.focusIndefiniteHint
             : L10n.focusSession(newState.sessionIndex, max(newState.settings.sessionsBeforeLongBreak, 1))

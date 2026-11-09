@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 import TokiNoteCore
 
@@ -58,7 +59,7 @@ struct FocusScreen: View {
         }
     }
 
-    private func ring(state: FocusState, now: Int64, accent: Color, maxSide: CGFloat) -> some View {
+    private func ring(state: FocusTimerState, now: Int64, accent: Color, maxSide: CGFloat) -> some View {
         let seconds = displaySeconds(state, now: now)
         let remain = liveRemainingMillis(state, now: now)
         let progress: Double = {
@@ -90,7 +91,7 @@ struct FocusScreen: View {
         .accessibilityAddTraits(.updatesFrequently)
     }
 
-    private func requestIndefinite(_ state: FocusState) {
+    private func requestIndefinite(_ state: FocusTimerState) {
         guard !state.running, !state.indefinite, state.mode == .focus, !hidingDigits else { return }
         let reduce = model.settings.reduceMotion
         if reduce {
@@ -105,7 +106,7 @@ struct FocusScreen: View {
         }
     }
 
-    private func actions(state: FocusState, accent: Color, onAccent: Color) -> some View {
+    private func actions(state: FocusTimerState, accent: Color, onAccent: Color) -> some View {
         VStack(spacing: 18) {
             GlassEffectContainer(spacing: 16) {
                 HStack(spacing: 12) {
@@ -161,7 +162,7 @@ struct FocusScreen: View {
         }
     }
 
-    private func sessionDots(state: FocusState, accent: Color) -> some View {
+    private func sessionDots(state: FocusTimerState, accent: Color) -> some View {
         let total = max(state.settings.sessionsBeforeLongBreak, 1)
         let filled = filledSessionCount(completedInCycle: state.completedInCycle, cycleLength: total, mode: state.mode)
         return HStack(spacing: 7) {

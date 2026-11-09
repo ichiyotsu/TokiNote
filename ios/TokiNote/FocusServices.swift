@@ -13,7 +13,7 @@ final class FocusNotificationScheduler {
         self.clock = clock
     }
 
-    func reschedule(_ state: FocusState) async {
+    func reschedule(_ state: FocusTimerState) async {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [Self.requestID])
         guard state.running, !state.indefinite, state.deadlineElapsed > 0 else { return }
