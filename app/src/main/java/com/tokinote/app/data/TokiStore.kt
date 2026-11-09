@@ -162,9 +162,6 @@ class TokiStore(context: Context) {
                 themeMode = runCatching {
                     ThemeMode.valueOf(json.optString("themeMode", ThemeMode.System.name))
                 }.getOrDefault(ThemeMode.System),
-                designStyle = runCatching {
-                    DesignStyle.valueOf(json.optString("designStyle", DesignStyle.MaterialExpressive.name))
-                }.getOrDefault(DesignStyle.MaterialExpressive),
                 font = runCatching {
                     AppFont.valueOf(json.optString("font", AppFont.Auto.name))
                 }.getOrDefault(AppFont.Auto),
@@ -208,7 +205,6 @@ class TokiStore(context: Context) {
     fun saveSettings(settings: AppSettings) {
         val json = JSONObject().apply {
             put("themeMode", settings.themeMode.name)
-            put("designStyle", settings.designStyle.name)
             put("font", settings.font.name)
             put("customFontPath", settings.customFontPath)
             put("customFonts", JSONArray().apply {

@@ -68,6 +68,29 @@ class UpdateCheckerTest {
             "release",
         )
         assertTrue(releaseOnly?.version == "0.3.6")
+
+        val installedOnBeta = UpdateChecker.pickLatest(
+            listOf(release("0.3.6"), release("0.3.7-beta.4"), release("windows-1.0.0"), release("ios-1.0.0")),
+            "beta",
+        )
+        assertTrue(installedOnBeta?.version == "0.3.7-beta.4")
+        assertTrue(UpdateChecker.isNewer("0.3.7-beta.4", "0.3.6"))
+        assertFalse(UpdateChecker.isNewer("0.3.6", "0.3.7-beta.4"))
+    }
+
+    @Test
+    fun `windows and ios tags are not android releases`() {
+        assertFalse(UpdateChecker.isAndroidRelease("windows-0.3.6"))
+        assertFalse(UpdateChecker.isAndroidRelease("ios-0.3.6"))
+        assertFalse(UpdateChecker.isAndroidRelease("Windows-1.0"))
+        assertTrue(UpdateChecker.isAndroidRelease("0.3.6"))
+        assertTrue(UpdateChecker.isAndroidRelease("0.3.7-beta.4"))
+
+        val latest = UpdateChecker.pickLatest(
+            listOf(release("windows-9.0.0"), release("ios-9.0.0"), release("0.3.5")),
+            "release",
+        )
+        assertTrue(latest?.version == "0.3.5")
     }
 
     private fun release(version: String): ReleaseInfo = ReleaseInfo(

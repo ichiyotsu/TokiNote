@@ -63,12 +63,12 @@ class MainActivity : ComponentActivity() {
 
             TokiNoteTheme(
                 darkTheme = darkTheme,
-                designStyle = settings.designStyle,
                 font = settings.font,
                 customFontPath = settings.customFontPath,
                 dynamicColor = settings.dynamicColor,
                 amoled = settings.amoled,
                 colorPreset = settings.colorPreset,
+                reduceMotion = settings.reduceMotion,
             ) {
                 val navigationSurface = MaterialTheme.colorScheme.surface
                 SideEffect {

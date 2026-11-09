@@ -50,9 +50,6 @@
     <string name="settings_data_sub">备份、清空</string>
     <string name="settings_about">关于</string>
     <string name="settings_about_sub">版本 %1$s</string>
-    <string name="design_style">设计风格</string>
-    <string name="design_style_md3e">MD3E</string>
-    <string name="design_style_oneui">One UI</string>
     <string name="setting_font">字体</string>
     <string name="font_auto">跟随设计风格</string>
     <string name="font_samsung">Samsung Sans</string>
@@ -195,6 +192,9 @@
     <string name="checklist_add">添加条目</string>
     <string name="update_in_progress">更新中…</string>
     <string name="focus_indefinite">不定时专注</string>
+    <string name="widget_focus_name">专注计时</string>
+    <string name="widget_focus_desc">在桌面查看正在进行的专注或休息，并可暂停或继续。</string>
+    <string name="widget_focus_time">25:00</string>
     <string name="update_in_progress_short">更新中</string>
     <string name="archive_title">归档</string>
     <string name="archive_subtitle">归档的笔记不会出现在主页，且不可编辑</string>

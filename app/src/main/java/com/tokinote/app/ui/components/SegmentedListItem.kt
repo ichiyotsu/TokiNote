@@ -26,8 +26,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.tokinote.app.data.DesignStyle
-import com.tokinote.app.ui.theme.LocalDesignStyle
 
 /**
  * 分段列表的外形：首项大圆角在上，末项大圆角在下，中间只有小圆角，
@@ -63,13 +61,8 @@ fun SegmentedListItem(
     subtitle: String? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
-    val shape = if (oneUi) RoundedCornerShape(28.dp) else segmentedShape(index, count)
-    val container = if (oneUi) {
-        MaterialTheme.colorScheme.surfaceContainerLow
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerHigh
-    }
+    val shape = segmentedShape(index, count)
+    val container = MaterialTheme.colorScheme.surfaceContainerHigh
     val dividerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
 
     Row(
@@ -78,7 +71,7 @@ fun SegmentedListItem(
             .clip(shape)
             .background(container)
             .drawBehind {
-                if (!oneUi && index < count - 1) {
+                if (index < count - 1) {
                     val y = size.height - 1.dp.toPx()
                     drawLine(
                         color = dividerColor,
@@ -115,7 +108,7 @@ fun SegmentedListItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (subtitle != null && !oneUi) {
+            if (subtitle != null) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
@@ -148,10 +141,9 @@ fun SegmentedColumn(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     Column(
         modifier = modifier,
-        verticalArrangement = if (oneUi) Arrangement.spacedBy(8.dp) else Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         content()
     }

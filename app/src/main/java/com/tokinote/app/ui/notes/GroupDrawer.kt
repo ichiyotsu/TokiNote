@@ -63,13 +63,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.tokinote.app.R
 import com.tokinote.app.data.AlbumFolder
-import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
 import com.tokinote.app.ui.TokiMotion
 import com.tokinote.app.ui.pressScale
 import com.tokinote.app.ui.theme.LocalChipShape
-import com.tokinote.app.ui.theme.LocalDesignStyle
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -104,7 +102,6 @@ fun GroupDrawer(
     onEditFolder: (AlbumFolder) -> Unit,
 ) {
     BackHandler(enabled = open, onBack = onDismiss)
-    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     var notesExpanded by rememberSaveable { mutableStateOf(true) }
     var albumExpanded by rememberSaveable { mutableStateOf(true) }
     val scrimInteraction = remember { MutableInteractionSource() }
@@ -166,13 +163,7 @@ fun GroupDrawer(
                     modifier = Modifier
                         .matchParentSize()
                         .then(glass)
-                        .background(
-                        if (oneUi) {
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.62f)
-                        } else {
-                            MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.55f)
-                        },
-                    ),
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.55f)),
                 )
                 Column(
                     modifier = Modifier

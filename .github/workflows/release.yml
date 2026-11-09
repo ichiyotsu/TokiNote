@@ -1,5 +1,9 @@
 name: Release
 
+# Trigger an Android release by pushing a plain version tag, for example:
+#   git tag 0.3.6 && git push origin 0.3.6
+# Tags prefixed windows- or ios- do not match. versionCode is the default in
+# app/build.gradle.kts (26 for 0.3.6) unless VERSION_CODE is set in the environment.
 on:
   push:
     tags:
@@ -54,7 +58,6 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          VERSION_CODE: ${{ github.run_number }}
         run: gradle assembleRelease bundleRelease --no-daemon --stacktrace -x lintVitalAnalyzeRelease -x lintVitalRelease
 
       - name: Prepare release notes

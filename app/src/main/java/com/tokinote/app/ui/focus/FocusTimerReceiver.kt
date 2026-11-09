@@ -11,12 +11,14 @@ class FocusTimerReceiver : BroadcastReceiver() {
         val engine = (context.applicationContext as TokiNoteApplication).focusEngine
         when (intent?.action) {
             ACTION_PAUSE -> engine.pause()
+            ACTION_TOGGLE -> engine.toggle()
             ACTION_RESET -> engine.reset()
         }
     }
 
     companion object {
         const val ACTION_PAUSE = "com.tokinote.app.focus.PAUSE"
+        const val ACTION_TOGGLE = "com.tokinote.app.focus.TOGGLE"
         const val ACTION_RESET = "com.tokinote.app.focus.RESET"
 
         fun pending(context: Context, action: String): PendingIntent {

@@ -56,9 +56,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -89,7 +87,6 @@ import com.tokinote.app.ui.settings.SettingsScreen
 import com.tokinote.app.ui.settings.SettingsSidebar
 import com.tokinote.app.ui.settings.UpdateAnnouncementHost
 import com.tokinote.app.ui.theme.LocalDarkTheme
-import com.tokinote.app.ui.theme.LocalDesignStyle
 import com.tokinote.app.ui.theme.tokiGlass
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -116,27 +113,12 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val focusState by focusViewModel.state.collectAsStateWithLifecycle()
     val hazeState = rememberHazeState()
     val darkTheme = LocalDarkTheme.current
-    val accent = MaterialTheme.colorScheme.primary
-    val oneUi = LocalDesignStyle.current == com.tokinote.app.data.DesignStyle.OneUI
-    val smoke = when {
-        oneUi && darkTheme -> Color.Black.copy(alpha = 0.62f)
-        oneUi -> Color.Black.copy(alpha = 0.42f)
-        darkTheme -> Color.Black.copy(alpha = 0.16f)
-        else -> Color.Black.copy(alpha = 0.03f)
-    }
-    val frost = if (oneUi) {
-        Color.White.copy(alpha = if (darkTheme) 0.06f else 0.08f)
-    } else {
-        Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f)
-    }
-    val glassFallback = if (oneUi) {
-        Color.Black.copy(alpha = 0.72f)
-    } else {
-        Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f)
-    }
+    val smoke = if (darkTheme) Color.Black.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.03f)
+    val frost = Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f)
+    val glassFallback = Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f)
     val glass = Modifier.tokiGlass(
         hazeState = hazeState,
-        blurRadius = if (oneUi) 52.dp else 30.dp,
+        blurRadius = 30.dp,
         tints = listOf(smoke, frost),
         fallback = glassFallback,
     )
@@ -207,35 +189,9 @@ fun TokiNoteApp(viewModel: AppViewModel) {
 
     BackHandler(enabled = backStack.size > 1) { goBack() }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .then(
-                if (oneUi) {
-                    Modifier.background(
-                        Brush.linearGradient(
-                            if (darkTheme) {
-                                listOf(
-                                    lerp(Color(0xFF08090D), accent, 0.08f),
-                                    lerp(Color(0xFF0C1424), accent, 0.12f),
-                                    Color(0xFF1A101B),
-                                )
-                            } else {
-                                listOf(
-                                    lerp(Color(0xFFF2F5FB), accent, 0.04f),
-                                    lerp(Color(0xFFF8F2FA), accent, 0.05f),
-                                    Color(0xFFFDF4F7),
-                                )
-                            },
-                        ),
-                    )
-                } else {
-                    Modifier
-                },
-            ),
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            containerColor = if (oneUi) Color.Transparent else MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.surface,
             contentWindowInsets = WindowInsets.safeDrawing,
             bottomBar = {
             AnimatedVisibility(

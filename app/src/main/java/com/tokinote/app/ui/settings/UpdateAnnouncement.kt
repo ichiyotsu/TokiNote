@@ -20,11 +20,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,8 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.tokinote.app.R
 import com.tokinote.app.data.ReleaseInfo
 import com.tokinote.app.data.UpdateChecker
@@ -50,9 +51,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * App-entry update announcement. It only performs the existing GitHub update
- * check and opens a floating bottom card when a newer release exists.
+ * 每次进入应用时检查 GitHub 上的 Android 正式版（或用户选中的 Beta 通道）。
+ * 断网或请求失败时不提示。
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpdateAnnouncementHost(channel: String) {
     val context = LocalContext.current
@@ -106,26 +108,19 @@ fun UpdateAnnouncementHost(channel: String) {
         }
     }
 
-    Dialog(
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
         onDismissRequest = { if (!downloading) info = null },
-        properties = DialogProperties(usePlatformDefaultWidth = false),
+        sheetState = sheetState,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 24.dp),
-            contentAlignment = Alignment.BottomCenter,
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 28.dp),
         ) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 22.dp, vertical = 20.dp),
-                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Filled.SystemUpdate,
@@ -198,15 +193,21 @@ fun UpdateAnnouncementHost(channel: String) {
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        TextButton(
+                            enabled = !downloading,
+                            onClick = { info = null },
+                        ) {
+                            Text(stringResource(R.string.action_cancel))
+                        }
+                        Spacer(Modifier.width(8.dp))
                         Button(
                             enabled = !downloading && currentInfo.apkUrl != null,
                             onClick = { download() },
+                            shape = MaterialTheme.shapes.extraLarge,
                         ) {
                             Text(stringResource(R.string.update_download))
                         }
                     }
-                }
-            }
         }
     }
 }
