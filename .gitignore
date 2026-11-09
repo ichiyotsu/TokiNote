@@ -11,3 +11,7 @@ build/
 *.jks
 *.keystore
 *.b64
+
+# Windows / .NET
+windows/**/bin/
+windows/**/obj/
