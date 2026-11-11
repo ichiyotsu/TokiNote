@@ -261,7 +261,11 @@ public sealed partial class SplashWindow : Window
         {
             KeyTime = KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(milliseconds)),
             Value = to,
-            KeySpline = new KeySpline(x1, y1, x2, y2),
+            KeySpline = new KeySpline
+            {
+                ControlPoint1 = new Windows.Foundation.Point(x1, y1),
+                ControlPoint2 = new Windows.Foundation.Point(x2, y2),
+            },
         });
         Storyboard.SetTarget(animation, target);
         Storyboard.SetTargetProperty(animation, property);
