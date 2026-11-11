@@ -3,7 +3,27 @@ name: CI
 on:
   push:
     branches: [main, master]
+    paths:
+      - 'app/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'gradle.properties'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'settings.gradle.kts'
+      - 'libs.versions.toml'
+      - '.github/workflows/release.yml'
   pull_request:
+    paths:
+      - 'app/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'gradle.properties'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'settings.gradle.kts'
+      - 'libs.versions.toml'
+      - '.github/workflows/release.yml'
 
 concurrency:
   group: ci-${{ github.ref }}
