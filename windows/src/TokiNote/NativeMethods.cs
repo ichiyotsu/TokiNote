@@ -7,6 +7,7 @@ internal static class NativeMethods
     public const int SwHide = 0;
     public const int SwShow = 5;
     public const int WmNcLButtonDown = 0x00A1;
+    public const int WmGetMinMaxInfo = 0x0024;
     public const int HtCaption = 2;
 
     [DllImport("user32.dll")]
@@ -94,6 +95,17 @@ internal static class NativeMethods
     {
         public int X;
         public int Y;
+    }
+
+    /// <summary>Win32 MINMAXINFO：WM_GETMINMAXINFO 的 lParam 指向的结构，五个 POINT 顺序排布。</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MinMaxInfo
+    {
+        public NativePoint PtReserved;
+        public NativePoint PtMaxSize;
+        public NativePoint PtMaxPosition;
+        public NativePoint PtMinTrackSize;
+        public NativePoint PtMaxTrackSize;
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
