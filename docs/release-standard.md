@@ -7,19 +7,19 @@
 - 发布顺序：`0.1.0` → `0.1.1-b1` → `0.1.1-b2` → … → `0.1.1`
 - 测试版可以领先正式版多个版本
 - 同一核心版本里正式版更高：`0.1.1-b1` < `0.1.1`
-- `versionCode` 只递增。0.3.7 的 `versionCode` 是 27
+- `versionCode` 只递增。0.3.8 的 `versionCode` 是 28
 
 ## Tag
 
-- 三个平台共用纯版本号标签：`0.3.7`。也可以用 `v` 前缀。带 `-` 的 tag 由 `.github/workflows/release.yml` 发成 prerelease，其余发成正式 release，并标成 Latest
+- 三个平台共用纯版本号标签：`0.3.8`。也可以用 `v` 前缀。带 `-` 的 tag 由 `.github/workflows/release.yml` 发成 prerelease，其余发成正式 release，并标成 Latest
 - 同一次 Release 放上 Android APK / AAB、`focus-component-1.0.zip`、Windows `-win-x64.zip` 和 iOS IPA
 - 应用内更新都读这个纯版本号。Android 只拿 `.apk`，Windows 只拿 `-win-x64.zip`，iOS 只拿 `.ipa`。没有对应文件的发布会被跳过
 
 ## 安装包
 
-- Android：`TokiNote-0.3.7.apk`（另有 `TokiNote-0.3.7.aab`）
-- iOS：`TokiNote-ios-0.3.7.ipa`（未签名）
-- Windows：`TokiNote-Windows-0.3.7-win-x64.zip`
+- Android：`TokiNote-0.3.8.apk`（另有 `TokiNote-0.3.8.aab`）
+- iOS：`TokiNote-ios-0.3.8.ipa`（未签名）
+- Windows：`TokiNote-Windows-0.3.8-win-x64.zip`
 
 ## Release Notes
 
@@ -52,7 +52,7 @@
 
 | 项目 | 正式版 | 测试版 | 状态 |
 | --- | --- | --- | --- |
-| TokiNote | `0.3.7`（Android versionCode 27；iOS build 2；Windows 0.3.7.0） | 无 | 已发布。三个平台共用标签 `0.3.7` |
+| TokiNote | `0.3.8`（Android versionCode 28；iOS build 3；Windows 0.3.8.0） | 无 | 已发布。三个平台共用标签 `0.3.8` |
 | Luma | 无 | `0.1.0-beta1` | 已发布（历史 tag 例外） |
 | TokiTodo | 无 | `0.1.0-beta.1` | 已发布 |
 

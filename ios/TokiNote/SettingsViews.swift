@@ -16,7 +16,7 @@ struct SettingsView: View {
     private var activeCount: Int { notes.filter { $0.deletedAt == nil }.count }
     private var trashCount: Int { notes.filter { $0.deletedAt != nil }.count }
     private var version: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.3.7"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.3.8"
     }
 
     var body: some View {
@@ -132,7 +132,7 @@ struct UpdateSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     private var current: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.3.7"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.3.8"
     }
 
     var body: some View {

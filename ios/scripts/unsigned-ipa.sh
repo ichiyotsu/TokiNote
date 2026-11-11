@@ -3,7 +3,7 @@
 # Usage: ios/scripts/unsigned-ipa.sh [output.ipa]
 set -eu
 cd "$(dirname "$0")/.."
-OUT="${1:-build/TokiNote-ios-0.3.7.ipa}"
+OUT="${1:-build/TokiNote-ios-0.3.8.ipa}"
 DERIVED="${DERIVED_DATA_PATH:-build/DerivedData}"
 mkdir -p "$(dirname "$OUT")" build
 xcodebuild \

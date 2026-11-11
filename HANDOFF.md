@@ -1,20 +1,20 @@
 # TokiNote — 交接文档（HANDOFF）
 
-> 最后更新：2026-11-11（0.3.7 三端正式版）
+> 最后更新：2026-11-12（0.3.8 三端正式版）
 > 工作区：`D:\DSH\TokiNote\project`（git 仓库）；工具：`..\tools`；密钥：`..\keys`
 > 新会话先读本文件，再读 `docs/design-refs/`。
 
 ## 1. 仓库与发布
 
 - 仓库：https://github.com/ichiyotsu/Tokinote （public，main）
-- 当前 Release：正式版 **0.3.7**（Latest）。一个标签 `0.3.7` 同时放 Android APK / AAB、专注组件、Windows zip 和 iOS IPA。Android versionName 0.3.7 / versionCode 27，iOS build 2，Windows 程序集 0.3.7.0
+- 当前 Release：正式版 **0.3.8**（Latest）。一个标签 `0.3.8` 同时放 Android APK / AAB、专注组件、Windows zip 和 iOS IPA。Android versionName 0.3.8 / versionCode 28，iOS build 3，Windows 程序集 0.3.8.0
 - 发布策略：三端共用纯版本号。带 `-` 的标签是 prerelease。各端只下载自己的文件：`.apk`、`-win-x64.zip`、`.ipa`
 - 外观只有 Material 3 Expressive，没有 One UI 切换
 - 版本规则：
   - 正式版 `X.Y.Z`，测试版 `X.Y.Z-bN`（如 `0.1.1-b1`）。已发布过的 `-beta` 写法更新逻辑仍认得
-  - 同一核心版本里正式版更高：`0.1.1-b1` < `0.1.1`，`0.3.7-beta.4` < `0.3.7`
+  - 同一核心版本里正式版更高：`0.1.1-b1` < `0.1.1`，`0.3.7-beta.4` < `0.3.8`
   - 三个平台的应用内更新都读纯版本号标签，并按文件名挑选安装包
-  - versionCode 只递增。0.3.7 是 27
+  - versionCode 只递增。0.3.8 是 28
 - 不再使用 Alpha 通道
 - 发版前与用户确认版本号和文案
 - Release Notes 固定使用 `docs/release-standard.md` 的「新增功能 / 设计特性」两段式模板；跨工作区同步 Luma、TokiTodo 前需用户确认
@@ -32,13 +32,13 @@
 - 无系统 git/gh：`tools\mingit\cmd\git.exe`、`tools\gh\bin\gh.exe`
 - gh：`GH_CONFIG_DIR=tools\gh-config`、`LOCALAPPDATA=tools\gh-la`（current dir 是 project，路径写成 `..\tools\...`）
 - 构建：`$env:JAVA_HOME="D:\Application\Android Studio\jbr"; $env:ANDROID_HOME="C:\Users\tokisaki\AppData\Local\Android\Sdk"; .\gradlew.bat --offline assembleDebug`
-- 本地对照构建（0.3.7）。正式发布由推送标签 `0.3.7` 触发，不必再手动 `gh release create`：
+- 本地对照构建（0.3.8）。正式发布由推送标签 `0.3.8` 触发，不必再手动 `gh release create`：
   ```powershell
-  $env:VERSION_NAME='0.3.7'; $env:VERSION_CODE='27'
+  $env:VERSION_NAME='0.3.8'; $env:VERSION_CODE='28'
   $env:KEYSTORE_FILE='D:\DSH\TokiNote\keys\release.jks'
   $env:KEYSTORE_PASSWORD='…'; $env:KEY_ALIAS='tokinote'; $env:KEY_PASSWORD='…'
   .\gradlew.bat --offline assembleRelease -x lintVitalAnalyzeRelease -x lintVitalRelease
-  Copy-Item app\build\outputs\apk\release\app-release.apk build\TokiNote-0.3.7.apk
+  Copy-Item app\build\outputs\apk\release\app-release.apk build\TokiNote-0.3.8.apk
   ```
 - 模拟器 AVD `Pixel_10_Pro`（API 37）；**adb 手势注入对 Compose 不稳定**，长按/点击常无效，交互验证优先真机
 - github.com:443 时不时机翻；`git push` 失败可改用 GitHub Git Data API
@@ -55,9 +55,9 @@
 - **玻璃统一入口**：`ui/theme/Glass.kt` 的 `Modifier.tokiGlass()` 统一 Haze 输入、模糊半径、tint 和 fallback；底栏、顶栏与抽屉 30dp 走同一条链路
 - **代码瘦身**：删除 `WavyRing`、旧 `JournalTopBar` / `JournalTabs` / `SearchResultRow` / `NoteGroupBar`、未使用的 ViewModel 方法，以及 107 条废弃字符串；当前 release APK 约 6.5 MB
 - **Pad 横屏适配**：抽屉宽度限制 260dp；笔记网格自适应 2–4 列；专注页时钟左 / 操作右（约 6:4）；设置首页两列，二级页左侧 3:7 快捷栏
-- **设计风格**：0.3.7 只有 Material 3 Expressive，外观里没有 One UI 切换
+- **设计风格**：0.3.8 只有 Material 3 Expressive，外观里没有 One UI 切换
 - **字体**：外观可选跟随风格、Samsung Sans、GoogleSans、苹方，或导入本地 TTF；导入的字体进入下拉列表并可确认删除；苹方使用设备字体，缺字时回退
-- **可选专注组件**：设置 → 组件；从 0.3.7 Release 的 `focus-component-1.0.zip` 下载并校验 SHA-256，安装到 `files/components/focus`；启用后底栏才显示专注，可关闭开关或删除组件。源文件在 `distribution/focus-component-1.0.zip`
+- **可选专注组件**：设置 → 组件；从 0.3.8 Release 的 `focus-component-1.0.zip` 下载并校验 SHA-256，安装到 `files/components/focus`；启用后底栏才显示专注，可关闭开关或删除组件。源文件在 `distribution/focus-component-1.0.zip`
 - **云同步**：数据页选择 Google Drive / OneDrive 文件夹（SAF），上传快照 / 从云端恢复；快照含笔记和专注统计
 - **DOCX**：数据页支持导入 DOCX（归入「导入」分组，标题取文件名）和导出全部笔记
 
@@ -88,7 +88,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 当前正式版是 0.3.7，三个平台共用标签 `0.3.7`。Android APK 命名 `TokiNote-<version>.apk`
+2. 当前正式版是 0.3.8，三个平台共用标签 `0.3.8`。Android APK 命名 `TokiNote-<version>.apk`
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）

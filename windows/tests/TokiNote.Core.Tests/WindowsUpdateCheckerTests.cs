@@ -84,28 +84,28 @@ public class WindowsUpdateCheckerTests
     }
 
     [Fact]
-    public void Version_0_3_7_is_newer_and_releases_without_a_windows_zip_are_ignored()
+    public void Version_0_3_8_is_newer_and_releases_without_a_windows_zip_are_ignored()
     {
-        Assert.True(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.6"));
-        Assert.False(WindowsUpdateChecker.IsNewer("0.3.6", "0.3.7"));
-        Assert.False(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.7"));
-        Assert.True(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.7-beta.4"));
-        Assert.Equal("0.3.7", WindowsUpdateChecker.VersionFromTag("0.3.7"));
-        Assert.Equal("0.3.7", WindowsUpdateChecker.VersionFromTag("v0.3.7"));
-        Assert.True(WindowsUpdateChecker.IsPlainVersionTag("0.3.7"));
-        Assert.False(WindowsUpdateChecker.IsPlainVersionTag("ios-0.3.7"));
-        Assert.False(WindowsUpdateChecker.IsPlainVersionTag("windows-0.3.7"));
+        Assert.True(WindowsUpdateChecker.IsNewer("0.3.8", "0.3.7"));
+        Assert.False(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.8"));
+        Assert.False(WindowsUpdateChecker.IsNewer("0.3.8", "0.3.8"));
+        Assert.True(WindowsUpdateChecker.IsNewer("0.3.8", "0.3.8-beta.4"));
+        Assert.Equal("0.3.8", WindowsUpdateChecker.VersionFromTag("0.3.8"));
+        Assert.Equal("0.3.8", WindowsUpdateChecker.VersionFromTag("v0.3.8"));
+        Assert.True(WindowsUpdateChecker.IsPlainVersionTag("0.3.8"));
+        Assert.False(WindowsUpdateChecker.IsPlainVersionTag("ios-0.3.8"));
+        Assert.False(WindowsUpdateChecker.IsPlainVersionTag("windows-0.3.8"));
 
         var latest = WindowsUpdateChecker.PickLatest([
-            Release("0.3.6"),
             Release("0.3.7"),
-            Release("0.3.8", zip: false),
+            Release("0.3.8"),
+            Release("0.3.9", zip: false),
             Release("ios-9.0.0"),
         ]);
-        Assert.Equal("0.3.7", latest?.Tag);
-        Assert.Equal("0.3.7", latest?.Version);
-        Assert.Equal("0.3.7", AppVersion.Current);
-        Assert.False(WindowsUpdateChecker.IsNewer(AppVersion.Current, "0.3.7"));
+        Assert.Equal("0.3.8", latest?.Tag);
+        Assert.Equal("0.3.8", latest?.Version);
+        Assert.Equal("0.3.8", AppVersion.Current);
+        Assert.False(WindowsUpdateChecker.IsNewer(AppVersion.Current, "0.3.8"));
     }
 
     [Fact]
