@@ -17,6 +17,9 @@ object FocusComponent {
 
     const val ID = "focus"
     const val VERSION = "1.0.0"
+
+    /** 组件包里 manifest.json 声明的最低应用版本；低于它不应再用旧包冒充新组件。 */
+    const val MIN_APP_VERSION = "0.3.4"
     const val DOWNLOAD_URL =
         "https://github.com/ichiyotsu/TokiNote/releases/download/0.3.7/focus-component-1.0.zip"
 
@@ -25,9 +28,24 @@ object FocusComponent {
 
     private const val MANIFEST = "manifest.json"
 
+    /** 安装失败的原因，供设置页向用户说明，而不是只显示一句“失败”。 */
+    sealed interface InstallResult {
+        data object Success : InstallResult
+        data class Failed(val reason: String) : InstallResult
+    }
+
     fun directory(context: Context): File = File(context.filesDir, "components/focus")
 
     fun installed(context: Context): Boolean = installedVersion(context) != null
+
+    /** 已安装组件占用的字节数；包本身很小（0.3.7 的 zip 只有 428 B），不要再按 MB 取整显示成 0 MB。 */
+    fun installedSizeBytes(context: Context): Long {
+        val dir = directory(context)
+        if (!dir.exists()) return 0L
+        return runCatching {
+            dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+        }.getOrDefault(0L)
+    }
 
     fun installedVersion(context: Context): String? = runCatching {
         val file = File(directory(context), MANIFEST)
@@ -51,7 +69,18 @@ object FocusComponent {
             .equals(expected, ignoreCase = true)
     }.getOrDefault(false)
 
-    fun install(context: Context, zip: File): Boolean {
+    fun install(context: Context, zip: File): Boolean =
+        installDetailed(context, zip) is InstallResult.Success
+
+    /**
+     * 解压并校验组件包。之前只返回 Boolean，安装失败时设置页无从分辨
+     * 是包损坏还是版本不对；现在把原因带回来。
+     *
+     * 校验：manifest 必须存在、id 必须是 focus、version 必须等于 [VERSION]。
+     * 版本不对的包（例如旧 Release 的残留 zip）不再静默装上，
+     * 否则底栏入口的状态和实际组件会对不上。
+     */
+    fun installDetailed(context: Context, zip: File): InstallResult {
         val targetDir = directory(context)
         return runCatching {
             targetDir.deleteRecursively()
@@ -75,12 +104,14 @@ object FocusComponent {
             require(manifest.isFile) { "missing manifest" }
             val json = JSONObject(manifest.readText())
             require(json.optString("id") == ID) { "wrong component" }
-            require(json.optString("version").isNotBlank()) { "missing version" }
-            true
+            val version = json.optString("version")
+            require(version.isNotBlank()) { "missing version" }
+            require(version == VERSION) { "unsupported version: $version" }
+            InstallResult.Success
         }.onFailure {
             android.util.Log.e("FocusComponent", "install failed", it)
             targetDir.deleteRecursively()
-        }.getOrDefault(false)
+        }.getOrElse { InstallResult.Failed(it.message ?: "install failed") }
     }
 
     fun delete(context: Context): Boolean = runCatching {

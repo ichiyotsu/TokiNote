@@ -68,7 +68,10 @@ fun ComponentsSettings(
     var installedVersion by remember { mutableStateOf(FocusComponent.installedVersion(context)) }
     var downloading by remember { mutableStateOf(false) }
     var progress by remember { mutableIntStateOf(0) }
-    var failed by remember { mutableStateOf(false) }
+    // 之前只有一个 failed 布尔值，下载、校验、安装三种失败都显示同一句话，
+    // 用户不知道该重试还是该等。现在按步骤区分，分别提示。
+    var failureRes by remember { mutableStateOf<Int?>(null) }
+    var justEnabled by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var deleteFailed by remember { mutableStateOf(false) }
 
@@ -82,25 +85,47 @@ fun ComponentsSettings(
         if (downloading) return
         downloading = true
         progress = 0
-        failed = false
+        failureRes = null
+        justEnabled = false
         deleteFailed = false
         scope.launch {
             val zip = File(context.cacheDir, "focus-component.zip")
-            val ok = withContext(Dispatchers.IO) {
+            // 先删掉上次残留的半截文件，避免这次失败时校验到旧包。
+            zip.delete()
+            val failure: Int? = withContext(Dispatchers.IO) {
                 runCatching {
-                    val downloaded = UpdateChecker.download(FocusComponent.DOWNLOAD_URL, zip) { progress = it }
-                    val checksum = FocusComponent.matchesChecksum(zip, FocusComponent.SHA256)
-                    val installedNow = downloaded && checksum && FocusComponent.install(context, zip)
-                    android.util.Log.d(
-                        "FocusComponent",
-                        "download=$downloaded checksum=$checksum installed=$installedNow size=${zip.length()}",
-                    )
-                    installedNow
-                }.getOrDefault(false)
+                    if (!UpdateChecker.download(FocusComponent.DOWNLOAD_URL, zip) { progress = it }) {
+                        return@runCatching R.string.component_download_failed_download
+                    }
+                    if (!FocusComponent.matchesChecksum(zip, FocusComponent.SHA256)) {
+                        android.util.Log.w(
+                            "FocusComponent",
+                            "checksum mismatch size=${zip.length()}",
+                        )
+                        return@runCatching R.string.component_download_failed_checksum
+                    }
+                    when (val result = FocusComponent.installDetailed(context, zip)) {
+                        is FocusComponent.InstallResult.Success -> null
+                        is FocusComponent.InstallResult.Failed -> {
+                            android.util.Log.w("FocusComponent", "install failed: ${result.reason}")
+                            R.string.component_download_failed_install
+                        }
+                    }
+                }.getOrElse { R.string.component_download_failed_download }
             }
             downloading = false
             zip.delete()
-            if (ok) refresh() else failed = true
+            if (failure == null) {
+                // 关键修复：下载完必须自动启用。之前下载成功后开关仍是关闭的，
+                // focusAvailable = enabled && installed 恒为 false，底栏始终
+                // 不出现专注入口，用户会以为组件“下载了也不能用”。
+                // 开关仍在下面，随时可以关掉。
+                onUpdate { it.copy(focusComponentEnabled = true) }
+                justEnabled = true
+                refresh()
+            } else {
+                failureRes = failure
+            }
         }
     }
 
@@ -133,19 +158,19 @@ fun ComponentsSettings(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "${componentSizeMb(context)} MB",
+                            text = if (installed) {
+                                stringResource(
+                                    R.string.component_status_installed,
+                                    installedVersion ?: FocusComponent.VERSION,
+                                )
+                            } else {
+                                stringResource(R.string.component_status_missing)
+                            },
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.weight(1f))
                         if (installed) {
-                            Switch(
-                                checked = settings.focusComponentEnabled,
-                                onCheckedChange = { enabled ->
-                                    onUpdate { it.copy(focusComponentEnabled = enabled) }
-                                    onComponentChanged()
-                                },
-                            )
                             IconButton(onClick = { confirmDelete = true }) {
                                 Icon(
                                     Icons.Filled.Delete,
@@ -153,6 +178,52 @@ fun ComponentsSettings(
                                     modifier = Modifier.size(20.dp),
                                 )
                             }
+                        }
+                    }
+
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.component_focus_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = componentSizeText(FocusComponent.installedSizeBytes(context)),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    if (installed) {
+                        Spacer(Modifier.height(14.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.component_enabled),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Text(
+                                    text = stringResource(R.string.component_enabled_hint),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            Switch(
+                                checked = settings.focusComponentEnabled,
+                                onCheckedChange = { enabled ->
+                                    onUpdate { it.copy(focusComponentEnabled = enabled) }
+                                    onComponentChanged()
+                                },
+                            )
+                        }
+                        if (justEnabled && settings.focusComponentEnabled) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.component_download_enabled),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
                         }
                     }
 
@@ -165,10 +236,18 @@ fun ComponentsSettings(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Spacer(Modifier.height(8.dp))
-                            LinearProgressIndicator(
-                                progress = { progress / 100f },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            if (progress <= 0) {
+                                // 总大小未知时 UpdateChecker 不回传进度，
+                                // 显示不定进度条而不是卡在 0%。
+                                LinearProgressIndicator(
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            } else {
+                                LinearProgressIndicator(
+                                    progress = { progress / 100f },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
                         } else {
                             Button(onClick = { download() }, modifier = Modifier.fillMaxWidth()) {
                                 Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -178,13 +257,19 @@ fun ComponentsSettings(
                         }
                     }
 
-                    if (failed) {
+                    failureRes?.let { res ->
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = stringResource(R.string.component_download_failed),
+                            text = stringResource(res),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                         )
+                        Spacer(Modifier.height(8.dp))
+                        Button(onClick = { download() }, modifier = Modifier.fillMaxWidth()) {
+                            Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.component_retry))
+                        }
                     }
                     if (deleteFailed) {
                         Spacer(Modifier.height(8.dp))
@@ -219,6 +304,7 @@ fun ComponentsSettings(
                         if (ok) {
                             installed = false
                             installedVersion = null
+                            justEnabled = false
                             deleteFailed = false
                             onUpdate { it.copy(focusComponentEnabled = false) }
                             onComponentChanged()
@@ -239,8 +325,13 @@ fun ComponentsSettings(
     }
 }
 
-private fun componentSizeMb(context: android.content.Context): Long {
-    val dir = File(context.filesDir, "components/focus")
-    val bytes = if (dir.exists()) dir.walkTopDown().filter { it.isFile }.sumOf { it.length() } else 0L
-    return (bytes / (1024L * 1024L)).coerceAtLeast(0L)
+/**
+ * 组件实际占用的大小。0.3.7 的组件包只有 428 B，之前按 MB 取整
+ * 恒显示“0 MB”，像没装上一样；现在按 B / KB / MB 分档显示。
+ */
+@Composable
+private fun componentSizeText(bytes: Long): String = when {
+    bytes < 1024L -> stringResource(R.string.component_size_b, bytes)
+    bytes < 1024L * 1024L -> stringResource(R.string.component_size_kb, bytes / 1024f)
+    else -> stringResource(R.string.component_size_mb, bytes / (1024f * 1024f))
 }

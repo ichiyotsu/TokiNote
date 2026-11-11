@@ -113,37 +113,62 @@ object UpdateChecker {
         return 0
     }
 
-    /** 下载 APK 到 [destination]，进度回调用 0–100。 */
+    /**
+     * 下载文件到 [destination]，进度回调用 0–100；总大小未知时不回传进度
+     *（调用方在 progress 仍为 0 时显示不定进度），避免把 -1 传给
+     * 其他同样用这个函数的 APK 更新进度条。
+     *
+     * GitHub 的 releases/download 固定先回 302，再跳到 release-assets 的签名地址，
+     * 是跨域跳转。HttpURLConnection 的 instanceFollowRedirects 在跨协议 / 跨域时
+     * 并不总能跟上，之前下载就可能在这里悄悄失败，随后校验一个不完整的文件
+     * 也失败，用户只看到一句“下载或校验失败”。现在手动跟跳转（最多 5 次，
+     * 301/302/303/307/308 都跟，相对 Location 也能解析），每跳都重新带上
+     * User-Agent 和 Accept；下载完按 Content-Length 核对长度，截断的文件
+     * 直接判失败，不让它走到校验那一步。
+     */
     fun download(url: String, destination: File, onProgress: (Int) -> Unit): Boolean {
-        val connection = URL(url).openConnection() as HttpURLConnection
-        connection.connectTimeout = 15_000
-        connection.readTimeout = 30_000
-        connection.instanceFollowRedirects = true
-        connection.setRequestProperty("User-Agent", USER_AGENT)
-        connection.setRequestProperty("Accept", "application/octet-stream")
-        try {
-            val code = connection.responseCode
-            if (code !in 200..299) throw IOException("HTTP $code")
-            val total = connection.contentLength.toLong()
-            var read = 0L
-            connection.inputStream.use { input ->
-                FileOutputStream(destination).use { output ->
-                    val buffer = ByteArray(64 * 1024)
-                    while (true) {
-                        val count = input.read(buffer)
-                        if (count <= 0) break
-                        output.write(buffer, 0, count)
-                        read += count
-                        if (total > 0) {
-                            onProgress(((read * 100) / total).toInt().coerceIn(0, 100))
+        var currentUrl = url
+        repeat(6) { hop ->
+            val connection = URL(currentUrl).openConnection() as HttpURLConnection
+            // 手动跟跳转时必须关掉自动跟随，否则两边会抢。
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = 15_000
+            connection.readTimeout = 30_000
+            connection.setRequestProperty("User-Agent", USER_AGENT)
+            connection.setRequestProperty("Accept", "application/octet-stream")
+            try {
+                val code = connection.responseCode
+                if (code in 301..308 && code != 304) {
+                    val location = connection.getHeaderField("Location")
+                        ?: throw IOException("redirect without Location")
+                    if (hop == 5) throw IOException("too many redirects")
+                    currentUrl = URL(URL(currentUrl), location).toString()
+                    return@repeat
+                }
+                if (code !in 200..299) throw IOException("HTTP $code")
+                val total = connection.contentLength.toLong()
+                var read = 0L
+                connection.inputStream.use { input ->
+                    FileOutputStream(destination).use { output ->
+                        val buffer = ByteArray(64 * 1024)
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count <= 0) break
+                            output.write(buffer, 0, count)
+                            read += count
+                            if (total > 0) {
+                                onProgress(((read * 100) / total).toInt().coerceIn(0, 100))
+                            }
                         }
                     }
                 }
+                if (total > 0 && read != total) throw IOException("truncated download")
+                return destination.length() > 0
+            } finally {
+                connection.disconnect()
             }
-            return destination.length() > 0
-        } finally {
-            connection.disconnect()
         }
+        return false
     }
 
     private fun httpGet(url: String): String {
