@@ -57,13 +57,11 @@ import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
 import com.tokinote.app.data.AlbumFolder
 import com.tokinote.app.data.AppSettings
-import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.Label
 import com.tokinote.app.data.Note
 import com.tokinote.app.data.NoteGroup
 import androidx.compose.ui.graphics.Color
 import com.tokinote.app.ui.theme.LocalDarkTheme
-import com.tokinote.app.ui.theme.LocalDesignStyle
 import com.tokinote.app.ui.theme.tokiGlass
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -177,27 +175,14 @@ fun TimelineScreen(
 
     val hazeState = rememberHazeState()
     val darkTheme = LocalDarkTheme.current
-    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
-    val isPad = LocalConfiguration.current.smallestScreenWidthDp >= 600
     val drawerGlass = Modifier.tokiGlass(
         hazeState = hazeState,
-        blurRadius = if (oneUi) 40.dp else 30.dp,
-        tints = if (oneUi) {
-            listOf(
-                Color.White.copy(alpha = if (darkTheme) 0.06f else 0.55f),
-                Color.White.copy(alpha = if (darkTheme) 0.04f else 0.18f),
-            )
-        } else {
-            listOf(
-                Color.Black.copy(alpha = if (darkTheme) 0.16f else 0.03f),
-                Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f),
-            )
-        },
-        fallback = if (oneUi) {
-            if (darkTheme) Color.Black.copy(alpha = 0.72f) else Color.White.copy(alpha = 0.72f)
-        } else {
-            Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f)
-        },
+        blurRadius = 30.dp,
+        tints = listOf(
+            Color.Black.copy(alpha = if (darkTheme) 0.16f else 0.03f),
+            Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f),
+        ),
+        fallback = Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f),
     )
 
     LaunchedEffect(previewNote) {
@@ -284,33 +269,7 @@ fun TimelineScreen(
                 .onSizeChanged { headerHeight = it.height },
             contentAlignment = Alignment.TopCenter,
         ) {
-            Column(
-                modifier = if (oneUi && isPad) {
-                    Modifier
-                        .widthIn(max = 880.dp)
-                        .fillMaxWidth()
-                } else {
-                    Modifier.fillMaxWidth()
-                },
-            ) {
-                if (oneUi) {
-                    OneUIHomeHeading(
-                        title = when (tab) {
-                            HomeTab.Notes -> selectedGroup?.name ?: stringResource(R.string.nav_notes)
-                            HomeTab.Album -> stringResource(R.string.nav_album)
-                            HomeTab.Stats -> stringResource(R.string.tab_stats)
-                        },
-                        counts = if (tab == HomeTab.Notes) {
-                            listOf(
-                                notes.size to stringResource(R.string.nav_notes),
-                                notes.count { it.pinned } to stringResource(R.string.section_pinned),
-                                labels.size to stringResource(R.string.labels_title),
-                            )
-                        } else {
-                            emptyList()
-                        },
-                    )
-                }
+            Column(modifier = Modifier.fillMaxWidth()) {
                 TopSearchBar(
                     query = query,
                     onQueryChange = { query = it },
@@ -480,53 +439,6 @@ fun TimelineScreen(
 }
 
 @Composable
-private fun OneUIHomeHeading(
-    title: String,
-    counts: List<Pair<Int, String>>,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 6.dp),
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-        )
-        if (counts.isNotEmpty()) {
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                counts.forEach { (count, label) ->
-                    Surface(
-                        shape = RoundedCornerShape(18.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.78f),
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = count.toString(),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun NoteFeed(
     notes: List<Note>,
     labels: List<Label>,
@@ -539,7 +451,6 @@ private fun NoteFeed(
     onLongPress: (Note, Rect) -> Unit,
     onScrollChanged: (Boolean) -> Unit,
 ) {
-    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
     val scrolled = if (viewMode == HomeViewMode.Grid) {
@@ -558,39 +469,24 @@ private fun NoteFeed(
     val pinned = notes.filter { it.pinned }
     val others = notes.filterNot { it.pinned }
     val padding = PaddingValues(
-        start = if (oneUi) 24.dp else 16.dp,
-        end = if (oneUi) 24.dp else 16.dp,
+        start = 16.dp,
+        end = 16.dp,
         top = topInset + 4.dp,
         bottom = contentPadding.calculateBottomPadding() + 80.dp,
     )
     if (viewMode == HomeViewMode.Grid) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val columns = (maxWidth / 190.dp).toInt().coerceIn(2, 4)
-            val horizontalPadding = when {
-                maxWidth >= 840.dp -> 32.dp
-                maxWidth >= 600.dp -> 24.dp
-                else -> 16.dp
-            }
             val gridGap = when {
                 maxWidth >= 840.dp -> 20.dp
                 maxWidth >= 600.dp -> 16.dp
                 else -> 12.dp
             }
-            val responsiveGridPadding = if (oneUi) {
-                PaddingValues(
-                    start = horizontalPadding,
-                    end = horizontalPadding,
-                    top = padding.calculateTopPadding(),
-                    bottom = padding.calculateBottomPadding(),
-                )
-            } else {
-                padding
-            }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),
                 modifier = Modifier.fillMaxSize(),
                 state = gridState,
-                contentPadding = responsiveGridPadding,
+                contentPadding = padding,
                 horizontalArrangement = Arrangement.spacedBy(gridGap),
                 verticalArrangement = Arrangement.spacedBy(gridGap),
             ) {

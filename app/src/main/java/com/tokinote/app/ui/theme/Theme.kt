@@ -4,7 +4,9 @@ import android.os.Build
 import android.graphics.Typeface
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -19,8 +21,6 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import com.tokinote.app.data.AppFont
 import com.tokinote.app.data.ColorPreset
-import com.tokinote.app.data.DesignStyle
-import com.tokinote.app.data.TokiFeatures
 import java.io.File
 
 val lightScheme = lightColorScheme(
@@ -100,89 +100,11 @@ val darkScheme = darkColorScheme(
 )
 
 val LocalDarkTheme = staticCompositionLocalOf { false }
-val LocalDesignStyle = staticCompositionLocalOf { DesignStyle.MaterialExpressive }
 val LocalCardShape = staticCompositionLocalOf<Shape> { ExpressiveCardShape }
 val LocalChipShape = staticCompositionLocalOf<Shape> { ExpressiveChipShape }
 val LocalFabShape = staticCompositionLocalOf<Shape> { ExpressiveFabShape }
 val LocalIslandShape = staticCompositionLocalOf<Shape> { ExpressiveIslandShape }
 val LocalSheetShape = staticCompositionLocalOf<Shape> { ExpressiveSheetShape }
-
-/** One UI 的中性底色与 Samsung 蓝强调色。 */
-val oneUiLightScheme = lightColorScheme(
-    primary = Color(0xFF0381FE),
-    onPrimary = Color(0xFFFAFAFA),
-    primaryContainer = Color(0xFFD6E9FF),
-    onPrimaryContainer = Color(0xFF001B33),
-    secondary = Color(0xFF0072DE),
-    onSecondary = Color(0xFFFAFAFA),
-    secondaryContainer = Color(0xFFE1E8EF),
-    onSecondaryContainer = Color(0xFF111A22),
-    tertiary = Color(0xFF3E91FF),
-    onTertiary = Color(0xFFFAFAFA),
-    tertiaryContainer = Color(0xFFC9E9FF),
-    onTertiaryContainer = Color(0xFF001E2D),
-    error = Color(0xFFBA1A1A),
-    onError = Color.White,
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410002),
-    background = Color(0xFFF2F2F2),
-    onBackground = Color(0xFF000000),
-    surface = Color(0xFFF2F2F2),
-    onSurface = Color(0xFF000000),
-    surfaceVariant = Color(0xFFE8E8E8),
-    onSurfaceVariant = Color(0xFF656565),
-    outline = Color(0xFF8A8A8A),
-    outlineVariant = Color(0xFFDADADA),
-    scrim = Color.Black,
-    inverseSurface = Color(0xFF2E2E2E),
-    inverseOnSurface = Color(0xFFFAFAFA),
-    inversePrimary = Color(0xFF3E91FF),
-    surfaceDim = Color(0xFFE2E2E2),
-    surfaceBright = Color(0xFFFFFFFF),
-    surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFFFFFFF),
-    surfaceContainer = Color(0xFFF2F2F2),
-    surfaceContainerHigh = Color(0xFFE8E8E8),
-    surfaceContainerHighest = Color(0xFFE0E0E0),
-)
-
-val oneUiDarkScheme = darkColorScheme(
-    primary = Color(0xFF0381FE),
-    onPrimary = Color(0xFFFAFAFA),
-    primaryContainer = Color(0xFF00345C),
-    onPrimaryContainer = Color(0xFFD6E9FF),
-    secondary = Color(0xFF3E91FF),
-    onSecondary = Color(0xFFFAFAFA),
-    secondaryContainer = Color(0xFF34414D),
-    onSecondaryContainer = Color(0xFFD4E4F5),
-    tertiary = Color(0xFF3E91FF),
-    onTertiary = Color(0xFFFAFAFA),
-    tertiaryContainer = Color(0xFF004D69),
-    onTertiaryContainer = Color(0xFFC9E9FF),
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFFDAD6),
-    background = Color(0xFF080808),
-    onBackground = Color(0xFFFAFAFA),
-    surface = Color(0xFF080808),
-    onSurface = Color(0xFFFAFAFA),
-    surfaceVariant = Color(0xFF2A2A2A),
-    onSurfaceVariant = Color(0xFFA8A8A8),
-    outline = Color(0xFF8A8A8A),
-    outlineVariant = Color(0xFF3A3A3A),
-    scrim = Color.Black,
-    inverseSurface = Color(0xFFE8E8E8),
-    inverseOnSurface = Color(0xFF2E2E2E),
-    inversePrimary = Color(0xFF0381FE),
-    surfaceDim = Color(0xFF111111),
-    surfaceBright = Color(0xFF3A3A3A),
-    surfaceContainerLowest = Color(0xFF080808),
-    surfaceContainerLow = Color(0xFF121212),
-    surfaceContainer = Color(0xFF1A1A1A),
-    surfaceContainerHigh = Color(0xFF242424),
-    surfaceContainerHighest = Color(0xFF2E2E2E),
-)
 
 private fun ColorScheme.trueBlack(): ColorScheme = copy(
     background = Color.Black,
@@ -251,52 +173,27 @@ private fun ColorScheme.withPreset(preset: ColorPreset, dark: Boolean): ColorSch
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TokiNoteTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    designStyle: DesignStyle = DesignStyle.MaterialExpressive,
     font: AppFont = AppFont.Auto,
     customFontPath: String = "",
     dynamicColor: Boolean = false,
     amoled: Boolean = false,
     colorPreset: ColorPreset = ColorPreset.Matcha,
+    reduceMotion: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val effectiveDesignStyle = if (TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED) {
-        designStyle
-    } else {
-        DesignStyle.MaterialExpressive
-    }
-    val oneUi = effectiveDesignStyle == DesignStyle.OneUI
     val base = when {
-        oneUi -> if (darkTheme) oneUiDarkScheme else oneUiLightScheme
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-
         darkTheme -> darkScheme
         else -> lightScheme
     }
-    val presetBase = when {
-        oneUi && dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val dynamic = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            base.copy(
-                primary = dynamic.primary,
-                onPrimary = dynamic.onPrimary,
-                primaryContainer = dynamic.primaryContainer,
-                onPrimaryContainer = dynamic.onPrimaryContainer,
-            )
-        }
-
-        oneUi -> base.withPreset(colorPreset, darkTheme)
-        dynamicColor -> base
-        else -> base.withPreset(colorPreset, darkTheme)
-    }
-    val seed = if (dynamicColor || oneUi) {
-        Color.Transparent
-    } else {
-        presetBase.primary
-    }
+    val presetBase = if (dynamicColor) base else base.withPreset(colorPreset, darkTheme)
+    val seed = if (dynamicColor) Color.Transparent else presetBase.primary
     val preset = if (seed == Color.Transparent) {
         presetBase
     } else {
@@ -311,51 +208,34 @@ fun TokiNoteTheme(
             surfaceContainerHighest = blend(presetBase.surfaceContainerHighest, 0.13f),
         )
     }
-    val scheme = when {
-        amoled && darkTheme && oneUi -> preset.copy(
-            background = Color.Black,
-            surface = Color.Black,
-            surfaceContainerLowest = Color.Black,
-            surfaceContainerLow = Color(0xFF0A0A0A),
-            surfaceContainer = Color(0xFF121212),
-            surfaceContainerHigh = Color(0xFF1A1A1A),
-            surfaceContainerHighest = Color(0xFF222222),
-        )
-
-        amoled && darkTheme -> preset.trueBlack()
-        else -> preset
-    }
-    val baseTypography = if (oneUi) OneUITypography else TokiTypography
-    val typography = baseTypography.withFont(
-        resolveFontFamily(context, font, customFontPath, oneUi),
-    )
+    val scheme = if (amoled && darkTheme) preset.trueBlack() else preset
+    val typography = TokiTypography.withFont(resolveFontFamily(context, font, customFontPath))
 
     CompositionLocalProvider(
         LocalDarkTheme provides darkTheme,
-        LocalDesignStyle provides effectiveDesignStyle,
-        LocalCardShape provides if (oneUi) OneUICardShape else ExpressiveCardShape,
-        LocalChipShape provides if (oneUi) OneUIChipShape else ExpressiveChipShape,
-        LocalFabShape provides if (oneUi) OneUIFabShape else ExpressiveFabShape,
-        LocalIslandShape provides if (oneUi) OneUIIslandShape else ExpressiveIslandShape,
-        LocalSheetShape provides if (oneUi) OneUISheetShape else ExpressiveSheetShape,
+        LocalCardShape provides ExpressiveCardShape,
+        LocalChipShape provides ExpressiveChipShape,
+        LocalFabShape provides ExpressiveFabShape,
+        LocalIslandShape provides ExpressiveIslandShape,
+        LocalSheetShape provides ExpressiveSheetShape,
     ) {
-        MaterialTheme(
+        MaterialExpressiveTheme(
             colorScheme = scheme,
+            motionScheme = if (reduceMotion) MotionScheme.standard() else MotionScheme.expressive(),
             typography = typography,
-            shapes = if (oneUi) OneUIShapes else TokiShapes,
+            shapes = TokiShapes,
             content = content,
         )
     }
 }
 
-/** 字体预设解析；自定义字体从应用私有目录读取，失败时回退到当前风格默认字体。 */
+/** 字体预设解析；自定义字体从应用私有目录读取，失败时回退到 Google Sans。 */
 private fun resolveFontFamily(
     context: android.content.Context,
     font: AppFont,
     customFontPath: String,
-    oneUi: Boolean,
 ): FontFamily {
-    val fallback = if (oneUi) SamsungSans else GoogleSansFlex
+    val fallback = GoogleSansFlex
     return when (font) {
         AppFont.Auto -> fallback
         AppFont.Samsung -> SamsungSans

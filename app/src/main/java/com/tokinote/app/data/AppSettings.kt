@@ -14,24 +14,13 @@ enum class ColorPreset {
     Orange,
 }
 
-/** 整体设计语言；MD3E 为现有 Expressive，OneUI 为三星 One UI 风格。 */
-enum class DesignStyle {
-    MaterialExpressive,
-    OneUI,
-}
-
-/** 字体预设；Auto 跟随当前设计风格。 */
+/** 字体预设。Auto 使用 Material 3 Expressive 的 Google Sans。 */
 enum class AppFont {
     Auto,
     Samsung,
     Md3e,
     PingFang,
     Custom,
-}
-
-/** 发布开关：开启后外观页显示设计风格入口。 */
-object TokiFeatures {
-    const val DESIGN_STYLE_SWITCH_ENABLED = true
 }
 
 /** 用户导入的自定义字体。 */
@@ -43,7 +32,6 @@ data class CustomFont(
 /** 专注计时器的时长设置，默认值与 Tomato 一致（25 / 5 / 15 / 4）。 */
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.System,
-    val designStyle: DesignStyle = DesignStyle.MaterialExpressive,
     val font: AppFont = AppFont.Auto,
     val customFontPath: String = "",
     val customFonts: List<CustomFont> = emptyList(),

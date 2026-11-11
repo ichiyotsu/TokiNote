@@ -39,7 +39,7 @@ import com.tokinote.app.R
 import com.tokinote.app.data.AppSettings
 import com.tokinote.app.ui.components.GlassIconButton
 import com.tokinote.app.ui.components.PillGroup
-import com.tokinote.app.ui.formatClock
+import com.tokinote.app.ui.formatElapsed
 
 private val focusPresets = listOf(15, 25, 45)
 private val shortPresets = listOf(3, 5, 10)
@@ -105,7 +105,7 @@ fun TimerSettingsScreen(
         ) {
             Spacer(Modifier.height(12.dp))
             Text(
-                text = formatClock(minutes * 60),
+                text = formatElapsed(minutes * 60),
                 style = MaterialTheme.typography.displayLarge.copy(
                     fontSize = 76.sp,
                     lineHeight = 80.sp,
@@ -157,7 +157,7 @@ fun TimerSettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                StepButton(Icons.Filled.Remove) {
+                StepButton(Icons.Filled.Remove, stringResource(R.string.timer_decrease)) {
                     onUpdate { it.copy(sessionsBeforeLongBreak = (it.sessionsBeforeLongBreak - 1).coerceAtLeast(1)) }
                 }
                 Text(
@@ -166,7 +166,7 @@ fun TimerSettingsScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.width(64.dp),
                 )
-                StepButton(Icons.Filled.Add) {
+                StepButton(Icons.Filled.Add, stringResource(R.string.timer_increase)) {
                     onUpdate { it.copy(sessionsBeforeLongBreak = (it.sessionsBeforeLongBreak + 1).coerceAtMost(12)) }
                 }
             }
@@ -209,7 +209,11 @@ fun TimerSettingsScreen(
 }
 
 @Composable
-private fun StepButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+private fun StepButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    onClick: () -> Unit,
+) {
     Surface(
         onClick = onClick,
         shape = CircleShape,
@@ -217,7 +221,7 @@ private fun StepButton(icon: androidx.compose.ui.graphics.vector.ImageVector, on
         modifier = Modifier.size(44.dp),
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Icon(imageVector = icon, contentDescription = description, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -232,9 +236,9 @@ private fun TimePickerHost(
     com.tokinote.app.ui.components.M3TimePickerDialog(
         initialHour = minutes / 60,
         initialMinute = minutes % 60,
-        title = "选择时长",
-        confirmText = "确定",
-        cancelText = "取消",
+        title = stringResource(R.string.timer_pick_duration),
+        confirmText = stringResource(R.string.timer_confirm),
+        cancelText = stringResource(R.string.action_cancel),
         onDismiss = onDismiss,
         onConfirm = { hour, minute -> onApply((hour * 60 + minute).coerceAtLeast(1)) },
     )

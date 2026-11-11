@@ -46,4 +46,20 @@ class FocusStateTest {
         assertEquals(4, FocusState(completedInCycle = 3, settings = settings).sessionIndex)
         assertEquals(1, FocusState(completedInCycle = 4, settings = settings).sessionIndex)
     }
+
+    @Test
+    fun `session dots reset when the next focus cycle starts`() {
+        assertEquals(4, filledSessionCount(4, 4, FocusMode.LongBreak))
+        assertEquals(0, filledSessionCount(4, 4, FocusMode.Focus))
+        assertEquals(1, filledSessionCount(1, 4, FocusMode.ShortBreak))
+        assertEquals(0, filledSessionCount(0, 4, FocusMode.Focus))
+    }
+
+    @Test
+    fun `zero length cycle does not divide by zero`() {
+        val state = FocusState(settings = AppSettings(sessionsBeforeLongBreak = 0))
+
+        assertEquals(FocusMode.LongBreak, state.nextMode)
+        assertEquals(1, state.sessionIndex)
+    }
 }

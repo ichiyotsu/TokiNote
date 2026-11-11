@@ -46,11 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
 import com.tokinote.app.data.AppSettings
-import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.FocusComponent
 import com.tokinote.app.data.UpdateChecker
 import java.io.File
-import com.tokinote.app.ui.theme.LocalDesignStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -117,7 +115,7 @@ fun ComponentsSettings(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(
-                    horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 20.dp,
+                    horizontal = 20.dp,
                     vertical = 12.dp,
                 ),
         ) {

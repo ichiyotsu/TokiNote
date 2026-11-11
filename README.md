@@ -1,55 +1,88 @@
-# tokinote
+# TokiNote
 
-Tokinote 是 Android 上的本地笔记和专注计时应用，界面里的名字是 TokiNote。笔记、图片、标签、分组、相册、个人资料和专注记录写在本机。可以导出 JSON，导入或导出 DOCX 正文，也可以把一份快照写进用户选定的云盘文件夹。检查更新和可选的专注组件包会访问 GitHub。
+TokiNote 是一款本地优先的笔记 + 专注应用。
 
-应用 ID 是 `com.tokinote.app`。源码默认 `versionName` 0.2.8、`versionCode` 1。发布时用环境变量 `VERSION_NAME`、`VERSION_CODE` 覆盖。
+笔记、图片、标签、个人资料和专注记录全部保存在本机；除了「检查更新」和后续的「公告」之外，应用不会发起网络请求。
 
-| 平台 | 版本 |
-| --- | --- |
-| Android | `app/build.gradle.kts` 的 `versionName` 0.2.8，`versionCode` 1。调试包是 `app-debug.apk`。release 构建产出 `app-release.apk` 和 `app-release.aab`。 |
+## 界面
 
-## 版本规则
+| 主页 | 分组抽屉 | 我的 |
+| --- | --- | --- |
+| ![](screenshots/journal.png) | ![](screenshots/drawer.png) | ![](screenshots/profile.png) |
 
-`X.Y.Z`（如 `0.1.0`）是正式版。`X.Y.Z-bN`（如 `0.1.1-b1`）是测试版。发布顺序是 `0.1.0`，然后 `0.1.1-b1`、`0.1.1-b2`，直到 `0.1.1`。测试版版本号领先正式版几个是正常的。tag 加 `v` 前缀，例如 `v0.1.0`、`v0.1.1-b1`。发布工作流里，tag 含 `-b` 时发成 prerelease，其余发成正式 release。同一核心版本里测试版更旧：`0.1.1-b1` < `0.1.1`。`versionCode` 只递增。
+| 编辑器 | 相册 | 图片查看器 |
+| --- | --- | --- |
+| ![](screenshots/editor.png) | ![](screenshots/album.png) | ![](screenshots/viewer.png) |
 
-## 已发布版本
+| 专注 | 专注总结 | 计时设置 |
+| --- | --- | --- |
+| ![](screenshots/focus.png) | ![](screenshots/focus-summary.png) | ![](screenshots/timer.png) |
 
-已发布并仍保留的有 [0.1.0](https://github.com/ichiyotsu/Tokinote/releases/tag/0.1.0)、[0.3.5](https://github.com/ichiyotsu/Tokinote/releases/tag/0.3.5)（Latest）、[0.3.7-beta.2](https://github.com/ichiyotsu/Tokinote/releases/tag/0.3.7-beta.2)、[0.3.7-beta.3](https://github.com/ichiyotsu/Tokinote/releases/tag/0.3.7-beta.3)、[0.3.7-beta.4](https://github.com/ichiyotsu/Tokinote/releases/tag/0.3.7-beta.4)。这些 tag 没有 `v` 前缀。`0.3.7-beta.2`、`0.3.7-beta.3`、`0.3.7-beta.4` 不是 `X.Y.Z-bN`。按现在的规则，最接近的写法是 `0.3.7-b2`、`0.3.7-b3`、`0.3.7-b4`。已发布的 tag 和 Release 仍用原来的名字。
+| 外观 | 数据 | 关于 |
+| --- | --- | --- |
+| ![](screenshots/appearance.png) | ![](screenshots/data.png) | ![](screenshots/about.png) |
 
-安装包文件名：`0.1.0` 是 `app-release.apk`。`0.3.5` 是 `TokiNote-0.3.5.apk`，同一次发布还有 `focus-component-1.0.zip`。`0.3.7-beta.2` 是 `TokiNote-0.3.7-beta.2.apk`。`0.3.7-beta.3` 是 `TokiNote-0.3.7-beta.3.apk`。`0.3.7-beta.4` 是 `TokiNote-0.3.7-beta.4.apk`。`HANDOFF.md` 记录 0.3.5 的 `versionCode` 是 22，0.3.7-beta.4 是 25。源码默认的 `versionCode` 仍是 1。
+## 笔记
 
-## 安装已发布的版本
+- 顶部控制区：导航、搜索、查看方式、排序、头像各自独立；搜索框只有半透明底、无描边，其余为独立悬浮按钮，长按会显示用途提示
+- 笔记列表支持「已置顶 / 全部笔记」分区、两列网格与单列列表；有图时图片在卡片顶部铺满，无图时卡片直接从标题开始
+- 长按卡片会从卡片位置展开预览，可直接打开、归档或删除
+- 左侧悬浮抽屉：笔记 / 相册 / 统计三个入口，笔记分组与相册文件夹可折叠展开，选中项高亮
+- 相册文件夹支持命名、多选照片、查看创建时间、编辑和删除；文件夹只记录照片引用，不复制或删除原图
+- 相册支持网格 / 列表切换；点开照片进入全屏查看器，支持双指缩放、双击放大、保存到系统相册、回到原笔记和查看图片信息
+- 日历视图按天展示日记，有记录的日期显示当天 emoji，选中日期直接列出当天内容
+- 编辑器从首图提取主色，驱动背景、标题、保存按钮和底部工具岛；正文与头部整体滚动，顶栏和工具岛悬浮
+- 向下滚动时大标题缩小、日期标签弹性收起，顶栏显示当前标题；回到顶部自动恢复
+- 底部工具岛默认收起，点击后弹性展开格式、图片、清单和日期工具；顶部「更多」打开笔记信息面板
+- 归档笔记不进入主页且不可编辑；回收站保留 14 天，可恢复或彻底删除
 
-从 [Releases](https://github.com/ichiyotsu/Tokinote/releases) 下载 APK，用系统安装器安装。应用内「检查更新」也可以下载 APK 并交给安装器。没有「安装未知应用」权限时会打开系统设置。
+## 专注
 
-## 从源码构建
+- 支持专注、短休息、长休息计时，时长与长休息间隔可自定义
+- 计时按真实经过时间计算：息屏、切到后台、旋转屏幕或进程被系统回收后，回来仍是正确的剩余时间
+- 计时进行中会显示一条前台通知；到点如果人不在应用里，会再提醒一次。自动开始只接上下一段，不会把离开的时间补记成很多段
+- 桌面小组件「专注计时」显示当前段，暂停和继续会立刻反映到小组件上
+- 大尺寸圆角进度环 + M3E 大胶囊主按钮，重置 / 跳过 / 设置独立排列
+- 长按或双击计时数字进入不定时正向计时，重置后回到原计时
+- 专注总结展示今日专注 / 休息、上周柱状图和上个月迷你柱状图
+- 计时设置提供大号预览、场景切换、预设胶囊和系统时间选择器
 
-```bash
-gradle testDebugUnitTest
-gradle assembleDebug
-gradle assembleRelease
-```
+## 我的
 
-仓库里有 `gradlew`，wrapper 指向 Gradle 9.6.0。CI 直接用预装 Gradle，不用 wrapper。runner 上 `downloads.gradle.org` 会拒绝连接，wrapper 拉不到 9.6.0。
+- 点顶栏头像打开「我的」
+- 头像可从系统相册选择，也可使用内置 emoji
+- 用户名和邮箱可展开编辑，修改立即在全局生效
+- 存储卡显示 APK、本地文件和缓存的占用，点击可直接进入系统应用详情
+- 管理账号与功能入口当前为占位，点击会提示「功能暂不支持」
 
-`VERSION_NAME` 和 `VERSION_CODE` 不设时，用 0.2.8 和 1。`COMPILE_SDK`、`TARGET_SDK` 不设时，用 37。
+## 设置
 
-签名钥匙不在这个仓库里。设置 `KEYSTORE_FILE`、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD` 后，release 用该钥匙签名。没有 `KEYSTORE_FILE` 时，release 使用 debug 签名。
+- 外观：Material 3 Expressive。主题模式（跟随系统 / 浅色 / 深色）、配色预设、动态取色、纯黑、显示时间、减弱动效
+- 默认字体是 Google Sans Flex（拉丁字母和数字）加思源黑体 / Noto Sans SC（中文）。应用里还带了一份常用汉字子集，没有的字回退到系统字体。也可以改成 Samsung Sans、苹方或自己的字体文件
+- 数据：笔记 / 归档 / 回收站数量、备份 JSON、清除缓存、存储占用、清空全部数据
+- 关于：版本信息、检查更新（Release / Beta 复合胶囊）、GitHub 主页
 
-`.github/workflows/release.yml` 在推送 `v` 开头的 tag 时构建 `app-release.apk` 和 `app-release.aab`，并创建 GitHub Release。tag 里有 `-b` 则标成 prerelease，否则标成正式 release。说明文件读 `.github/release-notes/<版本号>.md`，没有文件时用一句占位说明。
+## 应用内更新
 
-## Android 说明
+- 每次启动都会读取 [GitHub Releases](https://api.github.com/repos/ichiyotsu/TokiNote/releases)。只看 Android 标签（`0.3.6` 这种纯版本号）。`windows-` 和 `ios-` 开头的标签会被忽略
+- 正式版通道不提供预发布。`0.3.7-beta` 比已安装的 `0.3.6` 版本号更高，但只有打开 Beta 通道才会提示。同一核心版本仍是正式版优先于 beta
+- 发现新版本时用底部表单展示说明，可以下载 APK 并交给系统安装器。未授权「安装未知应用」时会跳到系统设置
+- 设置 → 关于里可以手动「检查更新」
+- 启动时如果没有网络，检查会安静失败，不弹错误。手动检查失败会在页面里提示
 
-`minSdk` 是 31（Android 12）。`compileSdk` / `targetSdk` 默认 37。工作流安装 `platforms;android-37.0` 和 `build-tools;36.0.0`。
+## 数据与隐私
 
-数据在 `TokiStore` 的 SharedPreferences JSON 里。回收站保留 14 天，启动时删掉过期笔记。归档笔记不进主页，也不能编辑。DOCX 只处理正文段落。云同步通过 SAF 读写用户选中文件夹里的 `tokinote-sync.json`，应用不登录网盘。
+- 所有笔记、图片、标签、分组、相册文件夹、个人资料和专注记录都保存在本机
+- 支持导出完整 JSON 备份；清除缓存不会删除笔记
+- 不接入匿名统计、账号上报或用户画像，不上传用户 ID、邮箱和笔记内容
+- 断网时除检查更新外，所有功能均可正常使用
 
-专注计时在 `FocusViewModel` 里用协程倒数，没有前台 Service。底栏的专注入口要先下载并安装 `focus-component-1.0.zip`（来自 [0.3.5](https://github.com/ichiyotsu/Tokinote/releases/tag/0.3.5)），再打开组件开关。未安装时不显示这个入口。
+## 设计
 
-外观有 `MaterialExpressive` 和 `OneUI` 两套。`TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED` 为 true，外观页可以切换。手机用底部导航。`smallestScreenWidthDp >= 600` 且横屏时，设置改用侧栏。
+界面使用 Material 3 Expressive：大圆角、悬浮玻璃底栏、分段列表和弹性动效。支持深色 / 浅色、纯黑与动态取色。
 
-检查更新请求 `https://api.github.com/repos/ichiyotsu/Tokinote/releases`。Release 通道只匹配 `X.Y.Z`。Beta 通道同时看正式版和 `X.Y.Z-bN`，并仍认已经发布的 `X.Y.Z-beta`、`X.Y.Z-beta.N`，取更高的一个。同一核心版本的正式版高于测试版。`INTERNET` 用于这次检查，以及下载专注组件包。
+## 已知限制
 
-## 许可
-
-仓库根目录的 `LICENSE` 是 GNU GPL-3.0。应用图标是 Material Symbols 的 `article-shortcut`，Apache-2.0，说明在 `docs/icon-sources.md`。
+1. 富文本目前是整条日记级别的字号 / 字重，不是局部加粗
+2. 应用内更新依赖 GitHub 可达。启动时离线不会提示；手动检查失败会在关于页说明。无法安装时会引导到系统设置授权
+3. 桌面小组件在进程被杀掉后，倒计时数字仍由系统时钟继续走；下一段要等进程被拉起后才会切换

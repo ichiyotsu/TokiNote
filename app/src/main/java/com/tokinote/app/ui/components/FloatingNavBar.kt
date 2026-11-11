@@ -51,10 +51,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tokinote.app.R
-import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.ui.Dest
 import com.tokinote.app.ui.pressScale
-import com.tokinote.app.ui.theme.LocalDesignStyle
 
 private data class NavEntry(
     val dest: Dest,
@@ -82,48 +80,15 @@ fun FloatingNavBar(
     showFocus: Boolean = true,
     action: (@Composable () -> Unit)? = null,
 ) {
-    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
-    val shape = RoundedCornerShape(if (oneUi) 36.dp else 36.dp)
+    val shape = RoundedCornerShape(36.dp)
     val entries = if (showFocus) navEntries else navEntries.filterNot { it.dest == Dest.Focus }
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(if (oneUi) 104.dp else 150.dp),
+            .height(150.dp),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        if (oneUi) {
-            Row(
-                modifier = Modifier
-                    .widthIn(max = 364.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(51.dp)
-                        .clip(shape)
-                        .then(glass)
-                        .background(Color(0xFF1C1C1E).copy(alpha = 0.78f))
-                        .border(1.dp, Color.White.copy(alpha = 0.14f), shape)
-                        .padding(horizontal = 5.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    entries.forEach { entry ->
-                        OneUINavItem(
-                            entry = entry,
-                            selected = current == entry.dest,
-                            onSelect = onSelect,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-                action?.invoke()
-            }
-        } else {
-            Row(
+        Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -147,51 +112,6 @@ fun FloatingNavBar(
                 }
                 action?.invoke()
             }
-        }
-    }
-}
-
-@Composable
-private fun OneUINavItem(
-    entry: NavEntry,
-    selected: Boolean,
-    onSelect: (Dest) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val interaction = remember { MutableInteractionSource() }
-    val haptic = LocalHapticFeedback.current
-    Column(
-        modifier = modifier
-            .fillMaxHeight()
-            .clip(RoundedCornerShape(28.dp))
-            .background(
-                if (selected) Color.White.copy(alpha = 0.14f) else Color.Transparent,
-            )
-            .clickable(
-                interactionSource = interaction,
-                indication = ripple(color = Color.White.copy(alpha = 0.18f)),
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onSelect(entry.dest)
-                },
-            )
-            .pressScale(interaction, pressedScale = 0.94f),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = if (selected) entry.selectedIcon else entry.icon,
-            contentDescription = stringResource(entry.label),
-            tint = if (selected) Color.White else MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-            modifier = Modifier.size(23.dp),
-        )
-        Spacer(Modifier.height(3.dp))
-        Text(
-            text = stringResource(entry.label),
-            style = MaterialTheme.typography.labelSmall,
-            color = if (selected) Color.White else Color.White.copy(alpha = 0.68f),
-            maxLines = 1,
-        )
     }
 }
 
@@ -263,28 +183,26 @@ fun NavActionButton(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val haptic = LocalHapticFeedback.current
-    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     Surface(
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             onClick()
         },
-        shape = if (oneUi) CircleShape else RoundedCornerShape(18.dp),
-        color = if (oneUi) Color(0xFF1C1C1E).copy(alpha = 0.82f) else MaterialTheme.colorScheme.primary,
-        contentColor = if (oneUi) Color.White else MaterialTheme.colorScheme.onPrimary,
-        shadowElevation = if (oneUi) 0.dp else 2.dp,
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shadowElevation = 2.dp,
         interactionSource = interaction,
         modifier = Modifier
-            .size(if (oneUi) 51.dp else 64.dp)
-            .clip(if (oneUi) CircleShape else RoundedCornerShape(18.dp))
-            .then(if (oneUi) glass else Modifier)
+            .size(64.dp)
+            .clip(RoundedCornerShape(18.dp))
             .pressScale(interaction, pressedScale = 0.9f),
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                modifier = Modifier.size(if (oneUi) 30.dp else 28.dp),
+                modifier = Modifier.size(28.dp),
             )
         }
     }
