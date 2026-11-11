@@ -23,19 +23,19 @@ struct UpdateCheckerTests {
         #expect(IOSReleaseIndex.isNewer("1.0.1-beta", than: "1.0.0"))
     }
 
-    @Test("ios tags ignore android releases and drafts")
-    func iosTagsIgnoreAndroidReleasesAndDrafts() throws {
+    @Test("plain tags ignore releases without an ipa and drafts")
+    func plainTagsIgnoreReleasesWithoutIpaAndDrafts() throws {
         let json = """
         [
           {"tag_name":"0.3.7","draft":false,"body":"android","html_url":"https://example.com/a","assets":[{"name":"TokiNote-0.3.7.apk","browser_download_url":"https://example.com/a.apk"}]},
-          {"tag_name":"ios-0.1.0","draft":false,"body":"first","html_url":"https://example.com/ios","published_at":"2026-11-01T00:00:00Z","assets":[{"name":"TokiNote-ios-0.1.0.ipa","browser_download_url":"https://example.com/ios.ipa"},{"name":"notes.txt","browser_download_url":"https://example.com/n.txt"}]},
-          {"tag_name":"ios-0.2.0-beta","draft":false,"body":"beta","html_url":"https://example.com/beta","published_at":"2026-11-02T00:00:00Z","assets":[{"name":"TokiNote-ios-0.2.0-beta.ipa","browser_download_url":"https://example.com/beta.ipa"}]},
-          {"tag_name":"ios-9.0.0","draft":true,"body":"hidden","html_url":"https://example.com/draft","assets":[{"name":"TokiNote-ios-9.0.0.ipa","browser_download_url":"https://example.com/draft.ipa"}]},
-          {"tag_name":"ios-0.2.0","draft":false,"body":"stable","html_url":"https://example.com/stable","published_at":"2026-11-03T00:00:00Z","assets":[{"name":"extra.ipa","browser_download_url":"https://example.com/extra.ipa"},{"name":"TokiNote-ios-0.2.0.ipa","browser_download_url":"https://example.com/stable.ipa"}]}
+          {"tag_name":"0.1.0","draft":false,"body":"first","html_url":"https://example.com/ios","published_at":"2026-11-01T00:00:00Z","assets":[{"name":"TokiNote-ios-0.1.0.ipa","browser_download_url":"https://example.com/ios.ipa"},{"name":"notes.txt","browser_download_url":"https://example.com/n.txt"}]},
+          {"tag_name":"0.2.0-beta","draft":false,"body":"beta","html_url":"https://example.com/beta","published_at":"2026-11-02T00:00:00Z","assets":[{"name":"TokiNote-ios-0.2.0-beta.ipa","browser_download_url":"https://example.com/beta.ipa"}]},
+          {"tag_name":"9.0.0","draft":true,"body":"hidden","html_url":"https://example.com/draft","assets":[{"name":"TokiNote-ios-9.0.0.ipa","browser_download_url":"https://example.com/draft.ipa"}]},
+          {"tag_name":"0.2.0","draft":false,"body":"stable","html_url":"https://example.com/stable","published_at":"2026-11-03T00:00:00Z","assets":[{"name":"extra.ipa","browser_download_url":"https://example.com/extra.ipa"},{"name":"TokiNote-ios-0.2.0.ipa","browser_download_url":"https://example.com/stable.ipa"}]}
         ]
         """.data(using: .utf8)!
         let releases = try #require(IOSReleaseIndex.parse(data: json))
-        #expect(releases.map(\.tag) == ["ios-0.1.0", "ios-0.2.0-beta", "ios-0.2.0"])
+        #expect(releases.map(\.tag) == ["0.1.0", "0.2.0-beta", "0.2.0"])
         let newest = try #require(IOSReleaseIndex.newest(releases))
         #expect(newest.version == "0.2.0")
         #expect(newest.ipaURL?.absoluteString == "https://example.com/stable.ipa")
@@ -55,20 +55,21 @@ struct UpdateCheckerTests {
         #expect(!IOSReleaseIndex.isNewer("0.3.6", than: "0.3.7"))
         #expect(!IOSReleaseIndex.isNewer("0.3.7", than: "0.3.7"))
         #expect(IOSReleaseIndex.isNewer("0.3.7", than: "0.3.7-beta.4"))
-        #expect(IOSReleaseIndex.version(fromTag: "ios-0.3.7") == "0.3.7")
-        #expect(IOSReleaseIndex.version(fromTag: "0.3.7") == nil)
+        #expect(IOSReleaseIndex.version(fromTag: "0.3.7") == "0.3.7")
+        #expect(IOSReleaseIndex.version(fromTag: "v0.3.7") == "0.3.7")
+        #expect(IOSReleaseIndex.version(fromTag: "ios-0.3.7") == nil)
         #expect(IOSReleaseIndex.version(fromTag: "windows-0.3.7") == nil)
         let json = """
         [
-          {"tag_name":"0.3.7","draft":false,"body":"android","assets":[{"name":"TokiNote-0.3.7.apk","browser_download_url":"https://example.com/a.apk"}]},
+          {"tag_name":"0.3.8","draft":false,"body":"android","assets":[{"name":"TokiNote-0.3.8.apk","browser_download_url":"https://example.com/a.apk"}]},
           {"tag_name":"windows-0.3.7","draft":false,"body":"windows","assets":[{"name":"TokiNote-Windows-0.3.7-win-x64.zip","browser_download_url":"https://example.com/w.zip"}]},
-          {"tag_name":"ios-0.3.6","draft":false,"body":"old","published_at":"2026-11-01T00:00:00Z","assets":[{"name":"TokiNote-ios-0.3.6.ipa","browser_download_url":"https://example.com/old.ipa"}]},
-          {"tag_name":"ios-0.3.7","draft":false,"body":"new","published_at":"2026-11-11T00:00:00Z","assets":[{"name":"TokiNote-ios-0.3.7.ipa","browser_download_url":"https://example.com/new.ipa"}]}
+          {"tag_name":"0.3.6","draft":false,"body":"old","published_at":"2026-11-01T00:00:00Z","assets":[{"name":"TokiNote-ios-0.3.6.ipa","browser_download_url":"https://example.com/old.ipa"}]},
+          {"tag_name":"0.3.7","draft":false,"body":"new","published_at":"2026-11-11T00:00:00Z","assets":[{"name":"TokiNote-0.3.7.apk","browser_download_url":"https://example.com/a.apk"},{"name":"TokiNote-ios-0.3.7.ipa","browser_download_url":"https://example.com/new.ipa"}]}
         ]
         """.data(using: .utf8)!
         let releases = try #require(IOSReleaseIndex.parse(data: json))
         let newest = try #require(IOSReleaseIndex.newest(releases))
-        #expect(newest.tag == "ios-0.3.7")
+        #expect(newest.tag == "0.3.7")
         #expect(newest.version == "0.3.7")
         #expect(newest.ipaURL?.absoluteString == "https://example.com/new.ipa")
         #expect(IOSReleaseIndex.check(data: json, currentVersion: "0.3.6") == .update(newest))

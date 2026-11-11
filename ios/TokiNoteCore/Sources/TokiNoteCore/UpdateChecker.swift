@@ -41,13 +41,16 @@ public enum IOSReleaseIndex {
     }
 
     public static func version(fromTag tag: String) -> String? {
-        let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.lowercased().hasPrefix("ios-") else { return nil }
-        var version = String(trimmed.dropFirst(4))
-        if version.lowercased().hasPrefix("v") {
-            version.removeFirst()
+        var trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.lowercased().hasPrefix("v"),
+           trimmed.count > 1,
+           trimmed[trimmed.index(after: trimmed.startIndex)].isNumber {
+            trimmed.removeFirst()
         }
-        return version
+        guard trimmed.range(of: #"^\d+(\.\d+)*(-[0-9A-Za-z.]+)?$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+        return trimmed
     }
 
     public static func parse(data: Data) -> [IOSRelease]? {
@@ -67,6 +70,7 @@ public enum IOSReleaseIndex {
                 }
                 .first
                 .flatMap { URL(string: $0.browserDownloadUrl) }
+            guard let ipa else { return nil }
             return IOSRelease(
                 tag: release.tagName,
                 version: version,

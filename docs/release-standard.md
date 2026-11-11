@@ -11,11 +11,9 @@
 
 ## Tag
 
-- Android 用纯版本号：`0.3.7`。也可以用 `v` 前缀。带 `-` 的 tag 由 `.github/workflows/release.yml` 发成 prerelease，其余发成正式 release，并标成 Latest
-- iOS / iPadOS 用 `ios-` 前缀：`ios-0.3.7`。工作流是 `.github/workflows/ios.yml`，不标成 Latest
-- Windows 用 `windows-` 前缀：`windows-0.3.7`。工作流是 `.github/workflows/windows.yml`，不标成 Latest
-- 应用内更新只认自己的前缀。Android 忽略 `ios-` 和 `windows-`
-- 0.3.7 这一组是要保留的正式发布。发布时删除更早的 GitHub Release 和 tag
+- 三个平台共用纯版本号标签：`0.3.7`。也可以用 `v` 前缀。带 `-` 的 tag 由 `.github/workflows/release.yml` 发成 prerelease，其余发成正式 release，并标成 Latest
+- 同一次 Release 放上 Android APK / AAB、`focus-component-1.0.zip`、Windows `-win-x64.zip` 和 iOS IPA
+- 应用内更新都读这个纯版本号。Android 只拿 `.apk`，Windows 只拿 `-win-x64.zip`，iOS 只拿 `.ipa`。没有对应文件的发布会被跳过
 
 ## 安装包
 
@@ -54,7 +52,7 @@
 
 | 项目 | 正式版 | 测试版 | 状态 |
 | --- | --- | --- | --- |
-| TokiNote | `0.3.7`（Android versionCode 27；iOS build 2；Windows 0.3.7.0） | 无 | 已发布。标签 `0.3.7`、`ios-0.3.7`、`windows-0.3.7` |
+| TokiNote | `0.3.7`（Android versionCode 27；iOS build 2；Windows 0.3.7.0） | 无 | 已发布。三个平台共用标签 `0.3.7` |
 | Luma | 无 | `0.1.0-beta1` | 已发布（历史 tag 例外） |
 | TokiTodo | 无 | `0.1.0-beta.1` | 已发布 |
 

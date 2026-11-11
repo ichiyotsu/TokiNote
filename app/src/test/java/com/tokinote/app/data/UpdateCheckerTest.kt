@@ -79,42 +79,29 @@ class UpdateCheckerTest {
     }
 
     @Test
-    fun `0_3_7 is newer than 0_3_6 and ignores other platforms`() {
+    fun `0_3_7 is newer than 0_3_6 and releases without an apk are ignored`() {
         assertTrue(UpdateChecker.isNewer("0.3.7", "0.3.6"))
         assertFalse(UpdateChecker.isNewer("0.3.6", "0.3.7"))
         assertFalse(UpdateChecker.isNewer("0.3.7", "0.3.7"))
         assertTrue(UpdateChecker.isNewer("0.3.7", "0.3.7-beta.4"))
-        assertTrue(UpdateChecker.isAndroidRelease("0.3.7"))
-        assertFalse(UpdateChecker.isAndroidRelease("ios-0.3.7"))
-        assertFalse(UpdateChecker.isAndroidRelease("windows-0.3.7"))
 
         val latest = UpdateChecker.pickLatest(
             listOf(
                 release("0.3.6"),
-                release("ios-0.3.7"),
-                release("windows-0.3.7"),
                 release("0.3.7-beta.4"),
+                releaseWithoutApk("0.3.8"),
                 release("0.3.7"),
             ),
             "release",
         )
         assertTrue(latest?.tag == "0.3.7")
         assertTrue(latest?.version == "0.3.7")
-    }
 
-    @Test
-    fun `windows and ios tags are not android releases`() {
-        assertFalse(UpdateChecker.isAndroidRelease("windows-0.3.6"))
-        assertFalse(UpdateChecker.isAndroidRelease("ios-0.3.6"))
-        assertFalse(UpdateChecker.isAndroidRelease("Windows-1.0"))
-        assertTrue(UpdateChecker.isAndroidRelease("0.3.6"))
-        assertTrue(UpdateChecker.isAndroidRelease("0.3.7-beta.4"))
-
-        val latest = UpdateChecker.pickLatest(
-            listOf(release("windows-9.0.0"), release("ios-9.0.0"), release("0.3.5")),
+        val onlyZip = UpdateChecker.pickLatest(
+            listOf(releaseWithoutApk("0.3.7"), release("0.3.6")),
             "release",
         )
-        assertTrue(latest?.version == "0.3.5")
+        assertTrue(onlyZip?.version == "0.3.6")
     }
 
     @Test
@@ -165,7 +152,10 @@ class UpdateCheckerTest {
         tag = version,
         version = version.removePrefix("v"),
         notes = "",
-        apkUrl = null,
+        apkUrl = "https://example.com/${version.removePrefix("v")}.apk",
         pageUrl = "",
     )
+
+    private fun releaseWithoutApk(version: String): ReleaseInfo =
+        release(version).copy(apkUrl = null)
 }

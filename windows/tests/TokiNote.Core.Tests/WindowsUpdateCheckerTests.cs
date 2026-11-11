@@ -26,56 +26,53 @@ public class WindowsUpdateCheckerTests
     }
 
     [Fact]
-    public void Windows_tags_ignore_android_releases_and_pick_the_newest()
+    public void Plain_version_tags_with_a_windows_zip_are_compared()
     {
-        var releases = new[]
-        {
-            Release("0.3.7"),
-            Release("windows-0.1.0", "2026-01-01T00:00:00Z"),
-            Release("windows-0.1.1", "2026-02-01T00:00:00Z"),
-            Release("windows-0.2.0-beta", "2026-03-01T00:00:00Z"),
-        };
-
-        var latest = WindowsUpdateChecker.PickLatest(releases);
+        var latest = WindowsUpdateChecker.PickLatest([
+            Release("0.3.7", zip: false),
+            Release("0.1.0", "2026-01-01T00:00:00Z"),
+            Release("0.1.1", "2026-02-01T00:00:00Z"),
+            Release("0.2.0-beta", "2026-03-01T00:00:00Z"),
+        ]);
         Assert.Equal("0.2.0-beta", latest?.Version);
-        Assert.Equal("windows-0.2.0-beta", latest?.Tag);
+        Assert.Equal("0.2.0-beta", latest?.Tag);
     }
 
     [Fact]
     public void Stable_windows_release_beats_same_core_beta()
     {
         var latest = WindowsUpdateChecker.PickLatest([
-            Release("windows-0.1.0-beta"),
-            Release("windows-0.1.0"),
+            Release("0.1.0-beta"),
+            Release("0.1.0"),
         ]);
         Assert.Equal("0.1.0", latest?.Version);
     }
 
     [Fact]
-    public void Asset_prefers_x64_exe_then_x64_zip()
+    public void Asset_picks_the_win_x64_zip()
     {
         var asset = WindowsUpdateChecker.PickAsset([
+            new ReleaseAsset("TokiNote-0.3.7.apk", "https://github.com/a.apk"),
+            new ReleaseAsset("TokiNote-ios-0.3.7.ipa", "https://github.com/a.ipa"),
             new ReleaseAsset("TokiNote-win-x86.zip", "https://github.com/a.zip"),
-            new ReleaseAsset("TokiNote-Windows-0.1.0-win-x64.zip", "https://github.com/b.zip"),
-            new ReleaseAsset("notes.txt", "https://github.com/c.txt"),
-        ]);
-        Assert.Equal("TokiNote-Windows-0.1.0-win-x64.zip", asset?.Name);
-
-        var exe = WindowsUpdateChecker.PickAsset([
-            new ReleaseAsset("TokiNote-Windows-0.1.0-win-x64.zip", "https://github.com/b.zip"),
+            new ReleaseAsset("TokiNote-Windows-0.3.7-win-x64.zip", "https://github.com/b.zip"),
             new ReleaseAsset("TokiNote-Setup-win-x64.exe", "https://github.com/setup.exe"),
         ]);
-        Assert.Equal("TokiNote-Setup-win-x64.exe", exe?.Name);
+        Assert.Equal("TokiNote-Windows-0.3.7-win-x64.zip", asset?.Name);
+        Assert.Null(WindowsUpdateChecker.PickAsset([
+            new ReleaseAsset("TokiNote-0.3.7.apk", "https://github.com/a.apk"),
+            new ReleaseAsset("TokiNote-Setup-win-x64.exe", "https://github.com/setup.exe"),
+        ]));
     }
 
     [Fact]
-    public void Parse_skips_drafts_and_reads_windows_asset()
+    public void Parse_skips_drafts_and_releases_without_a_windows_zip()
     {
         const string json = """
             [
-              {"tag_name":"windows-0.1.0","draft":true,"body":"hidden","html_url":"https://github.com/hidden","assets":[]},
+              {"tag_name":"0.1.0","draft":true,"body":"hidden","html_url":"https://github.com/hidden","assets":[{"name":"TokiNote-Windows-0.1.0-win-x64.zip","browser_download_url":"https://github.com/hidden.zip"}]},
               {"tag_name":"0.3.5","draft":false,"body":"android","html_url":"https://github.com/android","assets":[{"name":"TokiNote.apk","browser_download_url":"https://github.com/a.apk"}]},
-              {"tag_name":"windows-0.1.1","draft":false,"body":"hello","html_url":"https://github.com/win","published_at":"2026-04-01T00:00:00Z","assets":[{"name":"TokiNote-Windows-0.1.1-win-x64.zip","browser_download_url":"https://github.com/ichiyotsu/TokiNote/releases/download/windows-0.1.1/app.zip"}]}
+              {"tag_name":"0.1.1","draft":false,"body":"hello","html_url":"https://github.com/win","published_at":"2026-04-01T00:00:00Z","assets":[{"name":"TokiNote-Windows-0.1.1-win-x64.zip","browser_download_url":"https://github.com/ichiyotsu/TokiNote/releases/download/0.1.1/app.zip"}]}
             ]
             """;
         var latest = WindowsUpdateChecker.PickLatest(WindowsUpdateChecker.ParseReleases(json));
@@ -87,23 +84,25 @@ public class WindowsUpdateCheckerTests
     }
 
     [Fact]
-    public void Version_0_3_7_is_newer_and_other_platforms_are_ignored()
+    public void Version_0_3_7_is_newer_and_releases_without_a_windows_zip_are_ignored()
     {
         Assert.True(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.6"));
         Assert.False(WindowsUpdateChecker.IsNewer("0.3.6", "0.3.7"));
         Assert.False(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.7"));
         Assert.True(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.7-beta.4"));
-        Assert.Equal("0.3.7", WindowsUpdateChecker.VersionFromTag("windows-0.3.7"));
-        Assert.False(WindowsUpdateChecker.IsWindowsTag("0.3.7"));
-        Assert.False(WindowsUpdateChecker.IsWindowsTag("ios-0.3.7"));
+        Assert.Equal("0.3.7", WindowsUpdateChecker.VersionFromTag("0.3.7"));
+        Assert.Equal("0.3.7", WindowsUpdateChecker.VersionFromTag("v0.3.7"));
+        Assert.True(WindowsUpdateChecker.IsPlainVersionTag("0.3.7"));
+        Assert.False(WindowsUpdateChecker.IsPlainVersionTag("ios-0.3.7"));
+        Assert.False(WindowsUpdateChecker.IsPlainVersionTag("windows-0.3.7"));
 
         var latest = WindowsUpdateChecker.PickLatest([
+            Release("0.3.6"),
             Release("0.3.7"),
-            Release("ios-0.3.7"),
-            Release("windows-0.3.6"),
-            Release("windows-0.3.7"),
+            Release("0.3.8", zip: false),
+            Release("ios-9.0.0"),
         ]);
-        Assert.Equal("windows-0.3.7", latest?.Tag);
+        Assert.Equal("0.3.7", latest?.Tag);
         Assert.Equal("0.3.7", latest?.Version);
         Assert.Equal("0.3.7", AppVersion.Current);
         Assert.False(WindowsUpdateChecker.IsNewer(AppVersion.Current, "0.3.7"));
@@ -112,17 +111,21 @@ public class WindowsUpdateCheckerTests
     [Fact]
     public void Download_urls_must_be_https_github()
     {
-        Assert.True(WindowsUpdateChecker.IsAllowedDownloadUrl("https://github.com/ichiyotsu/TokiNote/releases/download/windows-0.1.0/app.zip"));
+        Assert.True(WindowsUpdateChecker.IsAllowedDownloadUrl("https://github.com/ichiyotsu/TokiNote/releases/download/0.3.7/TokiNote-Windows-0.3.7-win-x64.zip"));
         Assert.True(WindowsUpdateChecker.IsAllowedDownloadUrl("https://objects.githubusercontent.com/a"));
         Assert.False(WindowsUpdateChecker.IsAllowedDownloadUrl("http://github.com/a.zip"));
         Assert.False(WindowsUpdateChecker.IsAllowedDownloadUrl("https://example.com/a.zip"));
     }
 
-    private static WindowsRelease Release(string tag, string published = "2026-01-01T00:00:00Z") => new(
-        tag,
-        WindowsUpdateChecker.VersionFromTag(tag),
-        "",
-        "",
-        DateTimeOffset.Parse(published),
-        null);
+    private static WindowsRelease Release(string tag, string published = "2026-01-01T00:00:00Z", bool zip = true)
+    {
+        var version = WindowsUpdateChecker.VersionFromTag(tag);
+        return new WindowsRelease(
+            tag,
+            version,
+            "",
+            "",
+            DateTimeOffset.Parse(published),
+            zip ? new ReleaseAsset($"TokiNote-Windows-{version}-win-x64.zip", "https://github.com/b.zip") : null);
+    }
 }

@@ -59,7 +59,7 @@ object UpdateChecker {
         var stable: ReleaseInfo? = null
         var beta: ReleaseInfo? = null
         releases.forEach { info ->
-            if (!isAndroidRelease(info.tag)) return@forEach
+            if (info.apkUrl.isNullOrBlank()) return@forEach
             val version = info.version.trim().removePrefix("v").removePrefix("V")
             when {
                 stableVersion.matches(version) -> {
@@ -75,13 +75,6 @@ object UpdateChecker {
         val stableInfo = stable ?: return beta
         val betaInfo = beta ?: return stableInfo
         return if (isNewer(betaInfo.version, stableInfo.version)) betaInfo else stableInfo
-    }
-
-    /** Android 发版标签是纯版本号。Windows / iOS 用平台前缀，不参与 Android 更新。 */
-    internal fun isAndroidRelease(tag: String): Boolean {
-        val trimmed = tag.trim()
-        return !trimmed.startsWith("windows-", ignoreCase = true) &&
-            !trimmed.startsWith("ios-", ignoreCase = true)
     }
 
     /** 通道匹配规则，单独提出来便于测试。beta 通道也允许正式版。 */
@@ -181,8 +174,8 @@ object UpdateChecker {
                 }
             }
         }
+        if (apkUrl.isNullOrBlank()) return null
         val tag = optString("tag_name")
-        if (!isAndroidRelease(tag)) return null
         val version = tag.removePrefix("v").removePrefix("V")
         return ReleaseInfo(
             tag = tag,

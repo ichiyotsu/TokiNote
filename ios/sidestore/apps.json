@@ -2,7 +2,7 @@
   "name": "TokiNote",
   "identifier": "com.tokinote.ios.source",
   "subtitle": "TokiNote iOS / iPadOS",
-  "description": "本地笔记与专注计时。IPA 由 GitHub Actions 在 ios-* 标签上构建，未签名，交给 SideStore 重签。",
+  "description": "本地笔记与专注计时。IPA 附在纯版本号 GitHub Release 上（例如 0.3.7），未签名，交给 SideStore 重签。",
   "iconURL": "https://raw.githubusercontent.com/ichiyotsu/TokiNote/main/ios/sidestore/icon.png",
   "website": "https://github.com/ichiyotsu/TokiNote",
   "sourceURL": "https://raw.githubusercontent.com/ichiyotsu/TokiNote/main/ios/sidestore/apps.json",
@@ -22,7 +22,7 @@
           "version": "0.3.7",
           "date": "2026-11-11T00:00:00Z",
           "localizedDescription": "iOS / iPadOS 0.3.7：笔记、回收站、搜索、专注计时、统计、完成通知、实时活动与桌面小组件。版本号与 Android、Windows 对齐。",
-          "downloadURL": "https://github.com/ichiyotsu/TokiNote/releases/download/ios-0.3.7/TokiNote-ios-0.3.7.ipa",
+          "downloadURL": "https://github.com/ichiyotsu/TokiNote/releases/download/0.3.7/TokiNote-ios-0.3.7.ipa",
           "size": 722388,
           "minOSVersion": "26.0"
         }
