@@ -2,7 +2,7 @@
   "name": "TokiNote",
   "identifier": "com.tokinote.ios.source",
   "subtitle": "TokiNote iOS / iPadOS",
-  "description": "本地笔记与专注计时。IPA 附在纯版本号 GitHub Release 上（例如 0.3.7），未签名，交给 SideStore 重签。",
+  "description": "本地笔记与专注计时。IPA 附在纯版本号 GitHub Release 上（例如 0.3.8），未签名，交给 SideStore 重签。",
   "iconURL": "https://raw.githubusercontent.com/ichiyotsu/TokiNote/main/ios/sidestore/icon.png",
   "website": "https://github.com/ichiyotsu/TokiNote",
   "sourceURL": "https://raw.githubusercontent.com/ichiyotsu/TokiNote/main/ios/sidestore/apps.json",
@@ -12,18 +12,18 @@
       "bundleIdentifier": "com.tokinote.ios",
       "developerName": "ichiyotsu",
       "subtitle": "笔记与专注",
-      "localizedDescription": "TokiNote 是本地优先的笔记和专注计时。iPhone 与 iPad 共用同一个通用 App。笔记、专注记录和设置只保存在本机。0.3.7 支持 iOS 26 与 iPadOS 26，并兼容 27。安装包未签名，请用 SideStore 安装并每 7 天刷新。",
+      "localizedDescription": "TokiNote 是本地优先的笔记和专注计时。iPhone 与 iPad 共用同一个通用 App。笔记、专注记录和设置只保存在本机。0.3.8 支持 iOS 26 与 iPadOS 26，并兼容 27。安装包未签名，请用 SideStore 安装并每 7 天刷新。",
       "iconURL": "https://raw.githubusercontent.com/ichiyotsu/TokiNote/main/ios/sidestore/icon.png",
       "tintColor": "4C662B",
       "category": "productivity",
       "screenshotURLs": [],
       "versions": [
         {
-          "version": "0.3.7",
-          "date": "2026-11-11T00:00:00Z",
-          "localizedDescription": "iOS / iPadOS 0.3.7：笔记、回收站、搜索、专注计时、统计、完成通知、实时活动与桌面小组件。版本号与 Android、Windows 对齐。",
-          "downloadURL": "https://github.com/ichiyotsu/TokiNote/releases/download/0.3.7/TokiNote-ios-0.3.7.ipa",
-          "size": 723502,
+          "version": "0.3.8",
+          "date": "2026-11-12T00:00:00Z",
+          "localizedDescription": "iOS / iPadOS 0.3.8：笔记、回收站、搜索、专注计时、统计、完成通知、实时活动与桌面小组件。版本号与 Android、Windows 对齐。",
+          "downloadURL": "https://github.com/ichiyotsu/TokiNote/releases/download/0.3.8/TokiNote-ios-0.3.8.ipa",
+          "size": 723499,
           "minOSVersion": "26.0"
         }
       ]
