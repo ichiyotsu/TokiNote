@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Windows.UI;
 using Microsoft.UI.Windowing;
@@ -11,6 +12,7 @@ namespace TokiNote;
 public sealed partial class MainWindow : Window
 {
     private readonly AppHost _host;
+    private readonly NativeMethods.SubclassProc _minSizeProc;
     private bool _navReady;
     private bool _reallyExit;
     private TrayIcon? _tray;
@@ -30,6 +32,12 @@ public sealed partial class MainWindow : Window
         titleBar.ButtonBackgroundColor = Color.FromArgb(0, 0, 0, 0);
         titleBar.ButtonInactiveBackgroundColor = Color.FromArgb(0, 0, 0, 0);
         AppWindow.Closing += OnClosing;
+        // 最小窗口尺寸：WinUI 3 没有现成的窗口 MinWidth/MinHeight，
+        // 用子类化接 WM_GETMINMAXINFO 按当前 DPI 给出下限（换算在
+        // WindowSizing 里）。委托要存字段里保活，否则会被 GC 回收。
+        _minSizeProc = OnMinSizeMessage;
+        NativeMethods.SetWindowSubclass(WindowHandle, _minSizeProc, 1, 0);
+        Closed += (_, _) => NativeMethods.RemoveWindowSubclass(WindowHandle, _minSizeProc, 1);
         Activated += (_, _) => _host.Engine.Sync();
         _navReady = true;
         Nav.SelectedItem = Nav.MenuItems[0];
@@ -99,6 +107,21 @@ public sealed partial class MainWindow : Window
         _reallyExit = true;
         _tray?.Dispose();
         Close();
+    }
+
+    private nint OnMinSizeMessage(nint hwnd, uint message, nint wParam, nint lParam, nuint id, nuint data)
+    {
+        if (message == NativeMethods.WmGetMinMaxInfo && lParam != 0)
+        {
+            var info = Marshal.PtrToStructure<NativeMethods.MinMaxInfo>(lParam);
+            var (width, height) = WindowSizing.MinimumTrackSize(NativeMethods.GetDpiForWindow(hwnd));
+            info.PtMinTrackSize.X = width;
+            info.PtMinTrackSize.Y = height;
+            Marshal.StructureToPtr(info, lParam, false);
+            return 0;
+        }
+
+        return NativeMethods.DefSubclassProc(hwnd, message, wParam, lParam);
     }
 
     private void OnClosing(AppWindow sender, AppWindowClosingEventArgs args)

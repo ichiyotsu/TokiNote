@@ -5,12 +5,13 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
@@ -573,14 +574,19 @@ fun JournalEditorScreen(
                 animationSpec = TokiMotion.emphasized,
                 label = "toolToggle",
             )
+            // 工具岛的宽度只由下面的 AnimatedVisibility 驱动。
+            //
+            // 之前这里还挂了一个 animateContentSize（阻尼 0.72 的欠阻尼弹簧，
+            // 会冲过目标宽度再回弹），和 AnimatedVisibility 自己的
+            // expand/shrink（另一套弹簧参数）抢同一段宽度动画：两边速度对不上，
+            // 收起回弹时外层 Row 的宽度会一度小于“+ 按钮 + 内边距”的最小宽度，
+            // 整个胶囊被裁掉一截，看起来就是右边的边突然消失一下再弹回来。
+            // 删掉 animateContentSize 后，宽度只有一套动画在管，再也不会冲过
+            // 最小宽度；高度固定 68.dp（52.dp 按钮 + 上下各 8.dp），收起展开
+            // 时高度也不再抖。
             Row(
                 modifier = Modifier
-                    .animateContentSize(
-                        animationSpec = androidx.compose.animation.core.spring(
-                            dampingRatio = 0.72f,
-                            stiffness = 380f,
-                        ),
-                    )
+                    .height(68.dp)
                     .clip(LocalIslandShape.current)
                     .background(toolbarTint.copy(alpha = 0.94f))
                     .border(1.dp, accent.copy(alpha = 0.22f), LocalIslandShape.current)
@@ -613,15 +619,19 @@ fun JournalEditorScreen(
                 }
                 AnimatedVisibility(
                     visible = toolsExpanded,
+                    // 从 + 按钮右侧展开、向 + 按钮收起，左右两边不再各管各的；
+                    // 展开和收起用同一套弹簧，收起时不再冲过头。
                     enter = expandHorizontally(
+                        expandFrom = Alignment.Start,
                         animationSpec = androidx.compose.animation.core.spring(
-                            dampingRatio = 0.62f,
+                            dampingRatio = 0.85f,
                             stiffness = 420f,
                         ),
                     ) + fadeIn(tween(TokiMotion.standard)),
                     exit = shrinkHorizontally(
+                        shrinkTowards = Alignment.Start,
                         animationSpec = androidx.compose.animation.core.spring(
-                            dampingRatio = 0.8f,
+                            dampingRatio = 0.85f,
                             stiffness = 420f,
                         ),
                     ) + fadeOut(tween(TokiMotion.quick)),
@@ -631,7 +641,10 @@ fun JournalEditorScreen(
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        EditorTool(
+                        // 三个工具依次淡入放大出现（各晚 45ms），收起时一起快速淡出缩小。
+                        StaggeredEditorTool(
+                            visible = toolsExpanded,
+                            delayMillis = 0,
                             icon = Icons.Filled.FormatSize,
                             label = stringResource(R.string.action_format),
                             selected = showFormat,
@@ -640,7 +653,9 @@ fun JournalEditorScreen(
                                 showFormat = true
                             },
                         )
-                        EditorTool(
+                        StaggeredEditorTool(
+                            visible = toolsExpanded,
+                            delayMillis = 45,
                             icon = Icons.Filled.Photo,
                             label = stringResource(R.string.attach_photo),
                             selected = false,
@@ -651,7 +666,9 @@ fun JournalEditorScreen(
                                 )
                             },
                         )
-                        EditorTool(
+                        StaggeredEditorTool(
+                            visible = toolsExpanded,
+                            delayMillis = 90,
                             icon = Icons.Filled.Checklist,
                             label = stringResource(R.string.checklist_title),
                             selected = false,
@@ -1106,6 +1123,38 @@ private fun InfoRow(
                 color = MaterialTheme.colorScheme.onSurface,
             )
         }
+    }
+}
+
+/**
+ * 工具岛里的单个工具：展开时按 [delayMillis] 依次淡入放大，
+ * 收起时一起快速淡出缩小。外层 AnimatedVisibility 管宽度，
+ * 这里只管自己的透明度和缩放，两边不再抢动画。
+ */
+@Composable
+private fun StaggeredEditorTool(
+    visible: Boolean,
+    delayMillis: Int,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    selected: Boolean,
+    accent: Color,
+    onClick: () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(TokiMotion.standard, delayMillis = delayMillis)) +
+            scaleIn(tween(TokiMotion.standard, delayMillis = delayMillis), initialScale = 0.7f),
+        exit = fadeOut(tween(TokiMotion.quick)) +
+            scaleOut(tween(TokiMotion.quick), targetScale = 0.8f),
+    ) {
+        EditorTool(
+            icon = icon,
+            label = label,
+            selected = selected,
+            accent = accent,
+            onClick = onClick,
+        )
     }
 }
 
