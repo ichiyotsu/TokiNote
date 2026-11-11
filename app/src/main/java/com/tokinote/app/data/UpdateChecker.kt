@@ -24,14 +24,17 @@ data class ReleaseInfo(
 object UpdateChecker {
 
     private const val RELEASES_URL =
-        "https://api.github.com/repos/ichiyotsu/TokiNote/releases?per_page=10"
+        "https://api.github.com/repos/ichiyotsu/Tokinote/releases?per_page=10"
     private const val USER_AGENT = "TokiNote-Android"
 
-    /** 标准版：0.2.7 / v0.2.7，不带任何 -beta 后缀。 */
+    /** 正式版：0.1.0 / v0.1.0。 */
     private val stableVersion = Regex("""^\d+(\.\d+)*$""")
 
-    /** 测试版：0.2.9-beta / 0.2.9-beta.1（允许 v 前缀与大小写）。 */
-    private val betaVersion = Regex("""^\d+(\.\d+)*-beta(\.\d+)?$""", RegexOption.IGNORE_CASE)
+    /** 测试版：0.1.1-b1。N 是整数。 */
+    private val betaVersion = Regex("""^\d+(\.\d+)*-b\d+$""", RegexOption.IGNORE_CASE)
+
+    /** 已发布 tag 仍是 0.3.7-beta.4 这种写法，继续认，比较时与 -bN 同一套序号。 */
+    private val legacyBetaVersion = Regex("""^\d+(\.\d+)*-beta(\.\d+)?$""", RegexOption.IGNORE_CASE)
 
     /**
      * 最新版本：
@@ -62,7 +65,7 @@ object UpdateChecker {
                     if (stable == null || isNewer(info.version, stable!!.version)) stable = info
                 }
 
-                betaVersion.matches(version) -> {
+                isBetaVersion(version) -> {
                     if (beta == null || isNewer(info.version, beta!!.version)) beta = info
                 }
             }
@@ -77,23 +80,28 @@ object UpdateChecker {
     internal fun matchesChannel(info: ReleaseInfo, channel: String): Boolean {
         val version = info.version.trim().removePrefix("v").removePrefix("V")
         return if (channel.equals("beta", ignoreCase = true)) {
-            betaVersion.matches(version) || stableVersion.matches(version)
+            isBetaVersion(version) || stableVersion.matches(version)
         } else {
             stableVersion.matches(version)
         }
     }
 
-    /** 比较版本号：只看核心数字，稳定版优先于同一核心的最新预发布。 */
+    /**
+     * 比较版本号。核心数字先比。
+     * 同一核心版本里正式版高于测试版，所以 0.1.1-b1 < 0.1.1。
+     * 测试版序号按整数比，0.1.1-b2 < 0.1.1-b10。
+     * 更高的核心版本即使是测试版也更新：0.1.0 < 0.1.1-b1。
+     */
     fun isNewer(remote: String, current: String): Boolean {
         val r = ParsedVersion.parse(remote)
         val c = ParsedVersion.parse(current)
         val core = compareCore(r.core, c.core)
-        if (core > 0) return true
-        if (core < 0) return false
-        if (r.preRelease.isEmpty()) return c.preRelease.isNotEmpty()
-        if (c.preRelease.isEmpty()) return false
-        return r.preRelease > c.preRelease
+        if (core != 0) return core > 0
+        return comparePre(r.pre, c.pre) > 0
     }
+
+    private fun isBetaVersion(version: String): Boolean =
+        betaVersion.matches(version) || legacyBetaVersion.matches(version)
 
     private fun compareCore(a: List<Int>, b: List<Int>): Int {
         for (index in 0 until maxOf(a.size, b.size)) {
@@ -173,22 +181,48 @@ object UpdateChecker {
             notes = optString("body"),
             apkUrl = apkUrl,
             pageUrl = optString("html_url"),
-            isPrerelease = optBoolean("prerelease", false) || betaVersion.matches(version),
+            isPrerelease = optBoolean("prerelease", false) || isBetaVersion(version),
         )
     }
 
-    private data class ParsedVersion(val core: List<Int>, val preRelease: String) {
+    private data class ParsedVersion(val core: List<Int>, val pre: PreRelease) {
         companion object {
+            private val versionPattern = Regex("""^v?(\d+(?:\.\d+)*)(?:-(.+))?$""", RegexOption.IGNORE_CASE)
+            private val bNumber = Regex("""^b(\d+)$""", RegexOption.IGNORE_CASE)
+            private val betaNumber = Regex("""^beta(?:\.(\d+))?$""", RegexOption.IGNORE_CASE)
+
             fun parse(raw: String): ParsedVersion {
-                val trimmed = raw.trim().removePrefix("v").removePrefix("V")
-                val corePart = trimmed.substringBefore('-')
-                val pre = trimmed.substringAfter('-', "")
-                val numbers = corePart.split('.').map { it.toIntOrNull() ?: 0 }
-                return ParsedVersion(
-                    core = List(3) { numbers.getOrElse(it) { 0 } },
-                    preRelease = pre,
-                )
+                val match = versionPattern.matchEntire(raw.trim())
+                    ?: return ParsedVersion(listOf(0, 0, 0), PreRelease.Other(raw.trim()))
+                val numbers = match.groupValues[1].split('.').map { it.toIntOrNull() ?: 0 }
+                val core = List(3) { numbers.getOrElse(it) { 0 } }
+                val suffix = match.groupValues[2]
+                if (suffix.isEmpty()) return ParsedVersion(core, PreRelease.None)
+                bNumber.matchEntire(suffix)?.let { found ->
+                    return ParsedVersion(core, PreRelease.Build(found.groupValues[1].toIntOrNull() ?: 0))
+                }
+                betaNumber.matchEntire(suffix)?.let { found ->
+                    return ParsedVersion(core, PreRelease.Build(found.groupValues[1].toIntOrNull() ?: 0))
+                }
+                return ParsedVersion(core, PreRelease.Other(suffix))
             }
         }
+    }
+
+    /** 正式版（None）高于任何测试版。-bN 与已发布的 -beta.N 按整数序号比较。 */
+    private sealed interface PreRelease {
+        data object None : PreRelease
+        data class Build(val number: Int) : PreRelease
+        data class Other(val text: String) : PreRelease
+    }
+
+    private fun comparePre(left: PreRelease, right: PreRelease): Int = when {
+        left is PreRelease.None && right is PreRelease.None -> 0
+        left is PreRelease.None -> 1
+        right is PreRelease.None -> -1
+        left is PreRelease.Build && right is PreRelease.Build -> left.number.compareTo(right.number)
+        left is PreRelease.Other && right is PreRelease.Other -> left.text.compareTo(right.text)
+        left is PreRelease.Build -> -1
+        else -> 1
     }
 }

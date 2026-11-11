@@ -3,8 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - '[0-9]*'
-      - 'v*'
+      - 'v[0-9]*'
 
 permissions:
   contents: write
@@ -19,7 +18,8 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME#v}"
           echo "VERSION_NAME=$TAG" >> "$GITHUB_ENV"
-          if [[ "$TAG" == *-* ]]; then
+          # v0.1.1-b1 这类含 -b 的 tag 是测试版；v0.1.0 是正式版。
+          if [[ "$TAG" == *-b* ]]; then
             echo "IS_PRERELEASE=true" >> "$GITHUB_ENV"
           else
             echo "IS_PRERELEASE=false" >> "$GITHUB_ENV"

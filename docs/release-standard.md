@@ -2,28 +2,26 @@
 
 ## 版本
 
-- 正式版：`x.y.z`
-- 测试版：`x.y.z-beta.N`
-- 正式版与测试版轮流推进
+- 正式版：`X.Y.Z`，例如 `0.1.0`
+- 测试版：`X.Y.Z-bN`，例如 `0.1.1-b1`
+- 发布顺序：`0.1.0` → `0.1.1-b1` → `0.1.1-b2` → … → `0.1.1`
 - 测试版可以领先正式版多个版本
+- 同一核心版本里正式版更高：`0.1.1-b1` < `0.1.1`
+- `versionCode` 只递增
 - 已发布版本保留，不删除
 
 ## Tag
 
-- 正式版 tag 与版本号一致：`0.3.5`
-- 测试版 tag：`0.3.7-beta.2`
-- 历史 tag `0.1.0-beta1`（Luma）保留；新测试版统一 `beta.N`
-- Release 标题只写版本：`0.3.5`、`0.3.7 Beta 2`
+- tag 使用 `v` 前缀：`v0.1.0`、`v0.1.1-b1`
+- 含 `-b` 的 tag 由 `.github/workflows/release.yml` 发成 prerelease，其余发成正式 release
+- 已经发布的 tag 保持原名：`0.1.0`、`0.3.5`、`0.3.7-beta.2`、`0.3.7-beta.3`、`0.3.7-beta.4`
+- `0.3.7-beta.N` 最接近的合规写法是 `0.3.7-bN`。这些 tag 不改
+- Release 标题只写版本：`0.3.5`、`0.3.7 Beta 4`
 
 ## 安装包
 
-- Android：`<产品名>-<版本号>.apk`
-- 示例：
-  - `TokiNote-0.3.5.apk`
-  - `TokiTodo-0.1.0-beta.1.apk`
-  - `Luma-0.1.0-beta1-android.apk`
-
-多平台项目保留平台后缀；单平台项目不再加后缀。
+- 已发布的 Android 包：`TokiNote-0.3.5.apk`、`TokiNote-0.3.7-beta.2.apk`、`TokiNote-0.3.7-beta.3.apk`、`TokiNote-0.3.7-beta.4.apk`。`0.1.0` 的文件是 `app-release.apk`。`0.3.5` 另有 `focus-component-1.0.zip`。
+- `.github/workflows/release.yml` 上传 `app-release.apk` 和 `app-release.aab`，不改文件名。
 
 ## Release Notes
 
@@ -56,7 +54,7 @@
 
 | 项目 | 正式版 | 测试版 | 状态 |
 | --- | --- | --- | --- |
-| TokiNote | `0.3.5` | `0.3.7-beta.2` | 已发布 |
+| TokiNote | `0.3.5`（versionCode 22） | `0.3.7-beta.4`（versionCode 25；新测试版用 `X.Y.Z-bN`） | 已发布 |
 | Luma | 无 | `0.1.0-beta1` | 已发布（历史 tag 例外） |
 | TokiTodo | 无 | `0.1.0-beta.1` | 已发布 |
 

@@ -70,6 +70,50 @@ class UpdateCheckerTest {
         assertTrue(releaseOnly?.version == "0.3.6")
     }
 
+    @Test
+    fun `bN sorts before the same stable version and by integer`() {
+        assertFalse(UpdateChecker.isNewer("0.1.1-b1", "0.1.1"))
+        assertTrue(UpdateChecker.isNewer("0.1.1", "0.1.1-b1"))
+        assertTrue(UpdateChecker.isNewer("0.1.1-b1", "0.1.0"))
+        assertTrue(UpdateChecker.isNewer("0.1.1-b2", "0.1.1-b1"))
+        assertTrue(UpdateChecker.isNewer("0.1.1-b10", "0.1.1-b2"))
+        assertFalse(UpdateChecker.isNewer("0.1.1-b1", "0.1.1-b1"))
+        assertFalse(UpdateChecker.isNewer("0.3.7-b4", "0.3.7-beta.4"))
+        assertFalse(UpdateChecker.isNewer("0.3.7-beta.4", "0.3.7-b4"))
+    }
+
+    @Test
+    fun `channels accept bN and already published beta tags`() {
+        assertTrue(UpdateChecker.matchesChannel(release("0.1.1"), "release"))
+        assertFalse(UpdateChecker.matchesChannel(release("0.1.1-b1"), "release"))
+        assertFalse(UpdateChecker.matchesChannel(release("0.3.7-beta.4"), "release"))
+        assertTrue(UpdateChecker.matchesChannel(release("v0.1.1-b1"), "beta"))
+        assertTrue(UpdateChecker.matchesChannel(release("0.1.1-b10"), "beta"))
+        assertTrue(UpdateChecker.matchesChannel(release("0.3.7-beta.4"), "beta"))
+        assertTrue(UpdateChecker.matchesChannel(release("0.1.1"), "beta"))
+    }
+
+    @Test
+    fun `beta channel follows release order through bN`() {
+        val stableWins = UpdateChecker.pickLatest(
+            listOf(release("0.1.1-b2"), release("0.1.1"), release("0.1.0")),
+            "beta",
+        )
+        assertTrue(stableWins?.version == "0.1.1")
+
+        val betaAhead = UpdateChecker.pickLatest(
+            listOf(release("0.1.1-b1"), release("0.1.0")),
+            "beta",
+        )
+        assertTrue(betaAhead?.version == "0.1.1-b1")
+
+        val releaseOnly = UpdateChecker.pickLatest(
+            listOf(release("0.1.1-b1"), release("0.1.0")),
+            "release",
+        )
+        assertTrue(releaseOnly?.version == "0.1.0")
+    }
+
     private fun release(version: String): ReleaseInfo = ReleaseInfo(
         tag = version,
         version = version.removePrefix("v"),
