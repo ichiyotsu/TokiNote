@@ -110,6 +110,17 @@ public sealed partial class SettingsPage : Page
         await FileIO.WriteTextAsync(file, _host.Database.ExportJson());
     }
 
+    private async void UpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        var window = App.Current.Shell;
+        if (window == null)
+        {
+            return;
+        }
+
+        await UpdateCoordinator.CheckAsync(window, interactive: true);
+    }
+
     private async void ClearButton_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new ContentDialog
