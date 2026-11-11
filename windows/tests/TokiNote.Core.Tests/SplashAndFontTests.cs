@@ -7,7 +7,7 @@ public class SplashAndFontTests
     {
         Assert.Equal("Microsoft YaHei UI, Segoe UI Variable, Segoe UI", AppFonts.FamilySource);
         Assert.DoesNotContain("Inter", AppFonts.FamilySource, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal("0.1.0", AppVersion.Current);
+        Assert.Equal("0.3.7", AppVersion.Current);
     }
 
     [Fact]

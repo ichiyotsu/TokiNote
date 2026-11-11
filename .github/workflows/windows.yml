@@ -103,7 +103,7 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           NOTES=".github/release-notes/${TAG}.md"
           if [ ! -f "$NOTES" ]; then
-            printf 'TokiNote Windows %s\n' "${TAG#windows-}" > "$RUNNER_TEMP/windows-notes.md"
+            printf 'TokiNote Windows %s\n\n这一版包含修复和改进。\n' "${TAG#windows-}" > "$RUNNER_TEMP/windows-notes.md"
             NOTES="$RUNNER_TEMP/windows-notes.md"
           fi
           echo "NOTES_FILE=$NOTES" >> "$GITHUB_ENV"

@@ -7,21 +7,21 @@
 - 发布顺序：`0.1.0` → `0.1.1-b1` → `0.1.1-b2` → … → `0.1.1`
 - 测试版可以领先正式版多个版本
 - 同一核心版本里正式版更高：`0.1.1-b1` < `0.1.1`
-- `versionCode` 只递增
-- 已发布版本保留，不删除
+- `versionCode` 只递增。0.3.7 的 `versionCode` 是 27
 
 ## Tag
 
-- tag 使用 `v` 前缀：`v0.1.0`、`v0.1.1-b1`
-- 含 `-b` 的 tag 由 `.github/workflows/release.yml` 发成 prerelease，其余发成正式 release
-- 已经发布的 tag 保持原名：`0.1.0`、`0.3.5`、`0.3.7-beta.2`、`0.3.7-beta.3`、`0.3.7-beta.4`
-- `0.3.7-beta.N` 最接近的合规写法是 `0.3.7-bN`。这些 tag 不改
-- Release 标题只写版本：`0.3.5`、`0.3.7 Beta 4`
+- Android 用纯版本号：`0.3.7`。也可以用 `v` 前缀。带 `-` 的 tag 由 `.github/workflows/release.yml` 发成 prerelease，其余发成正式 release，并标成 Latest
+- iOS / iPadOS 用 `ios-` 前缀：`ios-0.3.7`。工作流是 `.github/workflows/ios.yml`，不标成 Latest
+- Windows 用 `windows-` 前缀：`windows-0.3.7`。工作流是 `.github/workflows/windows.yml`，不标成 Latest
+- 应用内更新只认自己的前缀。Android 忽略 `ios-` 和 `windows-`
+- 0.3.7 这一组是要保留的正式发布。发布时删除更早的 GitHub Release 和 tag
 
 ## 安装包
 
-- 已发布的 Android 包：`TokiNote-0.3.5.apk`、`TokiNote-0.3.7-beta.2.apk`、`TokiNote-0.3.7-beta.3.apk`、`TokiNote-0.3.7-beta.4.apk`。`0.1.0` 的文件是 `app-release.apk`。`0.3.5` 另有 `focus-component-1.0.zip`。
-- `.github/workflows/release.yml` 上传 `app-release.apk` 和 `app-release.aab`，不改文件名。
+- Android：`TokiNote-0.3.7.apk`（另有 `TokiNote-0.3.7.aab`）
+- iOS：`TokiNote-ios-0.3.7.ipa`（未签名）
+- Windows：`TokiNote-Windows-0.3.7-win-x64.zip`
 
 ## Release Notes
 
@@ -54,7 +54,7 @@
 
 | 项目 | 正式版 | 测试版 | 状态 |
 | --- | --- | --- | --- |
-| TokiNote | `0.3.5`（versionCode 22） | `0.3.7-beta.4`（versionCode 25；新测试版用 `X.Y.Z-bN`） | 已发布 |
+| TokiNote | `0.3.7`（Android versionCode 27；iOS build 2；Windows 0.3.7.0） | 无 | 已发布。标签 `0.3.7`、`ios-0.3.7`、`windows-0.3.7` |
 | Luma | 无 | `0.1.0-beta1` | 已发布（历史 tag 例外） |
 | TokiTodo | 无 | `0.1.0-beta.1` | 已发布 |
 

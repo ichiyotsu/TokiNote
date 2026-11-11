@@ -69,7 +69,7 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/ios-* ]]; then
             NAME="TokiNote-${GITHUB_REF_NAME}.ipa"
           else
-            NAME="TokiNote-ios-0.1.0.ipa"
+            NAME="TokiNote-ios-0.3.7.ipa"
           fi
           ios/scripts/unsigned-ipa.sh "build/${NAME}"
           find ios/build -name '*.ipa' -print
@@ -112,7 +112,7 @@ jobs:
           fi
           NOTES=".github/release-notes/${TAG}.md"
           if [ ! -f "$NOTES" ]; then
-            printf 'TokiNote iOS %s\n' "$VERSION" > /tmp/notes.md
+            printf 'TokiNote iOS %s\n\n这一版包含修复和改进。\n' "$VERSION" > /tmp/notes.md
             NOTES=/tmp/notes.md
           fi
           echo "NOTES_FILE=$NOTES" >> "$GITHUB_ENV"

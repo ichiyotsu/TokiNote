@@ -79,6 +79,30 @@ class UpdateCheckerTest {
     }
 
     @Test
+    fun `0_3_7 is newer than 0_3_6 and ignores other platforms`() {
+        assertTrue(UpdateChecker.isNewer("0.3.7", "0.3.6"))
+        assertFalse(UpdateChecker.isNewer("0.3.6", "0.3.7"))
+        assertFalse(UpdateChecker.isNewer("0.3.7", "0.3.7"))
+        assertTrue(UpdateChecker.isNewer("0.3.7", "0.3.7-beta.4"))
+        assertTrue(UpdateChecker.isAndroidRelease("0.3.7"))
+        assertFalse(UpdateChecker.isAndroidRelease("ios-0.3.7"))
+        assertFalse(UpdateChecker.isAndroidRelease("windows-0.3.7"))
+
+        val latest = UpdateChecker.pickLatest(
+            listOf(
+                release("0.3.6"),
+                release("ios-0.3.7"),
+                release("windows-0.3.7"),
+                release("0.3.7-beta.4"),
+                release("0.3.7"),
+            ),
+            "release",
+        )
+        assertTrue(latest?.tag == "0.3.7")
+        assertTrue(latest?.version == "0.3.7")
+    }
+
+    @Test
     fun `windows and ios tags are not android releases`() {
         assertFalse(UpdateChecker.isAndroidRelease("windows-0.3.6"))
         assertFalse(UpdateChecker.isAndroidRelease("ios-0.3.6"))

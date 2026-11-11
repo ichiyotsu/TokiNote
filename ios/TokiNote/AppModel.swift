@@ -283,7 +283,7 @@ final class AppModel {
         didAutoCheck = true
         checkingUpdate = true
         if manual { updateStatus = L10n.checking }
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.3.7"
         let result = await IOSReleaseIndex.check(currentVersion: version)
         checkingUpdate = false
         switch result {

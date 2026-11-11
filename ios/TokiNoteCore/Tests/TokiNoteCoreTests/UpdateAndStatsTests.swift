@@ -49,6 +49,31 @@ struct UpdateCheckerTests {
         #expect(parts.queryItems?.first?.value == newest.ipaURL?.absoluteString)
     }
 
+    @Test("0.3.7 is newer and other platform tags are ignored")
+    func version037IgnoresOtherPlatforms() throws {
+        #expect(IOSReleaseIndex.isNewer("0.3.7", than: "0.3.6"))
+        #expect(!IOSReleaseIndex.isNewer("0.3.6", than: "0.3.7"))
+        #expect(!IOSReleaseIndex.isNewer("0.3.7", than: "0.3.7"))
+        #expect(IOSReleaseIndex.isNewer("0.3.7", than: "0.3.7-beta.4"))
+        #expect(IOSReleaseIndex.version(fromTag: "ios-0.3.7") == "0.3.7")
+        #expect(IOSReleaseIndex.version(fromTag: "0.3.7") == nil)
+        #expect(IOSReleaseIndex.version(fromTag: "windows-0.3.7") == nil)
+        let json = """
+        [
+          {"tag_name":"0.3.7","draft":false,"body":"android","assets":[{"name":"TokiNote-0.3.7.apk","browser_download_url":"https://example.com/a.apk"}]},
+          {"tag_name":"windows-0.3.7","draft":false,"body":"windows","assets":[{"name":"TokiNote-Windows-0.3.7-win-x64.zip","browser_download_url":"https://example.com/w.zip"}]},
+          {"tag_name":"ios-0.3.6","draft":false,"body":"old","published_at":"2026-11-01T00:00:00Z","assets":[{"name":"TokiNote-ios-0.3.6.ipa","browser_download_url":"https://example.com/old.ipa"}]},
+          {"tag_name":"ios-0.3.7","draft":false,"body":"new","published_at":"2026-11-11T00:00:00Z","assets":[{"name":"TokiNote-ios-0.3.7.ipa","browser_download_url":"https://example.com/new.ipa"}]}
+        ]
+        """.data(using: .utf8)!
+        let newest = try #require(IOSReleaseIndex.newest(try #require(IOSReleaseIndex.parse(data: json))))
+        #expect(newest.tag == "ios-0.3.7")
+        #expect(newest.version == "0.3.7")
+        #expect(newest.ipaURL?.absoluteString == "https://example.com/new.ipa")
+        #expect(IOSReleaseIndex.check(data: json, currentVersion: "0.3.6") == .update(newest))
+        #expect(IOSReleaseIndex.check(data: json, currentVersion: "0.3.7") == .upToDate)
+    }
+
     @Test("no ios release is reported separately from failure")
     func noIOSRelease() throws {
         let json = """

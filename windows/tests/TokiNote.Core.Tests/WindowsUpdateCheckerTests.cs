@@ -82,8 +82,31 @@ public class WindowsUpdateCheckerTests
         Assert.Equal("0.1.1", latest?.Version);
         Assert.Equal("hello", latest?.Notes);
         Assert.Equal("TokiNote-Windows-0.1.1-win-x64.zip", latest?.Asset?.Name);
-        Assert.True(WindowsUpdateChecker.IsNewer(latest!.Version, AppVersion.Current));
-        Assert.False(WindowsUpdateChecker.IsNewer("0.1.0", AppVersion.Current));
+        Assert.True(WindowsUpdateChecker.IsNewer(latest!.Version, "0.1.0"));
+        Assert.False(WindowsUpdateChecker.IsNewer("0.1.0", "0.1.0"));
+    }
+
+    [Fact]
+    public void Version_0_3_7_is_newer_and_other_platforms_are_ignored()
+    {
+        Assert.True(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.6"));
+        Assert.False(WindowsUpdateChecker.IsNewer("0.3.6", "0.3.7"));
+        Assert.False(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.7"));
+        Assert.True(WindowsUpdateChecker.IsNewer("0.3.7", "0.3.7-beta.4"));
+        Assert.Equal("0.3.7", WindowsUpdateChecker.VersionFromTag("windows-0.3.7"));
+        Assert.False(WindowsUpdateChecker.IsWindowsTag("0.3.7"));
+        Assert.False(WindowsUpdateChecker.IsWindowsTag("ios-0.3.7"));
+
+        var latest = WindowsUpdateChecker.PickLatest([
+            Release("0.3.7"),
+            Release("ios-0.3.7"),
+            Release("windows-0.3.6"),
+            Release("windows-0.3.7"),
+        ]);
+        Assert.Equal("windows-0.3.7", latest?.Tag);
+        Assert.Equal("0.3.7", latest?.Version);
+        Assert.Equal("0.3.7", AppVersion.Current);
+        Assert.False(WindowsUpdateChecker.IsNewer(AppVersion.Current, "0.3.7"));
     }
 
     [Fact]

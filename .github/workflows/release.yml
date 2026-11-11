@@ -1,18 +1,31 @@
 name: Release
 
 # Build check (no tag, no release):
-#   opens automatically on pull requests, or run this workflow manually.
+#   opens on pull requests that touch the Android project, or run this workflow manually.
 # Publish an Android release by pushing a plain version tag:
-#   git tag 0.3.6 && git push origin 0.3.6
+#   git tag 0.3.7 && git push origin 0.3.7
 # Tags prefixed windows- or ios- do not match. versionCode stays the default
-# in app/build.gradle.kts (26 for 0.3.6) unless VERSION_CODE is set.
+# in app/build.gradle.kts (27 for 0.3.7) unless VERSION_CODE is set.
+# The signed APK is published as TokiNote-<version>.apk.
 
 on:
   pull_request:
+    paths:
+      - "app/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle/**"
+      - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - ".github/workflows/release.yml"
+      - ".github/release-notes/**"
+      - "distribution/**"
   workflow_dispatch:
   push:
     tags:
-      - 'v[0-9]*'
+      - "[0-9]*"
+      - "v*"
 
 permissions:
   contents: read
@@ -53,8 +66,7 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME#v}"
           echo "VERSION_NAME=$TAG" >> "$GITHUB_ENV"
-          # v0.1.1-b1 这类含 -b 的 tag 是测试版；v0.1.0 是正式版。
-          if [[ "$TAG" == *-b* ]]; then
+          if [[ "$TAG" == *-* ]]; then
             echo "IS_PRERELEASE=true" >> "$GITHUB_ENV"
           else
             echo "IS_PRERELEASE=false" >> "$GITHUB_ENV"
@@ -87,13 +99,18 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: bash ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace -x lintVitalAnalyzeRelease -x lintVitalRelease
 
+      - name: Name release artifacts
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk "dist/TokiNote-${VERSION_NAME}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "dist/TokiNote-${VERSION_NAME}.aab"
+          cp distribution/focus-component-1.0.zip dist/focus-component-1.0.zip
+
       - name: Prepare release notes
         run: |
           NOTES=".github/release-notes/${VERSION_NAME}.md"
           if [ ! -f "$NOTES" ]; then
-            echo "TokiNote ${VERSION_NAME}" > /tmp/notes.md
-            echo "" >> /tmp/notes.md
-            echo "This release contains fixes and improvements." >> /tmp/notes.md
+            printf 'TokiNote %s\n\n这一版包含修复和改进。\n' "$VERSION_NAME" > /tmp/notes.md
             NOTES=/tmp/notes.md
           fi
           echo "NOTES_FILE=$NOTES" >> "$GITHUB_ENV"
@@ -106,5 +123,6 @@ jobs:
           prerelease: ${{ env.IS_PRERELEASE == 'true' }}
           make_latest: ${{ env.IS_PRERELEASE == 'false' }}
           files: |
-            app/build/outputs/apk/release/app-release.apk
-            app/build/outputs/bundle/release/app-release.aab
+            dist/TokiNote-${{ env.VERSION_NAME }}.apk
+            dist/TokiNote-${{ env.VERSION_NAME }}.aab
+            dist/focus-component-1.0.zip
