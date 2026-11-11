@@ -17,9 +17,6 @@ object FocusComponent {
 
     const val ID = "focus"
     const val VERSION = "1.0.0"
-
-    /** 组件包里 manifest.json 声明的最低应用版本；低于它不应再用旧包冒充新组件。 */
-    const val MIN_APP_VERSION = "0.3.4"
     const val DOWNLOAD_URL =
         "https://github.com/ichiyotsu/TokiNote/releases/download/0.3.7/focus-component-1.0.zip"
 
