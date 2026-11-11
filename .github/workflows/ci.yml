@@ -4,26 +4,28 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'app/**'
-      - 'gradle/**'
-      - '*.gradle.kts'
-      - 'gradle.properties'
-      - 'gradlew'
-      - 'gradlew.bat'
-      - 'settings.gradle.kts'
-      - 'libs.versions.toml'
-      - '.github/workflows/release.yml'
+      - "app/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle/**"
+      - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/release.yml"
   pull_request:
+    # Android CI runs when the Android project or its workflows change.
+    # iOS lives under ios/ and Windows under windows/, so those PRs use their own workflows.
     paths:
-      - 'app/**'
-      - 'gradle/**'
-      - '*.gradle.kts'
-      - 'gradle.properties'
-      - 'gradlew'
-      - 'gradlew.bat'
-      - 'settings.gradle.kts'
-      - 'libs.versions.toml'
-      - '.github/workflows/release.yml'
+      - "app/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle/**"
+      - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/release.yml"
 
 concurrency:
   group: ci-${{ github.ref }}

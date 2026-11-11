@@ -81,6 +81,32 @@ TokiNote 是一款本地优先的笔记 + 专注应用。
 
 界面使用 Material 3 Expressive：大圆角、悬浮玻璃底栏、分段列表和弹性动效。支持深色 / 浅色、纯黑与动态取色。
 
+## Windows
+
+Windows 版在 `windows/`，用 C# / WinUI 3 / .NET 8 写成，和 Android 工程分开。界面字体是系统里的微软雅黑 UI（Microsoft YaHei UI），没有这套字体时回退到 Segoe UI Variable，再回退到 Segoe UI。不打包字体文件。启动时的 “tokinote” 字标单独使用随程序分发的 Google Sans Flex（SIL Open Font License，许可在 `windows/src/TokiNote/Assets/Fonts/OFL.txt`）。
+
+### 要求
+
+- Windows 10 版本 1809（内部版本 17763）或更高，包括 Windows 11
+- 64 位
+- 把压缩包解压到可写目录。应用内更新会直接覆盖这个目录
+
+### 安装
+
+1. 在 GitHub Releases 里找标签以 `windows-` 开头的版本，例如 `windows-0.1.0`
+2. 下载 `TokiNote-Windows-<版本>-win-x64.zip`
+3. 解压后运行 `TokiNote.exe`
+
+压缩包是自包含的，不需要另外安装 .NET 或 Windows App SDK。Windows 11 上启动画面是透明圆角卡片；Windows 10 上同一张卡片改为不透明圆角窗口。
+
+### 更新
+
+每次启动都会请求 `https://api.github.com/repos/ichiyotsu/TokiNote/releases`，在标签以 `windows-` 开头的发布里选最新的一个，和当前版本比较。有更新时弹出说明，可以下载 zip 或 exe 并安装。设置里的「检查更新」可以再查一次。离线或请求失败时不提示，笔记和专注计时照常使用。
+
+### 发布 `windows-*`
+
+合并到 `main` 之后，在那次提交上推送标签 `windows-0.1.0`（不要用 Android 的 `0.1.0` 标签）。`.github/workflows/windows.yml` 会在 Windows 运行器上测试、打包，并把 `TokiNote-Windows-0.1.0-win-x64.zip` 附加到对应的 GitHub Release。
+
 ## 已知限制
 
 1. 富文本目前是整条日记级别的字号 / 字重，不是局部加粗
