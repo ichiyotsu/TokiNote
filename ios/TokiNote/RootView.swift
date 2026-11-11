@@ -95,8 +95,12 @@ struct RootView: View {
 
     private var pad: some View {
         @Bindable var model = model
+        let selection = Binding<AppSection?>(
+            get: { model.section },
+            set: { model.section = $0 ?? model.section }
+        )
         return NavigationSplitView {
-            List(selection: $model.section) {
+            List(selection: selection) {
                 ForEach(AppSection.allCases) { section in
                     Label(section.title, systemImage: section.symbol)
                         .tag(section)

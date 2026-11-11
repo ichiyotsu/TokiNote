@@ -1,12 +1,13 @@
 import Foundation
 
-public struct IOSRelease: Equatable, Sendable {
+public struct IOSRelease: Equatable, Sendable, Identifiable {
     public var tag: String
     public var version: String
     public var notes: String
     public var ipaURL: URL?
     public var pageURL: URL?
     public var publishedAt: Date?
+    public var id: String { tag }
 
     public init(tag: String, version: String, notes: String, ipaURL: URL?, pageURL: URL?, publishedAt: Date?) {
         self.tag = tag

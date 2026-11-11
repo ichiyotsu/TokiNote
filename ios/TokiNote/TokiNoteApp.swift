@@ -1,6 +1,5 @@
 import SwiftData
 import SwiftUI
-import TokiNoteCore
 
 @main
 struct TokiNoteApp: App {
@@ -19,8 +18,4 @@ struct TokiNoteApp: App {
         }
         .commands { TokiCommands() }
     }
-}
-
-extension IOSRelease: Identifiable {
-    public var id: String { tag }
 }
