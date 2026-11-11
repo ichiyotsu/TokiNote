@@ -23,7 +23,7 @@
           "date": "2026-11-11T00:00:00Z",
           "localizedDescription": "iOS / iPadOS 0.3.7：笔记、回收站、搜索、专注计时、统计、完成通知、实时活动与桌面小组件。版本号与 Android、Windows 对齐。",
           "downloadURL": "https://github.com/ichiyotsu/TokiNote/releases/download/0.3.7/TokiNote-ios-0.3.7.ipa",
-          "size": 722388,
+          "size": 723502,
           "minOSVersion": "26.0"
         }
       ]
