@@ -1,26 +1,11 @@
 name: Release
 
-# Build check (no tag, no release):
-#   opens on pull requests that touch the Android project, or run this workflow manually.
-# Publish an Android release by pushing a plain version tag:
+# One tag publishes every platform.
 #   git tag 0.3.7 && git push origin 0.3.7
-# Tags prefixed windows- or ios- do not match. versionCode stays the default
-# in app/build.gradle.kts (27 for 0.3.7) unless VERSION_CODE is set.
-# The signed APK is published as TokiNote-<version>.apk.
+# A tag that contains "-" is a prerelease. 0.3.7 is a normal release and is marked Latest.
+# versionCode stays the default in app/build.gradle.kts (27 for 0.3.7) unless VERSION_CODE is set.
 
 on:
-  pull_request:
-    paths:
-      - "app/**"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - "gradle/**"
-      - "gradle.properties"
-      - "gradlew"
-      - "gradlew.bat"
-      - ".github/workflows/release.yml"
-      - ".github/release-notes/**"
-      - "distribution/**"
   workflow_dispatch:
   push:
     tags:
@@ -31,46 +16,20 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    if: github.event_name != 'push'
+  android:
+    name: Android
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: platforms;android-37.0 build-tools;36.0.0
-
-      - name: Drop the local dev proxy
-        run: sed -i '/^systemProp\.http\.proxy/d; /^systemProp\.https\.proxy/d' gradle.properties
-
-      - name: Unit tests and debug APK
-        run: bash ./gradlew testDebugUnitTest assembleDebug --no-daemon --stacktrace
-
-  release:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Resolve version
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
-          echo "VERSION_NAME=$TAG" >> "$GITHUB_ENV"
-          if [[ "$TAG" == *-* ]]; then
-            echo "IS_PRERELEASE=true" >> "$GITHUB_ENV"
-          else
-            echo "IS_PRERELEASE=false" >> "$GITHUB_ENV"
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$TAG" == v[0-9]* ]]; then
+            TAG="${TAG#v}"
           fi
+          echo "VERSION_NAME=$TAG" >> "$GITHUB_ENV"
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -97,6 +56,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          VERSION_NAME: ${{ env.VERSION_NAME }}
         run: bash ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace -x lintVitalAnalyzeRelease -x lintVitalRelease
 
       - name: Name release artifacts
@@ -106,14 +66,131 @@ jobs:
           cp app/build/outputs/bundle/release/app-release.aab "dist/TokiNote-${VERSION_NAME}.aab"
           cp distribution/focus-component-1.0.zip dist/focus-component-1.0.zip
 
-      - name: Prepare release notes
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: dist/*
+          if-no-files-found: error
+
+  windows:
+    name: Windows
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Unit tests
+        run: dotnet test tests/TokiNote.Core.Tests/TokiNote.Core.Tests.csproj -c Release --nologo
+
+      - name: Publish self-contained unpackaged app
+        run: dotnet publish src/TokiNote/TokiNote.csproj -c Release -r win-x64 --self-contained true -p:Platform=x64 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true
+
+      - name: Zip publish output
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
         run: |
-          NOTES=".github/release-notes/${VERSION_NAME}.md"
+          $tag = $env:GITHUB_REF_NAME
+          if ($tag.StartsWith("v") -and $tag.Length -gt 1 -and [char]::IsDigit($tag[1])) {
+            $tag = $tag.Substring(1)
+          }
+          $exe = Get-ChildItem -Recurse -Filter TokiNote.exe windows/src/TokiNote/bin |
+            Where-Object { $_.FullName -match '\\publish\\' } |
+            Select-Object -First 1
+          if (-not $exe) { throw "TokiNote.exe was not published" }
+          $name = "TokiNote-Windows-$tag-win-x64.zip"
+          if (Test-Path $name) { Remove-Item $name }
+          Compress-Archive -Path (Join-Path $exe.DirectoryName "*") -DestinationPath $name
+          Add-Content -Path $env:GITHUB_ENV -Value "ASSET_NAME=$name"
+          Get-Item $name | Select-Object FullName, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: ${{ env.ASSET_NAME }}
+          if-no-files-found: error
+
+  ios:
+    name: iOS
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: |
+          set -eux
+          if [ -d /Applications/Xcode_27.2.app ]; then
+            sudo xcode-select -s /Applications/Xcode_27.2.app
+          elif [ -d /Applications/Xcode_27.1.app ]; then
+            sudo xcode-select -s /Applications/Xcode_27.1.app
+          else
+            sudo xcode-select -s /Applications/Xcode.app
+          fi
+          xcodebuild -version
+
+      - name: Unit tests
+        run: xcrun swift test --package-path ios/TokiNoteCore
+
+      - name: Unsigned device build
+        run: |
+          set -eux
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$TAG" == v[0-9]* ]]; then
+            TAG="${TAG#v}"
+          fi
+          chmod +x ios/scripts/unsigned-ipa.sh
+          ios/scripts/unsigned-ipa.sh "build/TokiNote-ios-${TAG}.ipa"
+          find ios/build -name '*.ipa' -print
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-ios
+          path: ios/build/*.ipa
+          if-no-files-found: error
+
+  publish:
+    name: Publish
+    needs: [android, windows, ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$TAG" == v[0-9]* ]]; then
+            TAG="${TAG#v}"
+          fi
+          echo "VERSION_NAME=$TAG" >> "$GITHUB_ENV"
+          if [[ "$TAG" == *-* ]]; then
+            echo "IS_PRERELEASE=true" >> "$GITHUB_ENV"
+          else
+            echo "IS_PRERELEASE=false" >> "$GITHUB_ENV"
+          fi
+          NOTES=".github/release-notes/${TAG}.md"
           if [ ! -f "$NOTES" ]; then
-            printf 'TokiNote %s\n\n这一版包含修复和改进。\n' "$VERSION_NAME" > /tmp/notes.md
+            printf 'TokiNote %s\n\n这一版包含修复和改进。\n' "$TAG" > /tmp/notes.md
             NOTES=/tmp/notes.md
           fi
           echo "NOTES_FILE=$NOTES" >> "$GITHUB_ENV"
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: List assets
+        run: ls -l dist
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -122,7 +199,10 @@ jobs:
           body_path: ${{ env.NOTES_FILE }}
           prerelease: ${{ env.IS_PRERELEASE == 'true' }}
           make_latest: ${{ env.IS_PRERELEASE == 'false' }}
+          fail_on_unmatched_files: true
           files: |
             dist/TokiNote-${{ env.VERSION_NAME }}.apk
             dist/TokiNote-${{ env.VERSION_NAME }}.aab
             dist/focus-component-1.0.zip
+            dist/TokiNote-Windows-${{ env.VERSION_NAME }}-win-x64.zip
+            dist/TokiNote-ios-${{ env.VERSION_NAME }}.ipa

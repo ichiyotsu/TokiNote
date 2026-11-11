@@ -55,7 +55,7 @@ Android 12 及以上（`minSdk` 31）。
 
 ### 应用内更新
 
-每次启动都会读取 [GitHub Releases](https://api.github.com/repos/ichiyotsu/TokiNote/releases)。只认 Android 标签，例如 `0.3.7`。`ios-` 和 `windows-` 开头的标签会被忽略。
+每次启动都会读取 [GitHub Releases](https://api.github.com/repos/ichiyotsu/TokiNote/releases)。只认纯版本号标签，例如 `0.3.7`，并且这个发布里要有 APK。没有 APK 的发布会被跳过。
 
 正式版通道不提供预发布。`0.3.7` 比 `0.3.6` 和 `0.3.7-beta.4` 都新；同一核心版本里正式版高于测试版。测试版只在打开 Beta 通道时出现。
 
@@ -77,7 +77,7 @@ Android 12 及以上（`minSdk` 31）。
 
 ### 下载
 
-[TokiNote-Windows-0.3.7-win-x64.zip](https://github.com/ichiyotsu/TokiNote/releases/download/windows-0.3.7/TokiNote-Windows-0.3.7-win-x64.zip)
+[TokiNote-Windows-0.3.7-win-x64.zip](https://github.com/ichiyotsu/TokiNote/releases/download/0.3.7/TokiNote-Windows-0.3.7-win-x64.zip)
 
 ### 安装
 
@@ -89,7 +89,7 @@ Android 12 及以上（`minSdk` 31）。
 
 ### 应用内更新
 
-每次启动都会请求 GitHub Releases，只看标签以 `windows-` 开头的发布（例如 `windows-0.3.7`），和当前版本比较。`0.3.7` 与 `ios-0.3.7` 不会被当成 Windows 更新。`0.3.7` 比 `0.3.6` 新，也比同一核心版本的测试版新。
+每次启动都会请求 GitHub Releases，只看纯版本号标签（例如 `0.3.7`），并下载文件名以 `-win-x64.zip` 结尾的压缩包。没有这个文件的发布会被跳过。`0.3.7` 比 `0.3.6` 新，也比同一核心版本的测试版新。
 
 有更新时弹出说明，可以下载 zip 并安装：应用退出后，脚本把新文件覆盖到当前目录，再重新打开。设置里的「检查更新」可以再查一次。离线或请求失败时不提示，笔记和专注计时照常使用。窗口收在托盘里时进程还在，计时继续；完全退出后，下次打开按保存的截止时间恢复。
 
@@ -109,17 +109,17 @@ iPad 使用系统分栏：侧边栏是笔记、专注、统计、设置，笔记
 
 ### 下载
 
-[TokiNote-ios-0.3.7.ipa](https://github.com/ichiyotsu/TokiNote/releases/download/ios-0.3.7/TokiNote-ios-0.3.7.ipa)
+[TokiNote-ios-0.3.7.ipa](https://github.com/ichiyotsu/TokiNote/releases/download/0.3.7/TokiNote-ios-0.3.7.ipa)
 
 SideStore 源：`https://raw.githubusercontent.com/ichiyotsu/TokiNote/main/ios/sidestore/apps.json`
 
 ### 应用内更新
 
-除了启动时和设置里的「检查更新」，iOS 版不访问网络。检查更新请求 `https://api.github.com/repos/ichiyotsu/TokiNote/releases`，只看 tag 以 `ios-` 开头的发布（例如 `ios-0.3.7`），和当前版本比较。Android 的 `0.3.7` 和 Windows 的 `windows-0.3.7` 会被忽略。`0.3.7` 比 `0.3.6` 新，也比 `0.3.7-beta.4` 新。
+除了启动时和设置里的「检查更新」，iOS 版不访问网络。检查更新请求 `https://api.github.com/repos/ichiyotsu/TokiNote/releases`，只看纯版本号标签（例如 `0.3.7`），并下载 IPA。没有 IPA 的发布会被跳过。`0.3.7` 比 `0.3.6` 新，也比 `0.3.7-beta.4` 新。
 
 有更新时弹出说明，可以下载 IPA，或用 `sidestore://install?url=` 交给 SideStore；本机没有 SideStore 时改为打开发布页面。没有网络时静默跳过，不弹错误。
 
-GitHub Actions（`.github/workflows/ios.yml`）在改动 `ios/` 的 PR 上，用带最新 Xcode 的 macOS runner 跑单元测试，并打一个未签名 IPA。推送 tag `ios-*` 时，把这个 IPA 附到对应的 GitHub Release，且不会把它标成仓库的 Latest（Latest 留给 Android 正式版）。
+GitHub Actions（`.github/workflows/ios.yml`）在改动 `ios/` 的 PR 上，用带最新 Xcode 的 macOS runner 跑单元测试，并打一个未签名 IPA。正式发布不单独打 `ios-*` 标签：推送 `0.3.7` 时，`.github/workflows/release.yml` 把 IPA 和另外两个平台的安装包放进同一个 GitHub Release。
 
 ### 用 SideStore 安装
 
@@ -187,7 +187,7 @@ iOS 26 / iPadOS 26 按官方安装页里 **iOS 18 及以上** 的步骤做（[In
 IPA 没有签名。不能用隔空投送或「文件」直接打开来安装，要交给 SideStore，由它用你的 Apple ID 重签。
 
 1. 确认 Wi-Fi 已连接，LocalDevVPN 已连接，SideStore 已经刷新过自己。
-2. 下载 [TokiNote-ios-0.3.7.ipa](https://github.com/ichiyotsu/TokiNote/releases/download/ios-0.3.7/TokiNote-ios-0.3.7.ipa)，或在 [发布列表](https://github.com/ichiyotsu/TokiNote/releases) 里找 tag 以 `ios-` 开头的版本。
+2. 下载 [TokiNote-ios-0.3.7.ipa](https://github.com/ichiyotsu/TokiNote/releases/download/0.3.7/TokiNote-ios-0.3.7.ipa)，或在 [0.3.7 发布](https://github.com/ichiyotsu/TokiNote/releases/tag/0.3.7) 里找这个 IPA。
 3. 任选一种安装方式：
    - 在 SideStore 里添加源：`https://raw.githubusercontent.com/ichiyotsu/TokiNote/main/ios/sidestore/apps.json`。也可以点 `sidestore://source?url=https://raw.githubusercontent.com/ichiyotsu/TokiNote/main/ios/sidestore/apps.json`（设备上已安装 SideStore 时才会打开）。源文件在仓库的 `ios/sidestore/apps.json`。`size` 是 IPA 的字节数，只影响显示，不改变下载地址。
    - 或者在 TokiNote 的更新说明里点「用 SideStore 打开」。这会打开 `sidestore://install?url=` 加上 IPA 的直链（[URL 方案](https://docs.sidestore.io/docs/advanced/url-schema)）。SideStore 仍会再问一次是否安装。
@@ -218,7 +218,7 @@ IPA 没有签名。不能用隔空投送或「文件」直接打开来安装，�
 | 打开 TokiNote 时说「不再可用」 | 描述文件过期了。连上 Wi-Fi 和 LocalDevVPN，在 SideStore 里刷新。 |
 | 登录失败，或 Apple ID 被锁 | 多是 Anisette 服务器的问题。在 SideStore 设置里换官方列出的 Anisette 服务器，不要把账户密码交给第三方网页。 |
 | 开发者模式找不到 | iOS 16 及以上在「隐私与安全性」最下面。没有这项时，先在「VPN 与设备管理」里信任开发者 App，再重启看一次。 |
-| 更新检查没有反应 | 没有 `ios-*` 发布，或 GitHub 连不上。这是预期行为，离线时不会报错。可以稍后在设置里再点「检查更新」。 |
+| 更新检查没有反应 | 还没有带 IPA 的纯版本号发布，或 GitHub 连不上。这是预期行为，离线时不会报错。可以稍后在设置里再点「检查更新」。 |
 
 ## 从源码构建
 
@@ -232,7 +232,7 @@ bash ./gradlew assembleDebug
 bash ./gradlew assembleRelease
 ```
 
-`VERSION_NAME` 和 `VERSION_CODE` 不设时，用 0.3.7 和 27。推送标签 `0.3.7` 后，`.github/workflows/release.yml` 构建签名 APK / AAB，命名为 `TokiNote-0.3.7.apk` 与 `TokiNote-0.3.7.aab`，并附上 `focus-component-1.0.zip`。说明文件是 `.github/release-notes/0.3.7.md`。带 `-` 的标签标成 prerelease，`0.3.7` 这种正式版标成 Latest。`ios-*` 和 `windows-*` 不会触发这个工作流。
+`VERSION_NAME` 和 `VERSION_CODE` 不设时，用 0.3.7 和 27。推送标签 `0.3.7` 后，`.github/workflows/release.yml` 同时构建 Android、Windows 和 iOS，把 `TokiNote-0.3.7.apk`、`TokiNote-0.3.7.aab`、`focus-component-1.0.zip`、`TokiNote-Windows-0.3.7-win-x64.zip` 和 `TokiNote-ios-0.3.7.ipa` 放进同一个 GitHub Release。说明文件是 `.github/release-notes/0.3.7.md`。带 `-` 的标签标成 prerelease，`0.3.7` 这种正式版标成 Latest。
 
 ### Windows
 
@@ -243,7 +243,7 @@ dotnet test windows/tests/TokiNote.Core.Tests/TokiNote.Core.Tests.csproj -c Rele
 dotnet publish windows/src/TokiNote/TokiNote.csproj -c Release -r win-x64 --self-contained true -p:Platform=x64 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true
 ```
 
-推送标签 `windows-0.3.7` 后，`.github/workflows/windows.yml` 在 Windows 运行器上测试、打包，并把 `TokiNote-Windows-0.3.7-win-x64.zip` 附到对应的 GitHub Release。说明文件是 `.github/release-notes/windows-0.3.7.md`。这个 Release 不会被标成 Latest。
+Windows 的安装包由上面的 `0.3.7` 标签一并打出，文件名是 `TokiNote-Windows-0.3.7-win-x64.zip`。`.github/workflows/windows.yml` 只在改动 `windows/` 的 PR 上跑测试和打包。
 
 ### iOS 与 iPadOS
 
@@ -254,7 +254,7 @@ xcrun swift test --package-path ios/TokiNoteCore
 ios/scripts/unsigned-ipa.sh ios/build/TokiNote-ios-0.3.7.ipa
 ```
 
-推送标签 `ios-0.3.7` 后，`.github/workflows/ios.yml` 会在 `xcode-27` runner 上选择已安装的最新 Xcode，跑 `TokiNoteCore` 的单元测试，再用 `CODE_SIGNING_ALLOWED=NO` 打出未签名的 Payload IPA，文件名为 `TokiNote-ios-0.3.7.ipa`，并把它附到这个 tag 的 GitHub Release。说明文字用 `.github/release-notes/ios-0.3.7.md`。这个 Release 不会被标成仓库的 Latest。
+iOS 的 IPA 也由 `0.3.7` 标签打出，文件名是 `TokiNote-ios-0.3.7.ipa`。`.github/workflows/ios.yml` 只在改动 `ios/` 的 PR 上跑测试和未签名打包。
 
 ## 许可
 

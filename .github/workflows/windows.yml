@@ -5,13 +5,9 @@ on:
     paths:
       - "windows/**"
       - ".github/workflows/windows.yml"
-      - ".github/release-notes/windows-*"
-  push:
-    tags:
-      - "windows-*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -77,13 +73,7 @@ jobs:
             Where-Object { $_.FullName -match '\\publish\\' } |
             Select-Object -First 1
           if (-not $exe) { throw "TokiNote.exe was not published" }
-          if ($env:GITHUB_REF_TYPE -eq "tag") {
-            $version = $env:GITHUB_REF_NAME.Substring("windows-".Length)
-            $name = "TokiNote-Windows-$version-win-x64.zip"
-            Add-Content -Path $env:GITHUB_ENV -Value "VERSION_NAME=$version"
-          } else {
-            $name = "TokiNote-Windows-win-x64.zip"
-          }
+          $name = "TokiNote-Windows-win-x64.zip"
           if (Test-Path $name) { Remove-Item $name }
           Compress-Archive -Path (Join-Path $exe.DirectoryName "*") -DestinationPath $name
           Add-Content -Path $env:GITHUB_ENV -Value "ASSET_NAME=$name"
@@ -94,27 +84,3 @@ jobs:
           name: ${{ env.ASSET_NAME }}
           path: ${{ env.ASSET_NAME }}
           if-no-files-found: error
-
-      - name: Resolve release notes
-        if: startsWith(github.ref, 'refs/tags/windows-')
-        shell: bash
-        working-directory: ${{ github.workspace }}
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          NOTES=".github/release-notes/${TAG}.md"
-          if [ ! -f "$NOTES" ]; then
-            printf 'TokiNote Windows %s\n\n这一版包含修复和改进。\n' "${TAG#windows-}" > "$RUNNER_TEMP/windows-notes.md"
-            NOTES="$RUNNER_TEMP/windows-notes.md"
-          fi
-          echo "NOTES_FILE=$NOTES" >> "$GITHUB_ENV"
-
-      - name: Attach the zip to the GitHub release
-        if: startsWith(github.ref, 'refs/tags/windows-')
-        uses: softprops/action-gh-release@v2
-        with:
-          name: TokiNote Windows ${{ env.VERSION_NAME }}
-          body_path: ${{ env.NOTES_FILE }}
-          files: ${{ env.ASSET_NAME }}
-          make_latest: false
-          prerelease: ${{ contains(github.ref_name, 'beta') }}
-          fail_on_unmatched_files: true

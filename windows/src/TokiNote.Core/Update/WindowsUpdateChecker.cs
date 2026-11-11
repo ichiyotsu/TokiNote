@@ -26,25 +26,43 @@ public static class WindowsUpdateChecker
     public const string ReleasesUrl = "https://api.github.com/repos/ichiyotsu/TokiNote/releases?per_page=100";
     public const string UserAgent = "TokiNote-Windows";
 
-    public static bool IsWindowsTag(string? tag) =>
-        !string.IsNullOrWhiteSpace(tag) &&
-        tag.Trim().StartsWith("windows-", StringComparison.OrdinalIgnoreCase);
-
     public static string VersionFromTag(string tag)
     {
         var value = tag.Trim();
-        const string prefix = "windows-";
-        if (value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-        {
-            value = value[prefix.Length..];
-        }
-
         if (value.Length > 1 && (value[0] == 'v' || value[0] == 'V') && char.IsDigit(value[1]))
         {
             value = value[1..];
         }
 
         return value;
+    }
+
+    public static bool IsPlainVersionTag(string? tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            return false;
+        }
+
+        var version = VersionFromTag(tag);
+        var dash = version.IndexOf('-');
+        var core = dash < 0 ? version : version[..dash];
+        if (core.Length == 0 || core.Split('.', StringSplitOptions.RemoveEmptyEntries).Length == 0)
+        {
+            return false;
+        }
+
+        foreach (var part in core.Split('.', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (!int.TryParse(part, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+            {
+                return false;
+            }
+        }
+
+        return core.Count(character => character == '.') == core.Split('.', StringSplitOptions.RemoveEmptyEntries).Length - 1
+            && !core.StartsWith('.')
+            && !core.EndsWith('.');
     }
 
     public static bool IsNewer(string remote, string current)
@@ -80,7 +98,7 @@ public static class WindowsUpdateChecker
         WindowsRelease? best = null;
         foreach (var release in releases)
         {
-            if (!IsWindowsTag(release.Tag))
+            if (release.Asset == null || !IsPlainVersionTag(release.Tag))
             {
                 continue;
             }
@@ -269,29 +287,8 @@ public static class WindowsUpdateChecker
         return null;
     }
 
-    private static int Score(string name)
-    {
-        var lower = name.ToLowerInvariant();
-        var exe = lower.EndsWith(".exe", StringComparison.Ordinal);
-        var zip = lower.EndsWith(".zip", StringComparison.Ordinal);
-        if (!exe && !zip)
-        {
-            return 0;
-        }
-
-        var x64 = lower.Contains("x64", StringComparison.Ordinal) || lower.Contains("win64", StringComparison.Ordinal);
-        if (exe && x64)
-        {
-            return 4;
-        }
-
-        if (zip && x64)
-        {
-            return 3;
-        }
-
-        return exe ? 2 : 1;
-    }
+    private static int Score(string name) =>
+        name.EndsWith("-win-x64.zip", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
 
     private static string ReadString(JsonElement element, string name)
     {

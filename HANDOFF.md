@@ -7,19 +7,19 @@
 ## 1. 仓库与发布
 
 - 仓库：https://github.com/ichiyotsu/Tokinote （public，main）
-- 当前 Release：正式版 **0.3.7**。Android 标签 `0.3.7`（Latest，versionName 0.3.7，versionCode 27），iOS 标签 `ios-0.3.7`（build 2），Windows 标签 `windows-0.3.7`（程序集 0.3.7.0）。发布时删除更早的 Release 和 tag
-- 发布策略：三端使用同一个版本号。Android 标签是纯版本号，iOS 用 `ios-`，Windows 用 `windows-`。带 `-` 的 Android 标签是 prerelease
+- 当前 Release：正式版 **0.3.7**（Latest）。一个标签 `0.3.7` 同时放 Android APK / AAB、专注组件、Windows zip 和 iOS IPA。Android versionName 0.3.7 / versionCode 27，iOS build 2，Windows 程序集 0.3.7.0
+- 发布策略：三端共用纯版本号。带 `-` 的标签是 prerelease。各端只下载自己的文件：`.apk`、`-win-x64.zip`、`.ipa`
 - 外观只有 Material 3 Expressive，没有 One UI 切换
 - 版本规则：
   - 正式版 `X.Y.Z`，测试版 `X.Y.Z-bN`（如 `0.1.1-b1`）。已发布过的 `-beta` 写法更新逻辑仍认得
   - 同一核心版本里正式版更高：`0.1.1-b1` < `0.1.1`，`0.3.7-beta.4` < `0.3.7`
-  - Android 应用内更新忽略 `ios-` 与 `windows-`。iOS 只认 `ios-`，Windows 只认 `windows-`
+  - 三个平台的应用内更新都读纯版本号标签，并按文件名挑选安装包
   - versionCode 只递增。0.3.7 是 27
 - 不再使用 Alpha 通道
 - 发版前与用户确认版本号和文案
 - Release Notes 固定使用 `docs/release-standard.md` 的「新增功能 / 设计特性」两段式模板；跨工作区同步 Luma、TokiTodo 前需用户确认
 - 包名固定 `com.tokinote.app`
-- 发版：把对应标签推到包含说明文件的提交上。`.github/workflows/release.yml` 打签名包并上传 `TokiNote-<versionName>.apk`。iOS 与 Windows 分别由 `ios.yml`、`windows.yml` 上传 IPA 和 zip
+- 发版：把纯版本号标签推到包含说明文件的提交上。`.github/workflows/release.yml` 构建三端，并上传到同一个 Release
 
 ## 2. 签名密钥（重要）
 
@@ -88,7 +88,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 当前正式版是 0.3.7（`0.3.7`、`ios-0.3.7`、`windows-0.3.7`）。Android APK 命名 `TokiNote-<version>.apk`
+2. 当前正式版是 0.3.7，三个平台共用标签 `0.3.7`。Android APK 命名 `TokiNote-<version>.apk`
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
