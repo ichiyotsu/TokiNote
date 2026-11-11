@@ -1578,7 +1578,7 @@ internal fun cleanReleaseNotes(raw: String): String = raw
 private fun openGitHub(context: Context) {
     runCatching {
         context.startActivity(
-            Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ichiyotsu/TokiNote"))
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ichiyotsu/Tokinote"))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
     }

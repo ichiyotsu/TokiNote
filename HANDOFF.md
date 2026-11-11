@@ -6,16 +6,20 @@
 
 ## 1. 仓库与发布
 
-- 仓库：https://github.com/ichiyotsu/TokiNote （public，main）
+- 仓库：https://github.com/ichiyotsu/Tokinote （public，main）
 - 当前 Release：正式版 **0.3.5**（Latest，versionCode 22）、Beta **0.3.7-beta.4**（versionCode 25）、**0.3.7-beta.3**、**0.3.7-beta.2**、**0.1.0**
 - 发布策略：正式版与 Beta 轮流迭代；**从 0.3.5 起不再删除旧 Release，全部保留历史**
 - 正式版只从 Beta 验证后的内容收敛；Beta 可领先正式版多个版本
 - 发布开关：`TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED = true`，外观显示设计风格入口（MD3E / One UI）
 - 版本规则：
-  - 正式版 `x.y.z`：完整、稳定
-  - Beta `x.y.z-beta` / `x.y.z-beta.N`：可领先正式版多个版本，也可能包含不同功能
-  - Beta 通道 = beta + 正式版中版本更高者；同版本正式版优先
+  - 正式版 `X.Y.Z`，测试版 `X.Y.Z-bN`（如 `0.1.1-b1`）
+  - 顺序：`0.1.0` → `0.1.1-b1` → `0.1.1-b2` → … → `0.1.1`；测试版可以领先正式版多个版本
+  - 同一核心版本里正式版更高：`0.1.1-b1` < `0.1.1`
+  - 新 tag 用 `v` 前缀。release 工作流里含 `-b` 的 tag 是 prerelease，其余是正式 release
+  - 已发布 tag 仍是 `0.1.0`、`0.3.5`、`0.3.7-beta.2`、`0.3.7-beta.3`、`0.3.7-beta.4`
+  - Beta 通道 = 测试版 + 正式版中版本更高者；同版本正式版优先
   - Release 通道只读正式版
+  - versionCode 只递增。已发布 0.3.5 为 22，0.3.7-beta.4 为 25。源码默认仍是 1
 - 不再使用 Alpha 通道
 - 发版前与用户确认版本号和文案
 - Release Notes 固定使用 `docs/release-standard.md` 的「新增功能 / 设计特性」两段式模板；跨工作区同步 Luma、TokiTodo 前需用户确认
@@ -92,7 +96,7 @@
 ## 6. 待办（下一会话优先）
 
 1. 真机验证长按预览、不定时专注（模拟器 2026-10-24 已通过：长按卡片出预览；长按计时数字进入 00:03 正向计时；双指/双击手势在 adb 注入下未能确认）
-2. 当前为 0.3.5 正式版 + 0.3.7-beta.4 + 0.3.7-beta.3 + 0.3.7-beta.2 + 0.1.0；后续正式版/Beta 轮流迭代，旧 Release 全部保留；One UI 入口已开启；APK 命名 `TokiNote-<version>.apk`
+2. 当前为 0.3.5 正式版 + 0.3.7-beta.4 + 0.3.7-beta.3 + 0.3.7-beta.2 + 0.1.0；之后的 tag 用 `v` 前缀，测试版用 `X.Y.Z-bN`；旧 Release 全部保留；One UI 入口已开启；已发布 APK 命名 `TokiNote-<version>.apk`
 3. 真机观察毛玻璃、长按膨胀、编辑页滚动折叠、抽屉的开合性能
 4. 未做：选中行独立字号（需要富文本 span 存储，单独一轮）
 5. 待验证：编辑页长文输入时光标是否会自动滚动跟随（目前依赖 BasicTextField 在 verticalScroll 中的 bring-into-view 行为）
