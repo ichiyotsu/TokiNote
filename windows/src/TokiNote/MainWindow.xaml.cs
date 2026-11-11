@@ -20,7 +20,9 @@ public sealed partial class MainWindow : Window
     {
         _host = host;
         InitializeComponent();
-        Root.FontFamily = new FontFamily(AppFonts.FamilySource);
+        var appFont = new FontFamily(AppFonts.FamilySource);
+        Nav.FontFamily = appFont;
+        AppTitle.FontFamily = appFont;
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBar);
         AppWindow.Title = "TokiNote";
@@ -68,7 +70,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        Root.Background = new SolidColorBrush(Colors.Transparent);
+        Root.Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
         try
         {
             if (MicaController.IsSupported())

@@ -81,7 +81,7 @@ public sealed partial class NotesPage : Page
         _selectedId = note.Id;
         Reload(note.Id);
         ShowEditor(note);
-        TitleBox.Focus(FocusState.Programmatic);
+        TitleBox.Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
     }
 
     private void NoteList_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -13,7 +13,8 @@ public sealed class TransparentBackdrop : SystemBackdrop
 {
     protected override void OnTargetConnected(ICompositionSupportsSystemBackdrop connectedTarget, XamlRoot xamlRoot)
     {
-        connectedTarget.SystemBackdrop = xamlRoot.Compositor.CreateColorBrush(Color.FromArgb(0, 0, 0, 0));
+        var compositor = CompositionTarget.GetCompositorForCurrentThread();
+        connectedTarget.SystemBackdrop = compositor.CreateColorBrush(Color.FromArgb(0, 0, 0, 0));
     }
 
     protected override void OnTargetDisconnected(ICompositionSupportsSystemBackdrop connectedTarget)

@@ -1,4 +1,3 @@
-using Microsoft.UI.Composition;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -203,21 +202,16 @@ public sealed partial class SplashWindow : Window
             size = new System.Numerics.Vector2(368, 240);
         }
 
-        var geometry = compositor.CreateRoundedRectangleGeometry();
-        geometry.Size = size;
-        geometry.CornerRadius = new System.Numerics.Vector2(36, 36);
-        var shape = compositor.CreateSpriteShape(geometry);
-        shape.FillBrush = compositor.CreateColorBrush(Color.FromArgb(255, 0, 0, 0));
-        var shapeVisual = compositor.CreateShapeVisual();
-        shapeVisual.Size = size;
-        shapeVisual.Shapes.Add(shape);
+        var sprite = compositor.CreateSpriteVisual();
+        sprite.Size = size;
+        sprite.Brush = compositor.CreateColorBrush(Color.FromArgb(255, 0, 0, 0));
         var shadow = compositor.CreateDropShadow();
         shadow.BlurRadius = 30;
         shadow.Offset = new System.Numerics.Vector3(0, 10, 0);
         shadow.Color = Color.FromArgb(255, 0, 0, 0);
         shadow.Opacity = 0.28f;
-        shapeVisual.Shadow = shadow;
-        ElementCompositionPreview.SetElementChildVisual(ShadowHost, shapeVisual);
+        sprite.Shadow = shadow;
+        ElementCompositionPreview.SetElementChildVisual(ShadowHost, sprite);
     }
 
     private void PlayEntrance()
