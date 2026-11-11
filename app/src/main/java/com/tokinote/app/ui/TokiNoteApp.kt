@@ -1,6 +1,12 @@
 package com.tokinote.app.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -37,6 +43,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,12 +56,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tokinote.app.R
@@ -79,7 +87,6 @@ import com.tokinote.app.ui.settings.SettingsScreen
 import com.tokinote.app.ui.settings.SettingsSidebar
 import com.tokinote.app.ui.settings.UpdateAnnouncementHost
 import com.tokinote.app.ui.theme.LocalDarkTheme
-import com.tokinote.app.ui.theme.LocalDesignStyle
 import com.tokinote.app.ui.theme.tokiGlass
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -106,37 +113,35 @@ fun TokiNoteApp(viewModel: AppViewModel) {
     val focusState by focusViewModel.state.collectAsStateWithLifecycle()
     val hazeState = rememberHazeState()
     val darkTheme = LocalDarkTheme.current
-    val accent = MaterialTheme.colorScheme.primary
-    val oneUi = LocalDesignStyle.current == com.tokinote.app.data.DesignStyle.OneUI
-    val smoke = when {
-        oneUi && darkTheme -> Color.Black.copy(alpha = 0.62f)
-        oneUi -> Color.Black.copy(alpha = 0.42f)
-        darkTheme -> Color.Black.copy(alpha = 0.16f)
-        else -> Color.Black.copy(alpha = 0.03f)
-    }
-    val frost = if (oneUi) {
-        Color.White.copy(alpha = if (darkTheme) 0.06f else 0.08f)
-    } else {
-        Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f)
-    }
-    val glassFallback = if (oneUi) {
-        Color.Black.copy(alpha = 0.72f)
-    } else {
-        Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f)
-    }
+    val smoke = if (darkTheme) Color.Black.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.03f)
+    val frost = Color.White.copy(alpha = if (darkTheme) 0.08f else 0.10f)
+    val glassFallback = Color.Black.copy(alpha = if (darkTheme) 0.55f else 0.30f)
     val glass = Modifier.tokiGlass(
         hazeState = hazeState,
-        blurRadius = if (oneUi) 52.dp else 30.dp,
+        blurRadius = 30.dp,
         tints = listOf(smoke, frost),
         fallback = glassFallback,
     )
 
     LaunchedEffect(settings) { focusViewModel.configure(settings) }
-    LaunchedEffect(focusViewModel) {
-        focusViewModel.focusCompleted.collect { minutes -> viewModel.recordFocusSession(minutes) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, focusViewModel) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) focusViewModel.sync()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    LaunchedEffect(focusViewModel) {
-        focusViewModel.breakCompleted.collect { minutes -> viewModel.recordBreakSession(minutes) }
+    val notificationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { }
+    fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < 33) return
+        val granted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!granted) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
     val backStack = rememberSaveable(
@@ -184,35 +189,9 @@ fun TokiNoteApp(viewModel: AppViewModel) {
 
     BackHandler(enabled = backStack.size > 1) { goBack() }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .then(
-                if (oneUi) {
-                    Modifier.background(
-                        Brush.linearGradient(
-                            if (darkTheme) {
-                                listOf(
-                                    lerp(Color(0xFF08090D), accent, 0.08f),
-                                    lerp(Color(0xFF0C1424), accent, 0.12f),
-                                    Color(0xFF1A101B),
-                                )
-                            } else {
-                                listOf(
-                                    lerp(Color(0xFFF2F5FB), accent, 0.04f),
-                                    lerp(Color(0xFFF8F2FA), accent, 0.05f),
-                                    Color(0xFFFDF4F7),
-                                )
-                            },
-                        ),
-                    )
-                } else {
-                    Modifier
-                },
-            ),
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            containerColor = if (oneUi) Color.Transparent else MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.surface,
             contentWindowInsets = WindowInsets.safeDrawing,
             bottomBar = {
             AnimatedVisibility(
@@ -325,11 +304,17 @@ fun TokiNoteApp(viewModel: AppViewModel) {
                 Dest.Focus -> FocusScreen(
                     state = focusState,
                     contentPadding = padding,
-                    onToggle = focusViewModel::toggle,
+                    onToggle = {
+                        if (!focusState.running) requestNotificationPermission()
+                        focusViewModel.toggle()
+                    },
                     onReset = focusViewModel::reset,
                     onSkip = focusViewModel::skip,
                     onOpenTimerSettings = { backStack.add(Dest.Timer) },
-                    onStartIndefinite = focusViewModel::startIndefinite,
+                    onScheduleIndefinite = { delayMs ->
+                        requestNotificationPermission()
+                        focusViewModel.scheduleIndefinite(delayMs)
+                    },
                 )
 
                 Dest.Settings -> SettingsScreen(

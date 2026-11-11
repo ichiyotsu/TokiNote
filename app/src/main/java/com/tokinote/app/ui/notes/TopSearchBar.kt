@@ -39,8 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tokinote.app.R
-import com.tokinote.app.data.DesignStyle
-import com.tokinote.app.ui.theme.LocalDesignStyle
 
 enum class HomeTab { Notes, Album, Stats }
 
@@ -67,7 +65,6 @@ fun TopSearchBar(
     glass: Modifier = Modifier,
     modifier: Modifier = Modifier,
 ) {
-    val oneUi = LocalDesignStyle.current == DesignStyle.OneUI
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -83,17 +80,17 @@ fun TopSearchBar(
                     scaleY = 0.92f + 0.08f * backdropProgress.coerceIn(0f, 1f)
                     transformOrigin = TransformOrigin(0.5f, 0f)
                 }
-                .clip(RoundedCornerShape(if (oneUi) 26.dp else 30.dp))
+                .clip(RoundedCornerShape(30.dp))
                 .then(glass),
         )
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = if (oneUi) 24.dp else 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
         TopActionButton(
-            icon = if (oneUi) Icons.Outlined.Menu else Icons.Filled.Menu,
+            icon = Icons.Filled.Menu,
             contentDescription = stringResource(R.string.drawer_open),
             tooltip = stringResource(R.string.tooltip_navigation),
             onClick = onMenu,
@@ -106,16 +103,8 @@ fun TopSearchBar(
                 .height(48.dp)
                 .clip(CircleShape)
                 .background(
-                    (if (oneUi) {
-                        MaterialTheme.colorScheme.surfaceContainerLow
-                    } else {
-                        MaterialTheme.colorScheme.surfaceContainer
-                    }).copy(
-                        alpha = if (oneUi) {
-                            0.94f - 0.34f * backdropProgress.coerceIn(0f, 1f)
-                        } else {
-                            0.58f * (1f - backdropProgress.coerceIn(0f, 1f))
-                        },
+                    MaterialTheme.colorScheme.surfaceContainer.copy(
+                        alpha = 0.58f * (1f - backdropProgress.coerceIn(0f, 1f)),
                     ),
                 )
                 .padding(horizontal = 14.dp),
@@ -159,9 +148,9 @@ fun TopSearchBar(
             Spacer(Modifier.width(4.dp))
             TopActionButton(
                 icon = if (viewMode == HomeViewMode.Grid) {
-                    if (oneUi) Icons.Outlined.ViewAgenda else Icons.Filled.ViewAgenda
+                    Icons.Filled.ViewAgenda
                 } else {
-                    if (oneUi) Icons.Outlined.GridView else Icons.Filled.GridView
+                    Icons.Filled.GridView
                 },
                 contentDescription = stringResource(
                     if (viewMode == HomeViewMode.Grid) R.string.view_list else R.string.view_grid,
@@ -175,7 +164,7 @@ fun TopSearchBar(
             )
             Spacer(Modifier.width(4.dp))
             TopActionButton(
-                icon = if (oneUi) Icons.Outlined.SwapVert else Icons.Filled.SwapVert,
+                icon = Icons.Filled.SwapVert,
                 contentDescription = stringResource(
                     if (sortAscending) R.string.sort_descending else R.string.sort_ascending,
                 ),

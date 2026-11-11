@@ -97,10 +97,8 @@ import com.tokinote.app.data.AppSettings
 import com.tokinote.app.data.AppFont
 import com.tokinote.app.data.ColorPreset
 import com.tokinote.app.data.CustomFont
-import com.tokinote.app.data.DesignStyle
 import com.tokinote.app.data.ReleaseInfo
 import com.tokinote.app.data.ThemeMode
-import com.tokinote.app.data.TokiFeatures
 import com.tokinote.app.data.UpdateChecker
 import com.tokinote.app.ui.SettingsPage
 import com.tokinote.app.ui.components.ExpressiveTopBar
@@ -109,7 +107,6 @@ import com.tokinote.app.ui.components.PillGroup
 import com.tokinote.app.ui.components.SegmentedColumn
 import com.tokinote.app.ui.components.SegmentedListItem
 import com.tokinote.app.ui.components.segmentedShape
-import com.tokinote.app.ui.theme.LocalDesignStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -145,18 +142,10 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(
-                    horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 16.dp,
+                    horizontal = 16.dp,
                 ),
         ) {
             Spacer(Modifier.height(28.dp))
-            if (LocalDesignStyle.current == DesignStyle.OneUI) {
-                Text(
-                    text = stringResource(R.string.nav_settings),
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 12.dp),
-                )
-            }
             if (searchActive) {
                 androidx.compose.material3.OutlinedTextField(
                     value = query,
@@ -334,7 +323,8 @@ private fun FontPicker(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedCustom = customFonts.firstOrNull { it.path == selectedPath }
-    val presets = listOf(AppFont.Auto, AppFont.Samsung, AppFont.Md3e, AppFont.PingFang)
+    val shown = if (selected == AppFont.Md3e) AppFont.Auto else selected
+    val presets = listOf(AppFont.Auto, AppFont.Samsung, AppFont.PingFang)
     Box {
         Row(
             modifier = Modifier
@@ -375,7 +365,7 @@ private fun FontPicker(
                         Text(
                             text = fontLabel(font),
                             style = MaterialTheme.typography.titleSmall,
-                            color = if (font == selected && selected != AppFont.Custom) {
+                            color = if (font == shown && shown != AppFont.Custom) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface
@@ -386,7 +376,7 @@ private fun FontPicker(
                         onSelect(font, "")
                         expanded = false
                     },
-                    trailingIcon = if (font == selected && selected != AppFont.Custom) {
+                    trailingIcon = if (font == shown && shown != AppFont.Custom) {
                         {
                             Icon(
                                 imageVector = Icons.Filled.Check,
@@ -445,83 +435,6 @@ private fun FontPicker(
                                 )
                             }
                         }
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DesignStyleDropdown(
-    selected: DesignStyle,
-    onSelect: (DesignStyle) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(22.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.82f))
-                .clickable { expanded = true }
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = if (selected == DesignStyle.OneUI) {
-                    stringResource(R.string.design_style_oneui)
-                } else {
-                    stringResource(R.string.design_style_md3e)
-                },
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
-            )
-            Icon(
-                imageVector = Icons.Filled.KeyboardArrowDown,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            shape = RoundedCornerShape(22.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ) {
-            DesignStyle.entries.forEach { style ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = if (style == DesignStyle.OneUI) {
-                                stringResource(R.string.design_style_oneui)
-                            } else {
-                                stringResource(R.string.design_style_md3e)
-                            },
-                            style = MaterialTheme.typography.titleSmall,
-                            color = if (style == selected) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                        )
-                    },
-                    onClick = {
-                        onSelect(style)
-                        expanded = false
-                    },
-                    trailingIcon = if (style == selected) {
-                        {
-                            Icon(
-                                imageVector = Icons.Filled.Check,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                    } else {
-                        null
                     },
                 )
             }
@@ -632,22 +545,9 @@ fun AppearanceSettings(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 20.dp),
+                .padding(horizontal = 20.dp),
         ) {
             Spacer(Modifier.height(8.dp))
-            if (TokiFeatures.DESIGN_STYLE_SWITCH_ENABLED) {
-                Text(
-                    text = stringResource(R.string.design_style),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
-                )
-                DesignStyleDropdown(
-                    selected = settings.designStyle,
-                    onSelect = { style -> onUpdate { it.copy(designStyle = style) } },
-                )
-                Spacer(Modifier.height(16.dp))
-            }
             Text(
                 text = stringResource(R.string.setting_font),
                 style = MaterialTheme.typography.labelLarge,
@@ -871,7 +771,7 @@ fun DataSettings(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 20.dp),
+                .padding(horizontal = 20.dp),
         ) {
             Spacer(Modifier.height(8.dp))
 
@@ -1380,7 +1280,7 @@ fun AboutScreen(
         Column(            modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = if (LocalDesignStyle.current == DesignStyle.OneUI) 24.dp else 20.dp),
+                .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.Start,
         ) {
             Spacer(Modifier.height(12.dp))
@@ -1609,4 +1509,4 @@ private fun SettingSwitch(
 
 private fun appVersionName(context: Context): String = runCatching {
     context.packageManager.getPackageInfo(context.packageName, 0).versionName
-}.getOrNull() ?: "0.1.0"
+}.getOrNull() ?: "0.3.7"

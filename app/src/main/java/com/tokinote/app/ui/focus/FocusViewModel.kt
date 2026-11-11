@@ -1,19 +1,11 @@
 package com.tokinote.app.ui.focus
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import com.tokinote.app.R
+import com.tokinote.app.TokiNoteApplication
 import com.tokinote.app.data.AppSettings
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 
 enum class FocusMode(val labelRes: Int) {
     Focus(R.string.focus_title),
@@ -27,6 +19,19 @@ fun FocusMode.minutes(settings: AppSettings): Int = when (this) {
     FocusMode.LongBreak -> settings.longBreakMinutes
 }
 
+fun nextFocusMode(mode: FocusMode, completedInCycle: Int, sessionsBeforeLongBreak: Int): FocusMode {
+    val cycle = sessionsBeforeLongBreak.coerceAtLeast(1)
+    return when (mode) {
+        FocusMode.Focus -> if ((completedInCycle + 1) % cycle == 0) {
+            FocusMode.LongBreak
+        } else {
+            FocusMode.ShortBreak
+        }
+
+        else -> FocusMode.Focus
+    }
+}
+
 data class FocusState(
     val mode: FocusMode = FocusMode.Focus,
     val running: Boolean = false,
@@ -36,184 +41,49 @@ data class FocusState(
     val settings: AppSettings = AppSettings(),
     val indefinite: Boolean = false,
     val elapsedSeconds: Int = 0,
+    val phase: FocusPhase = if (running) FocusPhase.Running else FocusPhase.Idle,
+    val remainingMillis: Long = remainingSeconds * 1000L,
+    val totalMillis: Long = totalSeconds * 1000L,
+    val deadlineElapsed: Long = 0L,
+    val elapsedBaseMillis: Long = elapsedSeconds * 1000L,
+    val runStartedElapsed: Long = 0L,
 ) {
     val progress: Float
-        get() = if (totalSeconds <= 0) 0f else {
-            (1f - remainingSeconds.toFloat() / totalSeconds.toFloat()).coerceIn(0f, 1f)
+        get() = if (totalMillis <= 0L) 0f else {
+            (1f - remainingMillis.toFloat() / totalMillis.toFloat()).coerceIn(0f, 1f)
         }
 
     val nextMode: FocusMode
-        get() = when (mode) {
-            FocusMode.Focus -> if ((completedInCycle + 1) % settings.sessionsBeforeLongBreak == 0) {
-                FocusMode.LongBreak
-            } else {
-                FocusMode.ShortBreak
-            }
-
-            else -> FocusMode.Focus
-        }
+        get() = nextFocusMode(mode, completedInCycle, settings.sessionsBeforeLongBreak)
 
     val sessionIndex: Int
-        get() = completedInCycle % settings.sessionsBeforeLongBreak + 1
+        get() {
+            val cycle = settings.sessionsBeforeLongBreak.coerceAtLeast(1)
+            return completedInCycle % cycle + 1
+        }
 }
 
 /**
- * 番茄钟状态机，行为对齐 Tomato：
- * 专注结束进入短休息，每完成 N 段进入长休息，可自动开始下一段。
+ * 界面上的计时入口。真正的时钟在进程级 [FocusTimerEngine] 里，
+ * 这样旋转、离开页面甚至 Activity 重建都不会把正在走的表清掉。
  */
-class FocusViewModel : ViewModel() {
+class FocusViewModel(application: Application) : AndroidViewModel(application) {
+    private val engine = (application as TokiNoteApplication).focusEngine
 
-    private val _state = MutableStateFlow(FocusState())
-    val state: StateFlow<FocusState> = _state.asStateFlow()
+    val state: StateFlow<FocusState> = engine.state
 
-    private val _completed = MutableSharedFlow<Int>(extraBufferCapacity = 4)
-    val focusCompleted: SharedFlow<Int> = _completed.asSharedFlow()
+    fun configure(settings: AppSettings) = engine.configure(settings)
 
-    private val _breakCompleted = MutableSharedFlow<Int>(extraBufferCapacity = 4)
-    val breakCompleted: SharedFlow<Int> = _breakCompleted.asSharedFlow()
+    fun toggle() = engine.toggle()
 
-    private var ticker: Job? = null
+    fun reset() = engine.reset()
 
-    fun configure(settings: AppSettings) {
-        val current = _state.value
-        if (current.settings == settings) return
-        val total = current.mode.minutes(settings) * 60
-        _state.value = if (current.running) {
-            current.copy(settings = settings, totalSeconds = total)
-        } else {
-            current.copy(settings = settings, totalSeconds = total, remainingSeconds = total)
-        }
-    }
+    fun skip() = engine.skip()
 
-    fun toggle() {
-        if (_state.value.running) pause() else if (_state.value.indefinite) resumeIndefinite() else start()
-    }
+    fun startIndefinite() = engine.startIndefinite()
 
-    /** 长按数字进入不定时专注：从 0 开始正向计时。 */
-    fun startIndefinite() {
-        stopTicker()
-        _state.value = _state.value.copy(
-            indefinite = true,
-            running = true,
-            elapsedSeconds = 0,
-            remainingSeconds = 0,
-            totalSeconds = 0,
-        )
-        tickUp()
-    }
+    /** 长按数字后等退场动画结束再开始正向计时。延迟放在引擎里，旋转不会把这次启动弄丢。 */
+    fun scheduleIndefinite(delayMs: Long = 430L) = engine.scheduleIndefinite(delayMs)
 
-    private fun resumeIndefinite() {
-        _state.value = _state.value.copy(running = true)
-        tickUp()
-    }
-
-    private fun tickUp() {
-        stopTicker()
-        ticker = viewModelScope.launch {
-            while (isActive) {
-                delay(1000)
-                val current = _state.value
-                if (!current.running || !current.indefinite) break
-                _state.value = current.copy(elapsedSeconds = current.elapsedSeconds + 1)
-            }
-        }
-    }
-
-    fun reset() {
-        stopTicker()
-        val current = _state.value
-        val total = current.mode.minutes(current.settings) * 60
-        _state.value = current.copy(
-            running = false,
-            indefinite = false,
-            elapsedSeconds = 0,
-            totalSeconds = total,
-            remainingSeconds = total,
-        )
-    }
-
-    fun skip() {
-        stopTicker()
-        val current = _state.value
-        val next = when (current.mode) {
-            FocusMode.Focus -> {
-                if (current.completedInCycle > 0 &&
-                    current.completedInCycle % current.settings.sessionsBeforeLongBreak == 0
-                ) {
-                    FocusMode.LongBreak
-                } else {
-                    FocusMode.ShortBreak
-                }
-            }
-
-            else -> FocusMode.Focus
-        }
-        val total = next.minutes(current.settings) * 60
-        _state.value = current.copy(
-            mode = next,
-            running = false,
-            totalSeconds = total,
-            remainingSeconds = total,
-        )
-    }
-
-    private fun start() {
-        if (_state.value.remainingSeconds <= 0) return
-        _state.value = _state.value.copy(running = true)
-        stopTicker()
-        ticker = viewModelScope.launch {
-            while (isActive) {
-                delay(1000)
-                val current = _state.value
-                if (!current.running) break
-                if (current.remainingSeconds > 1) {
-                    _state.value = current.copy(remainingSeconds = current.remainingSeconds - 1)
-                } else {
-                    finishSegment()
-                    break
-                }
-            }
-        }
-    }
-
-    private fun pause() {
-        stopTicker()
-        _state.value = _state.value.copy(running = false)
-    }
-
-    private fun stopTicker() {
-        ticker?.cancel()
-        ticker = null
-    }
-
-    private fun finishSegment() {
-        stopTicker()
-        val current = _state.value
-        val focusMinutes = current.totalSeconds / 60
-
-        if (current.mode == FocusMode.Focus) {
-            _completed.tryEmit(focusMinutes)
-            val next = current.nextMode
-            val total = next.minutes(current.settings) * 60
-            _state.value = current.copy(
-                mode = next,
-                completedInCycle = current.completedInCycle + 1,
-                totalSeconds = total,
-                remainingSeconds = total,
-                running = current.settings.autoStartNext,
-            )
-        } else {
-            _breakCompleted.tryEmit(current.totalSeconds / 60)
-            val next = FocusMode.Focus
-            val total = next.minutes(current.settings) * 60
-            _state.value = current.copy(
-                mode = next,
-                totalSeconds = total,
-                remainingSeconds = total,
-                running = current.settings.autoStartNext,
-            )
-        }
-
-        if (_state.value.running) start()
-    }
+    fun sync() = engine.sync()
 }

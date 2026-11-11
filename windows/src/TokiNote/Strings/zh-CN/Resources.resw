@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppTitle.Text" xml:space="preserve"><value>TokiNote</value></data>
+  <data name="NavNotes.Content" xml:space="preserve"><value>笔记</value></data>
+  <data name="NavFocus.Content" xml:space="preserve"><value>专注</value></data>
+  <data name="NavStats.Content" xml:space="preserve"><value>统计</value></data>
+  <data name="NavArchive.Content" xml:space="preserve"><value>归档</value></data>
+  <data name="NavTrash.Content" xml:space="preserve"><value>回收站</value></data>
+  <data name="NavSettings.Content" xml:space="preserve"><value>设置</value></data>
+  <data name="app_name" xml:space="preserve"><value>TokiNote</value></data>
+  <data name="nav_notes" xml:space="preserve"><value>笔记</value></data>
+  <data name="nav_focus" xml:space="preserve"><value>专注</value></data>
+  <data name="nav_stats" xml:space="preserve"><value>统计</value></data>
+  <data name="nav_archive" xml:space="preserve"><value>归档</value></data>
+  <data name="nav_trash" xml:space="preserve"><value>回收站</value></data>
+  <data name="nav_settings" xml:space="preserve"><value>设置</value></data>
+  <data name="search_tokinote" xml:space="preserve"><value>搜索 TokiNote</value></data>
+  <data name="entry_new" xml:space="preserve"><value>写日记</value></data>
+  <data name="note_untitled" xml:space="preserve"><value>无标题</value></data>
+  <data name="title_hint" xml:space="preserve"><value>标题</value></data>
+  <data name="editor_hint" xml:space="preserve"><value>写点什么…</value></data>
+  <data name="action_pin" xml:space="preserve"><value>置顶</value></data>
+  <data name="action_unpin" xml:space="preserve"><value>取消置顶</value></data>
+  <data name="action_delete" xml:space="preserve"><value>删除</value></data>
+  <data name="action_cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="focus_title" xml:space="preserve"><value>专注</value></data>
+  <data name="focus_short_break" xml:space="preserve"><value>短休息</value></data>
+  <data name="focus_long_break" xml:space="preserve"><value>长休息</value></data>
+  <data name="focus_play" xml:space="preserve"><value>开始</value></data>
+  <data name="focus_pause" xml:space="preserve"><value>暂停</value></data>
+  <data name="focus_reset" xml:space="preserve"><value>重置</value></data>
+  <data name="focus_skip" xml:space="preserve"><value>跳过</value></data>
+  <data name="focus_indefinite" xml:space="preserve"><value>不定时专注</value></data>
+  <data name="focus_indefinite_hint" xml:space="preserve"><value>正向计时中</value></data>
+  <data name="focus_session" xml:space="preserve"><value>第 {0} / {1} 段</value></data>
+  <data name="focus_up_next" xml:space="preserve"><value>接下来</value></data>
+  <data name="focus_next_hint" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="focus_summary" xml:space="preserve"><value>专注总结</value></data>
+  <data name="stats_today" xml:space="preserve"><value>今天</value></data>
+  <data name="stats_focus" xml:space="preserve"><value>专注</value></data>
+  <data name="stats_break" xml:space="preserve"><value>休息</value></data>
+  <data name="stats_last_week" xml:space="preserve"><value>上周</value></data>
+  <data name="stats_last_month" xml:space="preserve"><value>上个月</value></data>
+  <data name="stats_avg_focus" xml:space="preserve"><value>日均专注</value></data>
+  <data name="about_check_update" xml:space="preserve"><value>检查更新</value></data>
+  <data name="about_latest" xml:space="preserve"><value>已是最新</value></data>
+  <data name="about_check_failed" xml:space="preserve"><value>检查失败，点按重试</value></data>
+  <data name="about_no_release" xml:space="preserve"><value>当前通道暂无可用版本</value></data>
+  <data name="about_github" xml:space="preserve"><value>GitHub 主页</value></data>
+  <data name="update_title" xml:space="preserve"><value>发现新版本 {0}</value></data>
+  <data name="update_download" xml:space="preserve"><value>下载更新</value></data>
+  <data name="update_downloading" xml:space="preserve"><value>正在下载… {0}%</value></data>
+  <data name="update_failed" xml:space="preserve"><value>下载失败，请稍后再试</value></data>
+  <data name="update_no_package" xml:space="preserve"><value>这个版本没有可用的安装包</value></data>
+  <data name="update_current" xml:space="preserve"><value>当前版本 {0}</value></data>
+  <data name="focus_notif_done_focus" xml:space="preserve"><value>专注结束</value></data>
+  <data name="focus_notif_done_break" xml:space="preserve"><value>休息结束</value></data>
+  <data name="focus_notif_done_focus_body" xml:space="preserve"><value>已完成 {0}</value></data>
+  <data name="focus_notif_done_break_body" xml:space="preserve"><value>休息了 {0}</value></data>
+  <data name="archive_title" xml:space="preserve"><value>归档</value></data>
+  <data name="archive_subtitle" xml:space="preserve"><value>归档的笔记不会出现在主页，且不可编辑</value></data>
+  <data name="trash_title" xml:space="preserve"><value>回收站</value></data>
+  <data name="trash_subtitle" xml:space="preserve"><value>保留 14 天，之后自动删除</value></data>
+  <data name="archive_empty" xml:space="preserve"><value>这里还没有内容</value></data>
+  <data name="archive_restore" xml:space="preserve"><value>恢复</value></data>
+  <data name="archive_delete_forever" xml:space="preserve"><value>彻底删除</value></data>
+  <data name="theme_system" xml:space="preserve"><value>跟随系统</value></data>
+  <data name="theme_light" xml:space="preserve"><value>浅色</value></data>
+  <data name="theme_dark" xml:space="preserve"><value>深色</value></data>
+  <data name="settings_appearance" xml:space="preserve"><value>外观</value></data>
+  <data name="settings_timer" xml:space="preserve"><value>计时器</value></data>
+  <data name="settings_data" xml:space="preserve"><value>数据</value></data>
+  <data name="settings_about" xml:space="preserve"><value>关于</value></data>
+</root>

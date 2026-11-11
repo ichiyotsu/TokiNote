@@ -3,7 +3,29 @@ name: CI
 on:
   push:
     branches: [main, master]
+    paths:
+      - "app/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle/**"
+      - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/release.yml"
   pull_request:
+    # Android CI runs when the Android project or its workflows change.
+    # iOS lives under ios/ and Windows under windows/, so those PRs use their own workflows.
+    paths:
+      - "app/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle/**"
+      - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/release.yml"
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -21,25 +43,20 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      # Runner 自带的 SDK 不一定有 compileSdk 37 的平台包，这里显式安装。
-      - name: Install Android SDK packages
-        run: |
-          SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
-          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f | head -n 1)"
-          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
-          "$SDKMANAGER" "platforms;android-37.0" "build-tools;36.0.0"
-          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
-          ls "$SDK_ROOT/platforms"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-37.0 build-tools;36.0.0
 
-      # runner 上 downloads.gradle.org 会拒绝连接，wrapper 拉不到 9.6.0，直接用预装 Gradle（9.8.1）。
-      - name: Verify Gradle
-        run: gradle --version
+      # gradle.properties points at a developer proxy that does not exist on the runner.
+      - name: Drop the local dev proxy
+        run: sed -i '/^systemProp\.http\.proxy/d; /^systemProp\.https\.proxy/d' gradle.properties
 
       - name: Unit tests
-        run: gradle testDebugUnitTest --no-daemon --stacktrace
+        run: bash ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
       - name: Assemble debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: bash ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

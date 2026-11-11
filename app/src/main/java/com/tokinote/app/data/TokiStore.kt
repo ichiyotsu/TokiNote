@@ -14,6 +14,8 @@ class TokiStore(context: Context) {
 
     private val prefs = context.applicationContext
         .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val sessionLock = Any()
+    private val sessionListeners = java.util.concurrent.CopyOnWriteArrayList<(FocusSession) -> Unit>()
 
     /* ----------------------------- notes ----------------------------- */
 
@@ -160,9 +162,6 @@ class TokiStore(context: Context) {
                 themeMode = runCatching {
                     ThemeMode.valueOf(json.optString("themeMode", ThemeMode.System.name))
                 }.getOrDefault(ThemeMode.System),
-                designStyle = runCatching {
-                    DesignStyle.valueOf(json.optString("designStyle", DesignStyle.MaterialExpressive.name))
-                }.getOrDefault(DesignStyle.MaterialExpressive),
                 font = runCatching {
                     AppFont.valueOf(json.optString("font", AppFont.Auto.name))
                 }.getOrDefault(AppFont.Auto),
@@ -206,7 +205,6 @@ class TokiStore(context: Context) {
     fun saveSettings(settings: AppSettings) {
         val json = JSONObject().apply {
             put("themeMode", settings.themeMode.name)
-            put("designStyle", settings.designStyle.name)
             put("font", settings.font.name)
             put("customFontPath", settings.customFontPath)
             put("customFonts", JSONArray().apply {
@@ -261,6 +259,30 @@ class TokiStore(context: Context) {
     }
 
     fun saveSessions(sessions: List<FocusSession>) {
+        writeSessions(sessions, commit = false)
+    }
+
+    fun addSessionListener(listener: (FocusSession) -> Unit) {
+        sessionListeners.add(listener)
+    }
+
+    fun removeSessionListener(listener: (FocusSession) -> Unit) {
+        sessionListeners.remove(listener)
+    }
+
+    /** 同步落盘，进程在计时结束瞬间被杀掉时也不会丢掉这一段记录。 */
+    fun appendSession(session: FocusSession) {
+        if (session.minutes <= 0 && session.breakMinutes <= 0) return
+        val added = synchronized(sessionLock) {
+            val current = loadSessions()
+            if (session in current) return
+            writeSessions(current + session, commit = true)
+            true
+        }
+        if (added) sessionListeners.forEach { listener -> listener(session) }
+    }
+
+    private fun writeSessions(sessions: List<FocusSession>, commit: Boolean) {
         val array = JSONArray()
         sessions.forEach { session ->
             array.put(
@@ -271,7 +293,8 @@ class TokiStore(context: Context) {
                 },
             )
         }
-        prefs.edit().putString(KEY_SESSIONS, array.toString()).apply()
+        val editor = prefs.edit().putString(KEY_SESSIONS, array.toString())
+        if (commit) editor.commit() else editor.apply()
     }
 
     /* ----------------------------- backup ----------------------------- */

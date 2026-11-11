@@ -24,7 +24,7 @@ data class ReleaseInfo(
 object UpdateChecker {
 
     private const val RELEASES_URL =
-        "https://api.github.com/repos/ichiyotsu/Tokinote/releases?per_page=10"
+        "https://api.github.com/repos/ichiyotsu/TokiNote/releases?per_page=40"
     private const val USER_AGENT = "TokiNote-Android"
 
     /** 正式版：0.1.0 / v0.1.0。 */
@@ -48,7 +48,7 @@ object UpdateChecker {
             for (index in 0 until array.length()) {
                 val json = array.optJSONObject(index) ?: continue
                 if (json.optBoolean("draft", false)) continue
-                add(json.toReleaseInfo())
+                json.toReleaseInfo()?.let { add(it) }
             }
         }
         return pickLatest(releases, channel)
@@ -59,6 +59,7 @@ object UpdateChecker {
         var stable: ReleaseInfo? = null
         var beta: ReleaseInfo? = null
         releases.forEach { info ->
+            if (!isAndroidRelease(info.tag)) return@forEach
             val version = info.version.trim().removePrefix("v").removePrefix("V")
             when {
                 stableVersion.matches(version) -> {
@@ -74,6 +75,13 @@ object UpdateChecker {
         val stableInfo = stable ?: return beta
         val betaInfo = beta ?: return stableInfo
         return if (isNewer(betaInfo.version, stableInfo.version)) betaInfo else stableInfo
+    }
+
+    /** Android 发版标签是纯版本号。Windows / iOS 用平台前缀，不参与 Android 更新。 */
+    internal fun isAndroidRelease(tag: String): Boolean {
+        val trimmed = tag.trim()
+        return !trimmed.startsWith("windows-", ignoreCase = true) &&
+            !trimmed.startsWith("ios-", ignoreCase = true)
     }
 
     /** 通道匹配规则，单独提出来便于测试。beta 通道也允许正式版。 */
@@ -160,7 +168,7 @@ object UpdateChecker {
         }
     }
 
-    private fun org.json.JSONObject.toReleaseInfo(): ReleaseInfo {
+    private fun org.json.JSONObject.toReleaseInfo(): ReleaseInfo? {
         var apkUrl: String? = null
         val assets = optJSONArray("assets")
         if (assets != null) {
@@ -174,6 +182,7 @@ object UpdateChecker {
             }
         }
         val tag = optString("tag_name")
+        if (!isAndroidRelease(tag)) return null
         val version = tag.removePrefix("v").removePrefix("V")
         return ReleaseInfo(
             tag = tag,

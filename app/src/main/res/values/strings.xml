@@ -50,17 +50,14 @@
     <string name="settings_data_sub">备份、清空</string>
     <string name="settings_about">关于</string>
     <string name="settings_about_sub">版本 %1$s</string>
-    <string name="design_style">设计风格</string>
-    <string name="design_style_md3e">MD3E</string>
-    <string name="design_style_oneui">One UI</string>
     <string name="setting_font">字体</string>
-    <string name="font_auto">跟随设计风格</string>
+    <string name="font_auto">Google Sans（默认）</string>
     <string name="font_samsung">Samsung Sans</string>
     <string name="font_md3e">GoogleSans</string>
     <string name="font_pingfang">苹方</string>
     <string name="font_custom">自定义 TTF</string>
     <string name="font_choose_ttf">选择 TTF</string>
-    <string name="font_system_fallback">苹方使用设备字体，未安装时回退</string>
+    <string name="font_system_fallback">拉丁字母和数字用 Google Sans，中文用思源黑体。子集没有的字回退到系统字体。苹方使用设备字体，未安装时回退。</string>
     <string name="font_custom_failed">无法读取该字体文件</string>
     <string name="font_delete_title">删除这个字体？</string>
     <string name="font_delete_body">字体会从列表中移除；如果正在使用，将切回跟随设计风格。</string>
@@ -121,6 +118,22 @@
 
     <!-- 计时器 -->
     <string name="timer_custom">自定义</string>
+    <string name="timer_pick_duration">选择时长</string>
+    <string name="timer_confirm">确定</string>
+    <string name="timer_decrease">减少</string>
+    <string name="timer_increase">增加</string>
+    <string name="focus_notif_channel">专注计时</string>
+    <string name="focus_notif_channel_desc">显示正在进行的专注或休息</string>
+    <string name="focus_notif_done_channel">专注结束</string>
+    <string name="focus_notif_done_channel_desc">一段专注或休息结束时提醒</string>
+    <string name="focus_notif_running_focus">专注中</string>
+    <string name="focus_notif_running_short">短休息中</string>
+    <string name="focus_notif_running_long">长休息中</string>
+    <string name="focus_notif_indefinite">不定时专注中</string>
+    <string name="focus_notif_done_focus">专注结束</string>
+    <string name="focus_notif_done_break">休息结束</string>
+    <string name="focus_notif_done_focus_body">已完成 %1$s</string>
+    <string name="focus_notif_done_break_body">休息了 %1$s</string>
 
     <!-- 设置 / 关于 / 更新 -->
     <string name="setting_motion">减弱动效</string>
@@ -179,6 +192,9 @@
     <string name="checklist_add">添加条目</string>
     <string name="update_in_progress">更新中…</string>
     <string name="focus_indefinite">不定时专注</string>
+    <string name="widget_focus_name">专注计时</string>
+    <string name="widget_focus_desc">在桌面查看正在进行的专注或休息，并可暂停或继续。</string>
+    <string name="widget_focus_time">25:00</string>
     <string name="update_in_progress_short">更新中</string>
     <string name="archive_title">归档</string>
     <string name="archive_subtitle">归档的笔记不会出现在主页，且不可编辑</string>

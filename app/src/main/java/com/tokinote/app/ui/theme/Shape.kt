@@ -1,25 +1,21 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.tokinote.app.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
-/** Expressive corner scale: much rounder than the baseline M3 scale. */
+/** Expressive corner scale: 8 stops, rounder than the baseline M3 scale. */
 val TokiShapes = Shapes(
     extraSmall = RoundedCornerShape(8.dp),
     small = RoundedCornerShape(12.dp),
     medium = RoundedCornerShape(18.dp),
     large = RoundedCornerShape(26.dp),
     extraLarge = RoundedCornerShape(36.dp),
-)
-
-/** One UI：对称、26dp focus block 圆角，强调内容而不是容器。 */
-val OneUIShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(18.dp),
-    large = RoundedCornerShape(26.dp),
-    extraLarge = RoundedCornerShape(32.dp),
+    largeIncreased = RoundedCornerShape(32.dp),
+    extraLargeIncreased = RoundedCornerShape(44.dp),
+    extraExtraLarge = RoundedCornerShape(56.dp),
 )
 
 /** 笔记卡片：四角不对称，避免通用圆角的“模板感”。 */
@@ -50,8 +46,3 @@ val ExpressiveFabShape = RoundedCornerShape(
 val ExpressiveIslandShape = RoundedCornerShape(34.dp)
 val ExpressiveSheetShape = RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp)
 
-val OneUICardShape = RoundedCornerShape(26.dp)
-val OneUIChipShape = RoundedCornerShape(20.dp)
-val OneUIFabShape = RoundedCornerShape(22.dp)
-val OneUIIslandShape = RoundedCornerShape(26.dp)
-val OneUISheetShape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)

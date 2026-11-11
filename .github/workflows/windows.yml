@@ -1,0 +1,120 @@
+name: Windows
+
+on:
+  pull_request:
+    paths:
+      - "windows/**"
+      - ".github/workflows/windows.yml"
+      - ".github/release-notes/windows-*"
+  push:
+    tags:
+      - "windows-*"
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    name: Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # windows-2022 is the Windows 10-era image still offered by GitHub.
+        # windows-latest is the Windows 11-era image (currently Windows Server 2025).
+        os: [windows-2022, windows-latest]
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Unit tests
+        run: dotnet test tests/TokiNote.Core.Tests/TokiNote.Core.Tests.csproj -c Release --nologo
+
+      - name: System font fallback
+        shell: powershell
+        working-directory: ${{ github.workspace }}
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          $fonts = New-Object System.Drawing.Text.InstalledFontCollection
+          $names = @($fonts.Families | ForEach-Object { $_.Name })
+          $os = [Environment]::OSVersion.Version
+          Write-Host "OS $os"
+          Write-Host ("Microsoft YaHei UI: " + ($names -contains "Microsoft YaHei UI"))
+          Write-Host ("Segoe UI Variable: " + ($names -contains "Segoe UI Variable"))
+          Write-Host ("Segoe UI: " + ($names -contains "Segoe UI"))
+          if ($names -notcontains "Segoe UI") { throw "Segoe UI is not installed; the Windows 10 fallback face is missing." }
+
+  package:
+    name: Package
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Unit tests
+        run: dotnet test tests/TokiNote.Core.Tests/TokiNote.Core.Tests.csproj -c Release --nologo
+
+      - name: Publish self-contained unpackaged app
+        run: dotnet publish src/TokiNote/TokiNote.csproj -c Release -r win-x64 --self-contained true -p:Platform=x64 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true
+
+      - name: Zip publish output
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter TokiNote.exe windows/src/TokiNote/bin |
+            Where-Object { $_.FullName -match '\\publish\\' } |
+            Select-Object -First 1
+          if (-not $exe) { throw "TokiNote.exe was not published" }
+          if ($env:GITHUB_REF_TYPE -eq "tag") {
+            $version = $env:GITHUB_REF_NAME.Substring("windows-".Length)
+            $name = "TokiNote-Windows-$version-win-x64.zip"
+            Add-Content -Path $env:GITHUB_ENV -Value "VERSION_NAME=$version"
+          } else {
+            $name = "TokiNote-Windows-win-x64.zip"
+          }
+          if (Test-Path $name) { Remove-Item $name }
+          Compress-Archive -Path (Join-Path $exe.DirectoryName "*") -DestinationPath $name
+          Add-Content -Path $env:GITHUB_ENV -Value "ASSET_NAME=$name"
+          Get-Item $name | Select-Object FullName, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ASSET_NAME }}
+          path: ${{ env.ASSET_NAME }}
+          if-no-files-found: error
+
+      - name: Resolve release notes
+        if: startsWith(github.ref, 'refs/tags/windows-')
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          NOTES=".github/release-notes/${TAG}.md"
+          if [ ! -f "$NOTES" ]; then
+            printf 'TokiNote Windows %s\n\n这一版包含修复和改进。\n' "${TAG#windows-}" > "$RUNNER_TEMP/windows-notes.md"
+            NOTES="$RUNNER_TEMP/windows-notes.md"
+          fi
+          echo "NOTES_FILE=$NOTES" >> "$GITHUB_ENV"
+
+      - name: Attach the zip to the GitHub release
+        if: startsWith(github.ref, 'refs/tags/windows-')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: TokiNote Windows ${{ env.VERSION_NAME }}
+          body_path: ${{ env.NOTES_FILE }}
+          files: ${{ env.ASSET_NAME }}
+          make_latest: false
+          prerelease: ${{ contains(github.ref_name, 'beta') }}
+          fail_on_unmatched_files: true
