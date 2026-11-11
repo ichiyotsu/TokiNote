@@ -216,51 +216,53 @@ public sealed partial class SplashWindow : Window
 
     private void PlayEntrance()
     {
-        var cardEase = Ease(0.2, 0, 0, 1);
-        var titleEase = Ease(0.05, 0.7, 0.1, 1);
         var storyboard = new Storyboard();
-        storyboard.Children.Add(DoubleAnim(Card, "Opacity", 0, 1, 550, cardEase, TimeSpan.Zero));
-        storyboard.Children.Add(DoubleAnim(CardScale, "ScaleX", 0.86, 1, 550, cardEase, TimeSpan.Zero));
-        storyboard.Children.Add(DoubleAnim(CardScale, "ScaleY", 0.86, 1, 550, cardEase, TimeSpan.Zero));
-        storyboard.Children.Add(DoubleAnim(Wordmark, "Opacity", 0, 1, 800, titleEase, TimeSpan.FromMilliseconds(100)));
-        storyboard.Children.Add(DoubleAnim(TitleShift, "Y", 10, 0, 800, titleEase, TimeSpan.FromMilliseconds(100)));
+        storyboard.Children.Add(Spline(Card, "Opacity", 0, 1, 550, 0.2, 0, 0, 1, TimeSpan.Zero));
+        storyboard.Children.Add(Spline(CardScale, "ScaleX", 0.86, 1, 550, 0.2, 0, 0, 1, TimeSpan.Zero));
+        storyboard.Children.Add(Spline(CardScale, "ScaleY", 0.86, 1, 550, 0.2, 0, 0, 1, TimeSpan.Zero));
+        storyboard.Children.Add(Spline(Wordmark, "Opacity", 0, 1, 800, 0.05, 0.7, 0.1, 1, TimeSpan.FromMilliseconds(100)));
+        storyboard.Children.Add(Spline(TitleShift, "Y", 10, 0, 800, 0.05, 0.7, 0.1, 1, TimeSpan.FromMilliseconds(100)));
         storyboard.Begin();
     }
 
     private void PlayExit()
     {
-        var exitEase = Ease(0.3, 0, 0.8, 0.15);
         var storyboard = new Storyboard();
-        storyboard.Children.Add(DoubleAnim(Card, "Opacity", Card.Opacity, 0, SplashTiming.ExitDurationMs, exitEase, TimeSpan.Zero));
-        storyboard.Children.Add(DoubleAnim(CardScale, "ScaleX", CardScale.ScaleX, 0.94, SplashTiming.ExitDurationMs, exitEase, TimeSpan.Zero));
-        storyboard.Children.Add(DoubleAnim(CardScale, "ScaleY", CardScale.ScaleY, 0.94, SplashTiming.ExitDurationMs, exitEase, TimeSpan.Zero));
+        storyboard.Children.Add(Spline(Card, "Opacity", Card.Opacity, 0, SplashTiming.ExitDurationMs, 0.3, 0, 0.8, 0.15, TimeSpan.Zero));
+        storyboard.Children.Add(Spline(CardScale, "ScaleX", CardScale.ScaleX, 0.94, SplashTiming.ExitDurationMs, 0.3, 0, 0.8, 0.15, TimeSpan.Zero));
+        storyboard.Children.Add(Spline(CardScale, "ScaleY", CardScale.ScaleY, 0.94, SplashTiming.ExitDurationMs, 0.3, 0, 0.8, 0.15, TimeSpan.Zero));
         storyboard.Begin();
     }
 
-    private static CubicBezierEasingFunction Ease(double x1, double y1, double x2, double y2) => new()
-    {
-        ControlPoint1 = new Windows.Foundation.Point(x1, y1),
-        ControlPoint2 = new Windows.Foundation.Point(x2, y2),
-    };
-
-    private static DoubleAnimation DoubleAnim(
+    private static DoubleAnimationUsingKeyFrames Spline(
         DependencyObject target,
         string property,
         double from,
         double to,
         int milliseconds,
-        EasingFunctionBase easing,
+        double x1,
+        double y1,
+        double x2,
+        double y2,
         TimeSpan begin)
     {
-        var animation = new DoubleAnimation
+        var animation = new DoubleAnimationUsingKeyFrames
         {
-            From = from,
-            To = to,
-            Duration = TimeSpan.FromMilliseconds(milliseconds),
             BeginTime = begin,
-            EasingFunction = easing,
+            Duration = TimeSpan.FromMilliseconds(milliseconds),
             FillBehavior = FillBehavior.HoldEnd,
         };
+        animation.KeyFrames.Add(new SplineDoubleKeyFrame
+        {
+            KeyTime = KeyTime.FromTimeSpan(TimeSpan.Zero),
+            Value = from,
+        });
+        animation.KeyFrames.Add(new SplineDoubleKeyFrame
+        {
+            KeyTime = KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(milliseconds)),
+            Value = to,
+            KeySpline = new KeySpline(x1, y1, x2, y2),
+        });
         Storyboard.SetTarget(animation, target);
         Storyboard.SetTargetProperty(animation, property);
         return animation;
