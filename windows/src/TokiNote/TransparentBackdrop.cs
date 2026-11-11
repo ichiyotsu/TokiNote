@@ -1,4 +1,4 @@
-using Microsoft.UI.Composition.SystemBackdrops;
+using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
