@@ -66,7 +66,8 @@ struct UpdateCheckerTests {
           {"tag_name":"ios-0.3.7","draft":false,"body":"new","published_at":"2026-11-11T00:00:00Z","assets":[{"name":"TokiNote-ios-0.3.7.ipa","browser_download_url":"https://example.com/new.ipa"}]}
         ]
         """.data(using: .utf8)!
-        let newest = try #require(IOSReleaseIndex.newest(try #require(IOSReleaseIndex.parse(data: json))))
+        let releases = try #require(IOSReleaseIndex.parse(data: json))
+        let newest = try #require(IOSReleaseIndex.newest(releases))
         #expect(newest.tag == "ios-0.3.7")
         #expect(newest.version == "0.3.7")
         #expect(newest.ipaURL?.absoluteString == "https://example.com/new.ipa")
